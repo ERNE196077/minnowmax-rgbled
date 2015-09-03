@@ -27,9 +27,16 @@ int main (){
 
 	printf("Value in %04x :\n", (unsigned int)GPIO_address_pointer);
 
-	printf("HEX: ");
-	for( int i=0 ; i<8 ; i++ )
-		printf("%04x ",*(GPIO_memory_address+40+i));
+	printf("HEX: \n");
+	for( int i=0 ; i<30 ; i+=4)
+	{
+		printf("Offset %02xh : ",i*4);
+		printf("%04x \n",*(GPIO_memory_address+GPIO_OFFSET+i));
+		printf("Offset %02xh : ",(i+2)*4);
+		printf("%04x",*(GPIO_memory_address+GPIO_OFFSET+(i+1)));
+		printf("%04x\n",*(GPIO_memory_address+GPIO_OFFSET+(i+2)));
+	}
+
 	printf("\n");
 
 	munmap(GPIO_memory_map,BLOCK_SIZE);
