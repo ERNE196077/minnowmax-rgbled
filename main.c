@@ -25,7 +25,7 @@ int main (){
 	   }
 	GPIO_memory_address = (volatile unsigned int*)GPIO_memory_map;
 
-	printf("Value in %04x :\n", GPIO_address_pointer);
+	printf("Value in %04x :\n", (unsigned int)GPIO_address_pointer);
 
 	printf("HEX: ");
 	for( int i=0 ; i<8 ; i++ )
