@@ -5,18 +5,21 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
 ../dma.c \
+../gpio.c \
 ../main.c \
 ../pwm.c \
 ../ws281x.c 
 
 OBJS += \
 ./dma.o \
+./gpio.o \
 ./main.o \
 ./pwm.o \
 ./ws281x.o 
 
 C_DEPS += \
 ./dma.d \
+./gpio.d \
 ./main.d \
 ./pwm.d \
 ./ws281x.d 
