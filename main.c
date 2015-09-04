@@ -31,10 +31,10 @@ int main (){
 	for( int i=0 ; i<200 ; i+=4)
 	{
 		printf("Offset %02xh : ",i*4);
-		printf("%04x \n",*(GPIO_memory_address+GPIO_OFFSET+i));
+		printf("%04x \n",*(GPIO_memory_address+i));
 		printf("Offset %02xh : ",(i+2)*4);
-		printf("%04x",*(GPIO_memory_address+GPIO_OFFSET+(i+1)));
-		printf("%04x\n",*(GPIO_memory_address+GPIO_OFFSET+(i+2)));
+		printf("%04x",*(GPIO_memory_address+(i+1)));
+		printf("%04x\n",*(GPIO_memory_address+(i+2)));
 	}
 
 	printf("\n");

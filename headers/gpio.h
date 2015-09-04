@@ -49,36 +49,79 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+/*****			GPIO BASE REGISTERS			*****/
+
 #define BLOCK_SIZE			(4*1024)
 #define	GPIO_BASE_SCORE 	0xFED0C000
 #define	GPIO_BASE_SSUS		0xFED0E000
+
+/*****			GPIO PIN REGISTERS			*****/
 
 //#define GPIO_PIN1			GND
 //#define GPIO_PIN2			GND
 //#define GPIO_PIN3			+5v
 //#define GPIO_PIN4			+3.3v
-#define GPIO_PIN5			(GPIO_BASE_SCORE + 272	)	// 0xFED0C000 + 110h
-#define GPIO_PIN6			(GPIO_BASE_SCORE + 24	)	// 0xFED0C000 + 18h
-#define GPIO_PIN7			(GPIO_BASE_SCORE + 288	)	// 0xFED0C000 + 120h
-#define GPIO_PIN8			(GPIO_BASE_SCORE + 32	)	// 0xFED0C000 + 20h
-#define GPIO_PIN9			(GPIO_BASE_SCORE + 304	)	// 0xFED0C000 + 130h
-#define GPIO_PIN10			(GPIO_BASE_SCORE + 64	)	// 0xFED0C000 + 40h
-#define GPIO_PIN11			(GPIO_BASE_SCORE + 256	)	// 0xFED0C000 + 100h
-#define GPIO_PIN12			(GPIO_BASE_SCORE + 0	)	// 0xFED0C000 + 0h
-#define GPIO_PIN13			(GPIO_BASE_SCORE + 320	)	// 0xFED0C000 + 140h
-#define GPIO_PIN14			(GPIO_BASE_SCORE + 208	)	// 0xFED0C000 + D0h
-#define GPIO_PIN15			(GPIO_BASE_SCORE + 336	)	// 0xFED0C000 + 150h
-#define GPIO_PIN16			(GPIO_BASE_SCORE + 192	)	// 0xFED0C000 + C0h
-#define GPIO_PIN17			(GPIO_BASE_SCORE + 70	)	// 0xFED0C000 + 70h
-#define GPIO_PIN18			(GPIO_BASE_SCORE + 240	)	// 0xFED0C000 + F0h
-#define GPIO_PIN19			(GPIO_BASE_SCORE + 96	)	// 0xFED0C000 + 60h
-#define GPIO_PIN20			(GPIO_BASE_SCORE + 224	)	// 0xFED0C000 + E0h
-#define GPIO_PIN21			(GPIO_BASE_SSUS  + 464	)	// 0xFED0E000 + 1D0h
-#define GPIO_PIN22			(GPIO_BASE_SCORE + 160	)	// 0xFED0C000 + A0h
-#define GPIO_PIN23			(GPIO_BASE_SSUS  + 528	)	// 0xFED0E000 + 210h
-#define GPIO_PIN24			(GPIO_BASE_SCORE + 176	)	// 0xFED0C000 + B0h
-#define GPIO_PIN25			(GPIO_BASE_SSUS  + 480	)	// 0xFED0E000 + 1E0
-#define GPIO_PIN26			(GPIO_BASE_SCORE + 1648	)	// 0xFED0C000 + 670h
+#define GPIO_PIN5			(GPIO_BASE_SCORE + 0x110	)
+#define GPIO_PIN6			(GPIO_BASE_SCORE + 0x18		)
+#define GPIO_PIN7			(GPIO_BASE_SCORE + 0x120	)
+#define GPIO_PIN8			(GPIO_BASE_SCORE + 0x20		)
+#define GPIO_PIN9			(GPIO_BASE_SCORE + 0x130	)
+#define GPIO_PIN10			(GPIO_BASE_SCORE + 0x40		)
+#define GPIO_PIN11			(GPIO_BASE_SCORE + 0x100	)
+#define GPIO_PIN12			(GPIO_BASE_SCORE + 0x0		)
+#define GPIO_PIN13			(GPIO_BASE_SCORE + 0x140	)
+#define GPIO_PIN14			(GPIO_BASE_SCORE + 0xD0		)
+#define GPIO_PIN15			(GPIO_BASE_SCORE + 0x150	)
+#define GPIO_PIN16			(GPIO_BASE_SCORE + 0xC0		)
+#define GPIO_PIN17			(GPIO_BASE_SCORE + 0x70		)
+#define GPIO_PIN18			(GPIO_BASE_SCORE + 0xF0		)
+#define GPIO_PIN19			(GPIO_BASE_SCORE + 0x60		)
+#define GPIO_PIN20			(GPIO_BASE_SCORE + 0xE0		)
+#define GPIO_PIN21			(GPIO_BASE_SSUS  + 0x1D0	)
+#define GPIO_PIN22			(GPIO_BASE_SCORE + 0xA0		)
+#define GPIO_PIN23			(GPIO_BASE_SSUS  + 0x210	)
+#define GPIO_PIN24			(GPIO_BASE_SCORE + 0xB0		)
+#define GPIO_PIN25			(GPIO_BASE_SSUS  + 0x1E0	)
+#define GPIO_PIN26			(GPIO_BASE_SCORE + 0x670	)
+
+struct _pin_{
+		char* 		__pin_name__;
+		char* 		__pin_functions__;
+		u_int32_t 	__pin_gpio_address__;
+} gpio_pins[]={
+		{"","",0x0},
+		{"Pin 1","",0x0},
+		{"Pin 2","",0x0},
+		{"Pin 3","",0x0},
+		{"Pin 4","",0x0},
+		{"Pin 5","",GPIO_PIN5},
+		{"Pin 6","",GPIO_PIN6},
+		{"Pin 7","",GPIO_PIN7},
+		{"Pin 8","",GPIO_PIN8},
+		{"Pin 9","",GPIO_PIN9},
+		{"Pin 10","",GPIO_PIN10},
+		{"Pin 11","",GPIO_PIN11},
+		{"Pin 12","",GPIO_PIN12},
+		{"Pin 13","",GPIO_PIN13},
+		{"Pin 14","",GPIO_PIN14},
+		{"Pin 15","",GPIO_PIN15},
+		{"Pin 16","",GPIO_PIN16},
+		{"Pin 17","",GPIO_PIN17},
+		{"Pin 18","",GPIO_PIN18},
+		{"Pin 19","",GPIO_PIN19},
+		{"Pin 20","",GPIO_PIN20},
+		{"Pin 21","",GPIO_PIN21},
+		{"Pin 22","",GPIO_PIN22},
+		{"Pin 23","",GPIO_PIN23},
+		{"Pin 24","",GPIO_PIN24},
+		{"Pin 25","",GPIO_PIN25},
+		{"Pin 26","",GPIO_PIN26},
+		{NULL,NULL,NULL}
+};
+
+
+/*****			GPIO MACROS			*****/
+
 
 
 unsigned long GPIO_address_pointer = GPIO_BASE_SCORE;
