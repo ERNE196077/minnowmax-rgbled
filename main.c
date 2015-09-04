@@ -28,7 +28,7 @@ int main (){
 	printf("Value in %04x :\n", (unsigned int)GPIO_address_pointer);
 
 	printf("HEX: \n");
-	for( int i=0 ; i<30 ; i+=4)
+	for( int i=0 ; i<200 ; i+=4)
 	{
 		printf("Offset %02xh : ",i*4);
 		printf("%04x \n",*(GPIO_memory_address+GPIO_OFFSET+i));
