@@ -79,6 +79,7 @@ int INIT_GPIO(int pin_n){
 		        return -1;
 		   }
 		pin_gpio_t[pin_n]->__pin_gpio_memory_address = (volatile unsigned int*)pin_gpio_t[pin_n]->__pin_gpio_memory_map_;
+		close(pin_gpio_t[pin_n]->__pin_gpio_memory_file__);
 
 
 	return 0;
@@ -86,12 +87,43 @@ int INIT_GPIO(int pin_n){
 
 int CLOSE_GPIO(int pin_n){
 	munmap(pin_gpio_t[pin_n]->__pin_gpio_memory_map_,BLOCK_SIZE);
-	close(pin_gpio_t[pin_n]->__pin_gpio_memory_file__);
 	return 0;
 }
 
 void GET_GPIO_VALUE(int pin_n){
 	printf("%04x\n",*(pin_gpio_t[pin_n]->__pin_gpio_memory_address+pin_gpio_t[pin_n]->__pin_gpio_offset__));
+	printf("%04x\n",*(pin_gpio_t[pin_n]->__pin_gpio_memory_address+pin_gpio_t[pin_n]->__pin_gpio_offset__+2));
+}
+
+
+int 	GET_GPIO_DIR	(int pin_n){
+	return 0;
+}
+
+
+int		SET_GPIO_DIR_INP	(int pin_n){
+	*(pin_gpio_t[pin_n]->__pin_gpio_memory_address+pin_gpio_t[pin_n]->__pin_gpio_offset__+2) |= (2<<0);
+	*(pin_gpio_t[pin_n]->__pin_gpio_memory_address+pin_gpio_t[pin_n]->__pin_gpio_offset__+2) &= ~(5<<0);
+	return 0;
+}
+
+
+int		SET_GPIO_DIR_OUT	(int pin_n){					//OUTPUT
+	*(pin_gpio_t[pin_n]->__pin_gpio_memory_address+pin_gpio_t[pin_n]->__pin_gpio_offset__+2) |= (4<<0);
+	*(pin_gpio_t[pin_n]->__pin_gpio_memory_address+pin_gpio_t[pin_n]->__pin_gpio_offset__+2) &= ~(3<<0);
+	return 0;
+}
+
+
+int 	SET_GPIO_VALUE	(int pin_n){
+	*(pin_gpio_t[pin_n]->__pin_gpio_memory_address+pin_gpio_t[pin_n]->__pin_gpio_offset__+2) |= (1<<0);
+	return 0;
+}
+
+
+int 	CLEAR_GPIO_VALUE	(int pin_n){
+	*(pin_gpio_t[pin_n]->__pin_gpio_memory_address+pin_gpio_t[pin_n]->__pin_gpio_offset__+2) &= ~(1<<0);
+	return 0;
 }
 
 

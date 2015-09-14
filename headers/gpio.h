@@ -104,22 +104,21 @@ typedef struct {
 }_info_gpio_;
 
 
-/*****			GPIO MACROS			*****/
-
-
 /*****			GPIO FUNCTIONS			*****/
 
 int 	INIT_GPIO		(int pin_n);
 int 	CLOSE_GPIO		(int pin_n);
 
 void 	GET_GPIO_VALUE	(int pin_n);
-int 	SET_GPIO_VALUE	(int pin_n, int value);
+int 	SET_GPIO_VALUE	(int pin_n);
+int 	CLEAR_GPIO_VALUE	(int pin_n);
 
 int		GET_GPIO_FUNC	(int pin_n);
 int		SET_GPIO_FUNC	(int pin_n, u_int32_t value);
 
 int 	GET_GPIO_DIR	(int pin_n);
-int		SET_GPIO_DIR	(int pin_n, int value);
+int		SET_GPIO_DIR_INP	(int pin_n);
+int		SET_GPIO_DIR_OUT	(int pin_n);
 
 
 
