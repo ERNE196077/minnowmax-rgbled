@@ -56,8 +56,8 @@
 //#define GPIO_PIN2			GND
 //#define GPIO_PIN3			+5v
 //#define GPIO_PIN4			+3.3v
-#define GPIO_OFF_PIN5			(0x118	/4)
-#define GPIO_OFF_PIN6			(0x18	/4)
+#define GPIO_OFF_PIN5			(0x110	/4)
+#define GPIO_OFF_PIN6			(0x10	/4)
 #define GPIO_OFF_PIN7			(0x120	/4)
 #define GPIO_OFF_PIN8			(0x20	/4)
 #define GPIO_OFF_PIN9			(0x130	/4)
@@ -84,7 +84,8 @@
 
 typedef struct {
 		char* 					__pin_gpio_name__;
-		char* 					__pin_gpio_functions__;
+		char* 					__pin_gpio_function0__;
+		char* 					__pin_gpio_function1__;
 		unsigned long 			__pin_gpio_base_addr_ptr__;
 		u_int32_t 				__pin_gpio_offset__;
 		int 					__pin_gpio_memory_file__;
@@ -96,7 +97,8 @@ typedef struct {
 
 typedef struct {
 		char* 					__pin_gpio_name__;
-		char* 					__pin_gpio_functions__;
+		char* 					__pin_gpio_function0__;
+		char* 					__pin_gpio_function1__;
 		unsigned long 			__pin_gpio_base_addr_ptr__;
 		u_int32_t 				__pin_gpio_offset__;
 
@@ -106,17 +108,19 @@ typedef struct {
 
 /*****			GPIO FUNCTIONS			*****/
 
-int 	INIT_GPIO		(int pin_n);
-int 	CLOSE_GPIO		(int pin_n);
+int 	INIT_GPIO			(int pin_n);
+int 	CLOSE_GPIO			(int pin_n);
+void 	GET_GPIO_STATUS		(int pin_n);
 
-void 	GET_GPIO_VALUE	(int pin_n);
-int 	SET_GPIO_VALUE	(int pin_n);
+void 	GET_GPIO_VALUE		(int pin_n);
+int 	SET_GPIO_VALUE		(int pin_n);
 int 	CLEAR_GPIO_VALUE	(int pin_n);
 
-int		GET_GPIO_FUNC	(int pin_n);
-int		SET_GPIO_FUNC	(int pin_n, u_int32_t value);
+void	GET_GPIO_FUNC		(int pin_n);
+int		SET_GPIO_FUNC		(int pin_n, u_int8_t value);
+void 	GET_GPIO_FUNC_OPT	(int pin_n);
 
-int 	GET_GPIO_DIR	(int pin_n);
+int 	GET_GPIO_DIR		(int pin_n);
 int		SET_GPIO_DIR_INP	(int pin_n);
 int		SET_GPIO_DIR_OUT	(int pin_n);
 
