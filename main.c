@@ -11,7 +11,7 @@
 
 int main (){
 
-	printf("Hello World! Biatc\n");
+	printf("Hello World! Biatch\n");
 
 
 
