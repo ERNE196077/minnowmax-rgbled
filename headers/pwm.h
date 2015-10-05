@@ -32,13 +32,3 @@ void 	PRINT_PWM1_REG		();
 
 
 
-1. Update License Code wizard
-2. FTP Site
-3. FTP Access Information Window:
-		FTP Site: Paste the gfw1.aus.stglabs.ibm.com (9.3.116.249)
-		Username: --use your own UserID (From LUCI - GSA)---
-		Password: --use your own Password (From LUCI - GSA)---
-
-		Accessing a mounted Discovery CD --UNMARKED--	
-
-		Change directory (copy and paste from the release page e.g. "/afs/austin/projects/gfw/images/firenze/b1001a_1542.840/SIGNED")
