@@ -15,9 +15,32 @@
 		int 					__pwm_memory_file__;
 		void 					*__pwm_memory_map_;
 		volatile unsigned int 	*__pwm_memory_address;
-#define PWMCTRL0 	(0x0 / 4)
-#define RESETS0		(804 / 4)
-#define GENERAL0 	(808 / 4)
+
+
+
+
+/*****************************
+
+param:
+
+@: 
+
+*****************************/
+int 	INIT_PWM0			(){
+
+}
+
+
+int 	STOP_PWM0			();
+int 	SET_PWM0_DUTY		(u_int16_t __duty__);
+int 	SET_PWM0_DIV		(u_int8_t __div__);
+void 	PRINT_PWM0_REG		();
+
+int 	INIT_PWM1			();
+int 	STOP_PWM1			();
+int 	SET_PWM1_DUTY		(u_int16_t __duty__);
+int 	SET_PWM1_DIV		(u_int8_t __div__);
+void 	PRINT_PWM1_REG		();
 
 
 int INIT_PWM(){
