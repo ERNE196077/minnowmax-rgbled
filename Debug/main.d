@@ -1,3 +1,3 @@
-main.d: ../main.c ../headers/gpio.h
+main.d: ../main.c ../headers/pwm.h
 
-../headers/gpio.h:
+../headers/pwm.h:

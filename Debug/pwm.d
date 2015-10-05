@@ -1,1 +1,3 @@
-pwm.d: ../pwm.c
+pwm.d: ../pwm.c ../headers/pwm.h
+
+../headers/pwm.h:

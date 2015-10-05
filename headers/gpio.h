@@ -106,7 +106,7 @@ typedef struct {
 }_info_gpio_;
 
 
-/*****			GPIO FUNCTIONS			*****/
+/*****			GPIO PIONS			*****/
 
 int 	INIT_GPIO			(int pin_n);
 int 	CLOSE_GPIO			(int pin_n);

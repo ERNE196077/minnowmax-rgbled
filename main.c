@@ -4,18 +4,28 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <time.h>
 
-#include "headers/gpio.h"
+#include "headers/pwm.h"
 
 
 int main (){
 
-	printf("Hello World! Biatch\n");
+	printf("Hello World! Biatc\n");
 
-INIT_GPIO(24);
-SET_GPIO_VALUE(24);
-GET_GPIO_STATUS(24);
-CLOSE_GPIO(24);
 
+
+INIT_GPIO(22);
+SET_GPIO_FUNC(22,1);
+GET_GPIO_STATUS(22);
+CLOSE_GPIO(22);
+
+/*
+INIT_GPIO(22);
+GET_GPIO_STATUS(22);
+CLOSE_GPIO(22);
+
+INIT_PWM();
+*/
 return 0;
 }
