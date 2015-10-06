@@ -11,18 +11,10 @@
 #include <math.h>
 #include "headers/pwm.h"
 
-		unsigned long 			__pwm_base_addr_ptr__;
-		int 					__pwm_memory_file__;
-		void 					*__pwm_memory_map__;
-		volatile unsigned int 	*__pwm_memory_address;
 
-
-_pwm_device_t *pwm_device_t[2]{
-	{PWM0_BASE_ADDR,0,NULL,0},
-	{PWM1_BASE_ADDR,0,NULL,0}
-};
-
-
+_pwm_device_t_ pwm0 = {PWM0_BASE_ADDR,0,NULL,NULL};
+_pwm_device_t_ pwm1 = {PWM1_BASE_ADDR,0,NULL,NULL};
+_pwm_device_t_ *pwm_device_t[2] = {&pwm0,&pwm1};
 /*
 Map the PWM device into the user memory space.
 
@@ -32,7 +24,9 @@ Map the PWM device into the user memory space.
 
 */
 int 	MAP_PWM				(u_int8_t pwm_n){
-		
+		if ( pwm_device_t[pwm_n] == NULL )
+
+
 		if ( pwm_device_t[pwm_n]->__pwm_memory_map__ != NULL ){
 			printf("PWM%d device already mapped!\n",pwm_n );
 			return -2;
@@ -59,9 +53,9 @@ int 	MAP_PWM				(u_int8_t pwm_n){
 		pwm_device_t[pwm_n]->__pwm_memory_address__ = (volatile unsigned int*)pwm_device_t[pwm_n]->__pwm_memory_map__;
 
 		close(pwm_device_t[pwm_n]->__pwm_memory_file__);
-				printf("0x0:  %04x  ---->  %04x\n",*(__pwm_memory_address+PWMCTRL0),((unsigned long)(__pwm_base_addr_ptr__)));
-				printf("0x804: %04x  ---->  %04x\n",*(__pwm_memory_address+RESETS0),((unsigned long)(__pwm_base_addr_ptr__)));
-				printf("0x808: %04x  ---->  %04x\n",*(__pwm_memory_address+RESETS0),((unsigned long)(__pwm_base_addr_ptr__)));
+//				printf("0x0:  %04x  ---->  %04x\n",*(__pwm_memory_address+PWMCTRL0),((unsigned long)(__pwm_base_addr_ptr__)));
+//			printf("0x804: %04x  ---->  %04x\n",*(__pwm_memory_address+RESETS0),((unsigned long)(__pwm_base_addr_ptr__)));
+//				printf("0x808: %04x  ---->  %04x\n",*(__pwm_memory_address+RESETS0),((unsigned long)(__pwm_base_addr_ptr__)));
 		
 		return 0;
 }
@@ -82,12 +76,12 @@ void 	UNMAP_PWM			(u_int8_t pwm_n){
 }
 
 
-int INIT_PWM(){
+int INIT_PWM(u_int8_t pwm_n){
 
 	
 
 
-	return 0;
+	return 1;
 }
 
 void	PRINT_PWM_STATUS	(u_int8_t pwm_n){
@@ -110,7 +104,7 @@ void	PRINT_PWM_STATUS	(u_int8_t pwm_n){
 		printf("OUTPUT: ENABLED\n");
 
 	pwm_base_unit_b = (*(pwm_device_t[pwm_n]->__pwm_memory_address__) >> 8 ) & 0xFFFF ;
-	printf("FREQUENCY: %.1f", (25/ceil(65536/pwm_base_unit_b)));
+	printf("FREQUENCY: %d\n", 25/(65536/pwm_base_unit_b));
 	
 	pwm_on_time_divisor_b = *(pwm_device_t[pwm_n]->__pwm_memory_address__) & 0xFF ;
 	printf("ON-TIME DIVISOR: %04x",pwm_on_time_divisor_b);

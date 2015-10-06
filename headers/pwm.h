@@ -26,11 +26,10 @@
 
 typedef struct {
 	unsigned long 			__pwm_base_addr_ptr__;
-	u_int32_t 				__pwm_offset__;
 	int 					__pwm_memory_file__;
 	void 					*__pwm_memory_map__;
 	volatile unsigned int 	*__pwm_memory_address__;
-}_pwm_device_t_;
+}_pwm_device_t_ ;
 
 
 /*****			PWM 			*****/
