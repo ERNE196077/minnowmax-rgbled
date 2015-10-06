@@ -1,6 +1,11 @@
 /*
  * gpio.c
  *
+ * GPIO Functionality.
+ * When a GPIO device is read (INIT_GPIO), it's mapping is stored in the respective number of the "pin_gpio_t" table. 
+ * "gpio_pins_t" stores only the main information of the GPIO's (Functions, address, offset).
+ *
+ *
  *  Created on: Sep 3, 2015
  *      Author: minnow
  */
@@ -52,8 +57,14 @@ _info_gpio_ gpio_pins_t[28]={
 };
 
 
-/*****			GPIO FUNCTIONS			*****/
+/*
+Inits the GPIO reading, is needed to run CLOSE_GPIO to unmap the GPIO device. Returns 0 if successful and -1 in error. **NEED TO IMPROVE**
 
+@param	pin_n 	Number of the pin to map and read.
+
+@returns 	0 on successful mapping/reading, -1 on error.
+
+*/
 int INIT_GPIO(int pin_n){
 
 	pin_gpio_t[pin_n]= (_pin_gpio_*)malloc(sizeof(_pin_gpio_));
@@ -86,12 +97,28 @@ int INIT_GPIO(int pin_n){
 	return 0;
 }
 
-int CLOSE_GPIO(int pin_n){
+
+/*
+Unmap the GPIO device and release the memory. **NEED TO IMPROVE**
+
+@param	pin_n 	Number of the pin to map and read.
+
+@returns 	n/a
+
+*/
+void CLOSE_GPIO(int pin_n){
 	munmap(pin_gpio_t[pin_n]->__pin_gpio_memory_map_,BLOCK_SIZE);
-	return 0;
 }
 
 
+/*
+Gather the GPIO pin status, which function is active, the direction and register values for manual debugging
+
+@param	pin_n 	Number of the pin to map and read.
+
+@returns 	n/a
+
+*/
 void GET_GPIO_STATUS(int pin_n){
 	if (!pin_gpio_t[pin_n])
 		printf("STATUS:\t\tNOT READING...\n");
@@ -100,10 +127,8 @@ void GET_GPIO_STATUS(int pin_n){
 
 		printf("FUNCTION:\t");
 		int8_t func=*(pin_gpio_t[pin_n]->__pin_gpio_memory_address+pin_gpio_t[pin_n]->__pin_gpio_offset__) & 0x7;
-		if ( func==0 )
-			printf("%s\n",gpio_pins_t[pin_n].__pin_gpio_function0__);
-		else
-			printf("%s\n",gpio_pins_t[pin_n].__pin_gpio_function1__);
+			printf("%s",gpio_pins_t[pin_n].__pin_gpio_function0__);	if ( func==0 )	printf(" <<ACTIVE>> \n");	else	printf("\n");
+			printf("%s",gpio_pins_t[pin_n].__pin_gpio_function1__);	if ( func==1 )	printf(" <<ACTIVE>> \n");	else	printf("\n");
 
 		printf("DIRECTION:\t");
 		int8_t inp=(*(pin_gpio_t[pin_n]->__pin_gpio_memory_address+pin_gpio_t[pin_n]->__pin_gpio_offset__+2) & 0x4) >> 2;
@@ -126,17 +151,14 @@ void GET_GPIO_STATUS(int pin_n){
 }
 
 
-void GET_GPIO_VALUE(int pin_n){
-	printf("%04x\n",*(pin_gpio_t[pin_n]->__pin_gpio_memory_address+pin_gpio_t[pin_n]->__pin_gpio_offset__));
-	printf("%04x\n",*(pin_gpio_t[pin_n]->__pin_gpio_memory_address+pin_gpio_t[pin_n]->__pin_gpio_offset__+2));
-}
+/*
+Set GPIO as input.	**NEED TO VERIFY IF GPIO IS MAPPED FIRST**
 
+@param	pin_n 	Number of the pin to map and read.
 
-int 	GET_GPIO_DIR	(int pin_n){
-	return 0;
-}
+@returns 	0 when successful.
 
-
+*/
 int		SET_GPIO_DIR_INP	(int pin_n){
 	*(pin_gpio_t[pin_n]->__pin_gpio_memory_address+pin_gpio_t[pin_n]->__pin_gpio_offset__+2) |= (1<<1);
 	*(pin_gpio_t[pin_n]->__pin_gpio_memory_address+pin_gpio_t[pin_n]->__pin_gpio_offset__+2) &= ~(5<<0);
@@ -144,6 +166,14 @@ int		SET_GPIO_DIR_INP	(int pin_n){
 }
 
 
+/*
+Set GPIO as output.	**NEED TO VERIFY IF GPIO IS MAPPED FIRST**
+
+@param	pin_n 	Number of the pin to map and read.
+
+@returns 	0 when successful.
+
+*/
 int		SET_GPIO_DIR_OUT	(int pin_n){					//OUTPUT
 	*(pin_gpio_t[pin_n]->__pin_gpio_memory_address+pin_gpio_t[pin_n]->__pin_gpio_offset__+2) &= ~(1<<2);
 	*(pin_gpio_t[pin_n]->__pin_gpio_memory_address+pin_gpio_t[pin_n]->__pin_gpio_offset__+2) &= ~(3<<0);
@@ -151,34 +181,48 @@ int		SET_GPIO_DIR_OUT	(int pin_n){					//OUTPUT
 }
 
 
+/*
+Set GPIO as as high.	**NEED TO VERIFY IF GPIO IS MAPPED FIRST AND AS OUTPUT**
+
+@param	pin_n 	Number of the pin to map and read.
+
+@returns 	0 when successful.
+
+*/
 int 	SET_GPIO_VALUE	(int pin_n){
 	*(pin_gpio_t[pin_n]->__pin_gpio_memory_address+pin_gpio_t[pin_n]->__pin_gpio_offset__+2) |= (1<<0);
 	return 0;
 }
 
 
+/*
+Set GPIO as as low.	**NEED TO VERIFY IF GPIO IS MAPPED FIRST AND AS OUTPUT**
+
+@param	pin_n 	Number of the pin to map and read.
+
+@returns 	0 when successful.
+
+*/
 int 	CLEAR_GPIO_VALUE	(int pin_n){
 	*(pin_gpio_t[pin_n]->__pin_gpio_memory_address+pin_gpio_t[pin_n]->__pin_gpio_offset__+2) &= ~(1<<0);
 	return 0;
 }
 
 
-void 	GET_GPIO_FUNC_OPT	(int pin_n){
-	printf("0:\t %s\n",gpio_pins_t[pin_n].__pin_gpio_function0__);
-	printf("1:\t %s\n",gpio_pins_t[pin_n].__pin_gpio_function1__);
-}
+/*
+Switch between GPIO or the alternative function
 
+@param	pin_n 	Number of the pin to map and read.
+@param	func 	Number of the function. Usually 0 is GPIO and 1 is the alternative function.
 
-void		GET_GPIO_FUNC		(int pin_n){
-	printf("%02x\n",*(pin_gpio_t[pin_n]->__pin_gpio_memory_address+pin_gpio_t[pin_n]->__pin_gpio_offset__) & 0x7);
-}
+@returns 	0 when successful, -1 when a not supported function is choosen.
 
-
-int		SET_GPIO_FUNC		(int pin_n, u_int8_t value){
-	if ( value > 1 )
+*/
+int		SET_GPIO_FUNC		(int pin_n, u_int8_t func){
+	if ( func > 1 )
 		return -1;
 	*(pin_gpio_t[pin_n]->__pin_gpio_memory_address+pin_gpio_t[pin_n]->__pin_gpio_offset__) &= ~7;
-	*(pin_gpio_t[pin_n]->__pin_gpio_memory_address+pin_gpio_t[pin_n]->__pin_gpio_offset__) |= value;
+	*(pin_gpio_t[pin_n]->__pin_gpio_memory_address+pin_gpio_t[pin_n]->__pin_gpio_offset__) |= func;
 	*(pin_gpio_t[pin_n]->__pin_gpio_memory_address+pin_gpio_t[pin_n]->__pin_gpio_offset__+2) &= ~7;
 	return 0;
 }

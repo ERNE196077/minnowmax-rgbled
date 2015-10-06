@@ -1,8 +1,13 @@
 /*
  * gpio.h
  *
- * Creating the headers of the structs that will be used to connect the
- * application with the GPIO pins.
+ * Structs and macros to control the GPIO functions. Basic operations:
+ * - Change Function
+ * - Init GPIO reading
+ * - Close GPIO reading
+ * - Set High
+ * - Set Low
+ *
  *
  * PIN	FUNCTION
  * 1	GND
@@ -50,7 +55,7 @@
 #define	GPIO_BASE_SSUS		0xFED0E000
 
 
-/*****			GPIO PIN REGISTERS			*****/
+/*****			GPIO PIN REGISTER OFFSETS			*****/
 
 //#define GPIO_PIN1			GND
 //#define GPIO_PIN2			GND
@@ -106,21 +111,17 @@ typedef struct {
 }_info_gpio_;
 
 
-/*****			GPIO PIONS			*****/
+/*****			GPIO FUNCTIONS			*****/
 
 int 	INIT_GPIO			(int pin_n);
-int 	CLOSE_GPIO			(int pin_n);
+void 	CLOSE_GPIO			(int pin_n);
 void 	GET_GPIO_STATUS		(int pin_n);
 
-void 	GET_GPIO_VALUE		(int pin_n);
 int 	SET_GPIO_VALUE		(int pin_n);
 int 	CLEAR_GPIO_VALUE	(int pin_n);
 
-void	GET_GPIO_FUNC		(int pin_n);
 int		SET_GPIO_FUNC		(int pin_n, u_int8_t value);
-void 	GET_GPIO_FUNC_OPT	(int pin_n);
 
-int 	GET_GPIO_DIR		(int pin_n);
 int		SET_GPIO_DIR_INP	(int pin_n);
 int		SET_GPIO_DIR_OUT	(int pin_n);
 
