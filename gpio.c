@@ -112,7 +112,7 @@ void CLOSE_GPIO(int pin_n){
 
 
 /*
-Gather the GPIO pin status, which function is active, the direction and register values for manual debugging
+Gather the GPIO pin status, which function is active, the direction and register values for manual debugging **VALIDATE AGAINST __pin_gpio_memory_map__**
 
 @param	pin_n 	Number of the pin to map and read.
 
