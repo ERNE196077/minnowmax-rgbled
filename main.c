@@ -16,12 +16,18 @@ int main (){
 
 
 
-INIT_GPIO(22);
+//INIT_GPIO(22);
 //SET_GPIO_FUNC(22,1);
-GET_GPIO_STATUS(22);
-CLOSE_GPIO(22);
+//GET_GPIO_STATUS(22);
+//CLOSE_GPIO(22);
 
 MAP_PWM(0);
+int i=0;
+while (i<255){
+SET_PWM_DIV(0,i);
+usleep(500000);
+i++;
+}
 PRINT_PWM_STATUS(0);
 UNMAP_PWM(0);
 /*

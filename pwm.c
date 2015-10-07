@@ -8,7 +8,6 @@
 #include <fcntl.h>
 #include <string.h>
 #include <linux/pci.h>
-#include <math.h>
 #include "headers/pwm.h"
 
 
@@ -77,12 +76,20 @@ void 	UNMAP_PWM			(u_int8_t pwm_n){
 
 
 int INIT_PWM(u_int8_t pwm_n){
-
+	*(pwm_device_t[pwm_n]->__pwm_memory_address__) |= ( 1 << 31 );
 	
 
-
-	return 1;
+	return 0;
 }
+
+int 	SET_PWM_DIV			(u_int8_t pwm_n, u_int8_t div){
+	*(pwm_device_t[pwm_n]->__pwm_memory_address__) &=  ~(0xFF) ;
+	*(pwm_device_t[pwm_n]->__pwm_memory_address__) |=  div ;
+	*(pwm_device_t[pwm_n]->__pwm_memory_address__) |= ( 1 << 30 );
+
+	return 0;
+}
+
 
 void	PRINT_PWM_STATUS	(u_int8_t pwm_n){
 	u_int8_t 	pwm_enable_b, 
@@ -104,9 +111,15 @@ void	PRINT_PWM_STATUS	(u_int8_t pwm_n){
 		printf("OUTPUT: ENABLED\n");
 
 	pwm_base_unit_b = (*(pwm_device_t[pwm_n]->__pwm_memory_address__) >> 8 ) & 0xFFFF ;
-	printf("FREQUENCY: %d\n", 25/(65536/pwm_base_unit_b));
+	float pwm_freq = 25/(65536/(float)pwm_base_unit_b);
+	char* freq_unit = pwm_freq < 0 ? "Mhz" : "Khz";
+	pwm_freq *= pwm_freq > 0 ? 1000 : 1 ;
+	printf("FREQUENCY: %5.2f %s -> %d\n", pwm_freq ,freq_unit, pwm_base_unit_b);
 	
 	pwm_on_time_divisor_b = *(pwm_device_t[pwm_n]->__pwm_memory_address__) & 0xFF ;
-	printf("ON-TIME DIVISOR: %04x",pwm_on_time_divisor_b);
+	printf("ON-TIME DIVISOR: %04x\n",pwm_on_time_divisor_b);
+
+	printf("REGISTRO: \n0x%04x\n",*(pwm_device_t[pwm_n]->__pwm_memory_address__));
+
 }
 
