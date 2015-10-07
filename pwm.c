@@ -127,8 +127,8 @@ Set and update the PWM duty cycle
 @returns	0 if successful, -1 if the value is out of range.
 
 */
-int 	SET_PWM_DUTY		(u_int8_t pwm_n, u_int8_t duty){
-	if ( div < 65536 ){ 
+int 	SET_PWM_DUTY		(u_int8_t pwm_n, u_int16_t duty){
+	if ( duty < 65536 ){
 	*(pwm_device_t[pwm_n]->__pwm_memory_address__) &=  ~( 0xFFFF << 8 ) ;
 	*(pwm_device_t[pwm_n]->__pwm_memory_address__) |=  ( duty << 8 ) ;
 	*(pwm_device_t[pwm_n]->__pwm_memory_address__) |= ( 1 << 30 );
@@ -152,6 +152,7 @@ int 	SET_PWM_DIV			(u_int8_t pwm_n, u_int8_t div){
 	*(pwm_device_t[pwm_n]->__pwm_memory_address__) &=  ~(0xFF) ;
 	*(pwm_device_t[pwm_n]->__pwm_memory_address__) |=  div ;
 	*(pwm_device_t[pwm_n]->__pwm_memory_address__) |= ( 1 << 30 );
+	printf("%04x\n",*(pwm_device_t[pwm_n]->__pwm_memory_address__) &  (0xFF) );
 	return 0;
 	}
 	printf("PWM divisor value out of range\n");
