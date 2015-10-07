@@ -36,8 +36,8 @@ typedef struct {
 
 int 	MAP_PWM				(u_int8_t pwm_n);
 void 	UNMAP_PWM			(u_int8_t pwm_n);
-int 	INIT_PWM			(u_int8_t pwm_n);
-int 	STOP_PWM			(u_int8_t pwm_n);
+void 	INIT_PWM			(u_int8_t pwm_n);
+void 	STOP_PWM			(u_int8_t pwm_n);
 int 	SET_PWM_DUTY		(u_int8_t pwm_n, u_int16_t duty);
 int 	SET_PWM_DIV			(u_int8_t pwm_n, u_int8_t div);
 void 	PRINT_PWM_STATUS	(u_int8_t pwm_n);

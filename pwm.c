@@ -1,4 +1,22 @@
 
+/*
+ * pwm.c
+ *
+ * PWM Functionality
+ * Below are the steps to program the PWM output from scratch:
+ * 	1. Start the user space register mapping (MAP_PWM)
+ * 	2. Program the counter value PWMCTRL.PWM_BASE_UNIT (SET_PWM_DUTY) and PWMCTRL.PWM_ON_TIME_DIVISOR (SET_PWM_DIV)
+ * 	3. Enable PWM output by setting the PWMCTRL.PWM_ENABLE bit (INIT_PWM)
+ *
+ * For update on the fly, follow sequence:
+ * 	1. Program the counter value PWMCTRL.PWM_BASE_UNIT (SET_PWM_DUTY) and/or PWMCTRL.PWM_ON_TIME_DIVISOR (SET_PWM_DIV)
+ *
+ * 
+ *
+ *  Created on: Sep 3, 2015
+ *      Author: minnow
+ */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/mman.h>
@@ -75,22 +93,80 @@ void 	UNMAP_PWM			(u_int8_t pwm_n){
 }
 
 
-int INIT_PWM(u_int8_t pwm_n){
-	*(pwm_device_t[pwm_n]->__pwm_memory_address__) |= ( 1 << 31 );
-	
+/*
+Init the PWM output
 
-	return 0;
+@param	pwm_n	PWM device number, available: 0 or 1.
+
+@returns	n/a
+
+*/
+void 	INIT_PWM			(u_int8_t pwm_n){
+	*(pwm_device_t[pwm_n]->__pwm_memory_address__) |= ( 1 << 31 );
 }
 
+
+/*
+Stop the PWM output
+
+@param	pwm_n	PWM device number, available: 0 or 1.
+
+@returns	n/a
+
+*/
+void 	STOP_PWM			(u_int8_t pwm_n){
+	*(pwm_device_t[pwm_n]->__pwm_memory_address__) &= ~( 1 << 31 );
+}
+
+
+/*
+Set and update the PWM duty cycle
+
+@param	pwm_n	PWM device number, available: 0 or 1.
+
+@returns	0 if successful, -1 if the value is out of range.
+
+*/
+int 	SET_PWM_DUTY		(u_int8_t pwm_n, u_int8_t duty){
+	if ( div < 65536 ){ 
+	*(pwm_device_t[pwm_n]->__pwm_memory_address__) &=  ~( 0xFFFF << 8 ) ;
+	*(pwm_device_t[pwm_n]->__pwm_memory_address__) |=  ( duty << 8 ) ;
+	*(pwm_device_t[pwm_n]->__pwm_memory_address__) |= ( 1 << 30 );
+	return 0;
+	}
+	printf("PWM duty value out of range\n");
+	return -1;
+}
+
+
+/*
+Set and update the PWM On-Time divisor.
+
+@param	pwm_n	PWM device number, available: 0 or 1.
+
+@returns	0 if successful, -1 if the value is out of range
+
+*/
 int 	SET_PWM_DIV			(u_int8_t pwm_n, u_int8_t div){
+	if ( div < 256 ){ 
 	*(pwm_device_t[pwm_n]->__pwm_memory_address__) &=  ~(0xFF) ;
 	*(pwm_device_t[pwm_n]->__pwm_memory_address__) |=  div ;
 	*(pwm_device_t[pwm_n]->__pwm_memory_address__) |= ( 1 << 30 );
-
 	return 0;
+	}
+	printf("PWM divisor value out of range\n");
+	return -1;
 }
 
 
+/*
+Print the status of the PWM interface.
+
+@param	pwm_n	PWM device number, available: 0 or 1.
+
+@returns	n/a
+
+*/
 void	PRINT_PWM_STATUS	(u_int8_t pwm_n){
 	u_int8_t 	pwm_enable_b, 
 				pwm_on_time_divisor_b;
@@ -98,28 +174,28 @@ void	PRINT_PWM_STATUS	(u_int8_t pwm_n){
 
 
 	if ( (pwm_device_t[pwm_n]->__pwm_memory_map__ == NULL) && (pwm_device_t[pwm_n]->__pwm_memory_address__ == 0) ){
-		printf("STATUS: PWM%d NOT READING!\n",pwm_n );
+		printf("Status:\tPWM%d not reading!\n",pwm_n );
 		return;
 	}
 	else
-		printf("STATUS: PWM%d READING\n",pwm_n );
+		printf("Status:\tPWM%d reading...\n",pwm_n );
 
 	pwm_enable_b = (*(pwm_device_t[pwm_n]->__pwm_memory_address__) >> 31 ) & 1 ;
 	if ( pwm_enable_b == 0 )
-		printf("OUTPUT: DISABLED\n");
+		printf("Output:\tDisabled\n");
 	else
-		printf("OUTPUT: ENABLED\n");
+		printf("Output:\tEnabled\n");
 
 	pwm_base_unit_b = (*(pwm_device_t[pwm_n]->__pwm_memory_address__) >> 8 ) & 0xFFFF ;
 	float pwm_freq = 25/(65536/(float)pwm_base_unit_b);
 	char* freq_unit = pwm_freq < 0 ? "Mhz" : "Khz";
 	pwm_freq *= pwm_freq > 0 ? 1000 : 1 ;
-	printf("FREQUENCY: %5.2f %s -> %d\n", pwm_freq ,freq_unit, pwm_base_unit_b);
+	printf("Frequency:\t%5.2f %s -> %d\n", pwm_freq ,freq_unit, pwm_base_unit_b);
 	
 	pwm_on_time_divisor_b = *(pwm_device_t[pwm_n]->__pwm_memory_address__) & 0xFF ;
-	printf("ON-TIME DIVISOR: %04x\n",pwm_on_time_divisor_b);
+	printf("On-Time Divisor:\t%04x\n",pwm_on_time_divisor_b);
 
-	printf("REGISTRO: \n0x%04x\n",*(pwm_device_t[pwm_n]->__pwm_memory_address__));
+	printf("Register Value:\t0x%04x\n",*(pwm_device_t[pwm_n]->__pwm_memory_address__));
 
 }
 

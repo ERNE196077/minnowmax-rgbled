@@ -121,30 +121,30 @@ Gather the GPIO pin status, which function is active, the direction and register
 */
 void GET_GPIO_STATUS(int pin_n){
 	if (!pin_gpio_t[pin_n])
-		printf("STATUS:\t\tNOT READING...\n");
+		printf("Status:\t\tNot reading\n");
 	else{
-		printf("STATUS:\t\tREADING!\n");
+		printf("STATUS:\t\tReading\n");
 
-		printf("FUNCTION:\t");
+		printf("Functions:\t");
 		int8_t func=*(pin_gpio_t[pin_n]->__pin_gpio_memory_address+pin_gpio_t[pin_n]->__pin_gpio_offset__) & 0x7;
 			printf("%s",gpio_pins_t[pin_n].__pin_gpio_function0__);	if ( func==0 )	printf(" <<ACTIVE>> \n");	else	printf("\n");
 			printf("%s",gpio_pins_t[pin_n].__pin_gpio_function1__);	if ( func==1 )	printf(" <<ACTIVE>> \n");	else	printf("\n");
 
-		printf("DIRECTION:\t");
+		printf("Direction:\t");
 		int8_t inp=(*(pin_gpio_t[pin_n]->__pin_gpio_memory_address+pin_gpio_t[pin_n]->__pin_gpio_offset__+2) & 0x4) >> 2;
 		int8_t out=(*(pin_gpio_t[pin_n]->__pin_gpio_memory_address+pin_gpio_t[pin_n]->__pin_gpio_offset__+2) & 0x2) >> 1;
 		if ( (inp == 0) && (out==1) )
-			printf("IN\n");
+			printf("In\n");
 		else{
 			if( ((inp==1) && (out==0)) || ((inp==0) && (out==0)) )
-				printf("OUT\n");
+				printf("Out\n");
 			else{
-				printf("NONE\n");
+				printf("None\n");
 
 			}
 		}
-		printf("VALUE:\t\t%i\n\n",*(pin_gpio_t[pin_n]->__pin_gpio_memory_address+pin_gpio_t[pin_n]->__pin_gpio_offset__+2) & 0x1);
-		printf("REGISTER VALUES:\n");
+		printf("Value:\t\t%i\n\n",*(pin_gpio_t[pin_n]->__pin_gpio_memory_address+pin_gpio_t[pin_n]->__pin_gpio_offset__+2) & 0x1);
+		printf("Register Values:\n");
 		printf("%02x : %04x\n",pin_gpio_t[pin_n]->__pin_gpio_offset__*4,*(pin_gpio_t[pin_n]->__pin_gpio_memory_address+pin_gpio_t[pin_n]->__pin_gpio_offset__));
 		printf("%02x : %04x%04x\n",pin_gpio_t[pin_n]->__pin_gpio_offset__*4+0x8,*(pin_gpio_t[pin_n]->__pin_gpio_memory_address+pin_gpio_t[pin_n]->__pin_gpio_offset__+1),*(pin_gpio_t[pin_n]->__pin_gpio_memory_address+pin_gpio_t[pin_n]->__pin_gpio_offset__+2));
 	}
