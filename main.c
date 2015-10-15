@@ -21,9 +21,12 @@ INIT_GPIO(22);
 GET_GPIO_STATUS(22);
 CLOSE_GPIO(22);
 
-MAP_PWM(0);
-SET_PWM_DUTY(0,13);
-INIT_PWM(0);
+
+GET_REG_VALUE(0x90818000);
+
+//MAP_PWM(0);
+//SET_PWM_DUTY(0,13);
+//INIT_PWM(0);
 /*
 while ( 1 ){
 SET_PWM_DIV(0,0);
@@ -33,7 +36,7 @@ nanosleep((const struct timespec[]){{0, 50710L}}, NULL);
 
 }
 */
-SET_PWM_DIV(0,7);
+//SET_PWM_DIV(0,7);
 
 /*
 int i = 0 ;
@@ -50,8 +53,8 @@ i--;
 }
 }
 */
-PRINT_PWM_STATUS(0);
-UNMAP_PWM(0);
+//RINT_PWM_STATUS(0);
+//UNMAP_PWM(0);
 /*
 INIT_GPIO(22);
 GET_GPIO_STATUS(22);

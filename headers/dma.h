@@ -31,8 +31,8 @@
 /*****			PWM STRUCTURES			*****/
 
 typedef struct dmapage{
-	dmapage *__next__;
-	dmapage *__prev__;
+//	dmapage *__next__;
+//	dmapage *__prev__;
 }_dma_page_;
 
 typedef struct{
@@ -45,9 +45,24 @@ typedef struct{
 	u_int32_t __DAR_L__;			// Destination Address Register
 	u_int32_t __DAR_H__;			// Reserved
 	u_int32_t __LLP_L__;			// Linked List Pointer Register
-	#define DMA_LLP_LOC(value)		()
+	#define DMA_LLP_L_LOC(value)		((value & 0xFFFFFFFF) << 2)		// Starting Address In Memory of next LLI if block chaining is enabled.
+	#define DMA_LLP_L(value)			(value & 0xF)					// Identifies the AHB layer/interface where the memory device that stores the next linked list item resides.
 	u_int32_t __LLP_H__;			// Reserved
 	u_int32_t __CTL_L__;			// Control Register
+	#define DMA_CTL_L_LLP_SRC_EN	(1 << 28)							// Block chaining is enabled on the source side only if the LLP_SRC_EN field is high and LLPx.LOC is non-zero
+	#define DMA_CTL_L_LLP_DST_EN	(1 << 27)							// Block chaining is enabled on the destination side only if the LLP_DST_EN field is high and LLPx.LOC is non-zero.
+	#define DMA_CTL_L_SMS(value)	((value & 0x3) << 25)				// Identifies the Master Interface layer from which the	source device (peripheral or memory) is accessed.
+	#define DMA_CTL_L_DMS(value)
+	#define DMA_CTL_L
+	#define DMA_CTL_L
+	#define DMA_CTL_L
+	#define DMA_CTL_L
+	#define DMA_CTL_L
+	#define DMA_CTL_L
+	#define DMA_CTL_L
+	#define DMA_CTL_L
+	#define DMA_CTL_L
+	#define DMA_CTL_L
 	u_int32_t __CTL_H__;			// Control Register 2
 	u_int32_t __SSTAT_L__;			// Source Status Register
 	u_int32_t __SSTAT_H__;			//
@@ -79,7 +94,7 @@ typedef struct{
 int 	MAP_DMA_CHANNEL		(u_int8_t ch_num);
 void	UNMAP_DMA_CHANNEL	(u_int8_t ch_num);
 void	PRINT_DMA_STATUS	(u_int8_t ch_num);
-void 	INIT_DMA_LIST 		(_dma_item_ *page);
+//void 	INIT_DMA_LIST 		(_dma_item_ *page);
 
 
 

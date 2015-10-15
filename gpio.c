@@ -234,7 +234,7 @@ void	GET_REG_VALUE		(u_int32_t address){
 	}
 	void *memory_map = mmap(
 				NULL,
-				8,
+				4096,
 				PROT_READ|PROT_WRITE,
 				MAP_SHARED,
 				memory_file,
@@ -246,8 +246,9 @@ void	GET_REG_VALUE		(u_int32_t address){
 		        return;
 	}
 	volatile unsigned int 	*memory_address = (volatile unsigned int*)memory_map;
-	printf("Address: %04x\nValue: %04x\n",address,*memory_address);
-	munmap(memory_map);
+	for ( int i = 0 ; i < 400 ; i++ )
+	printf("%04x\t\t%08x\n",(i*4),*(memory_address+i));
+	munmap(memory_map,8);
 	close(memory_file);
 }
 
