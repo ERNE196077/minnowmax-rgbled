@@ -125,7 +125,7 @@ int		SET_GPIO_FUNC		(int pin_n, u_int8_t value);
 int		SET_GPIO_DIR_INP	(int pin_n);
 int		SET_GPIO_DIR_OUT	(int pin_n);
 
-
+void	GET_REG_VALUE		(u_int32_t reg);
 
 
 

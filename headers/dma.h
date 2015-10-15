@@ -31,14 +31,56 @@
 /*****			PWM STRUCTURES			*****/
 
 typedef struct dmapage{
-	dmapage *next;
-	dmapage *prev;
-}_dma_item_;
+	dmapage *__next__;
+	dmapage *__prev__;
+}_dma_page_;
 
+typedef struct{
+	u_int32_t __sar_;
+};
+
+typedef struct{
+	u_int32_t __SAR_L__;			// Source Address Register
+	u_int32_t __SAR_H__;			// Reserved
+	u_int32_t __DAR_L__;			// Destination Address Register
+	u_int32_t __DAR_H__;			// Reserved
+	u_int32_t __LLP_L__;			// Linked List Pointer Register
+	#define DMA_LLP_LOC(value)		()
+	u_int32_t __LLP_H__;			// Reserved
+	u_int32_t __CTL_L__;			// Control Register
+	u_int32_t __CTL_H__;			// Control Register 2
+	u_int32_t __SSTAT_L__;			// Source Status Register
+	u_int32_t __SSTAT_H__;			//
+	u_int32_t __DSTAT_L__;			// Destination Status Register
+	u_int32_t __DSTAT_H__;			//
+	u_int32_t __SSTATAR_L__;		// Source Status Address Register
+	u_int32_t __SSTATAR_H__;		//
+	u_int32_t __DSTATAR_L__;		// Destination Status Address Register
+	u_int32_t __DSTATAR_H__;		//
+	u_int32_t __CFG_L__;			// Configuration Register
+	u_int32_t __CFG_H__;			// Configuration Register 2
+	u_int32_t __SGR_L__;			// Source Gather Register
+	u_int32_t __SGR_H__;			//
+	u_int32_t __DSR_L__;			// Destination Scatter Register
+	u_int32_t __DSR_H__;			// 
+
+
+
+
+
+	unsigned long 			__pwm_base_addr_ptr__;
+	int 					__pwm_memory_file__;
+	void 					*__pwm_memory_map__;
+	volatile unsigned int 	*__pwm_memory_address__;
+}_dma_channel_
 
 
 /*****			DMA 			*****/
+int 	MAP_DMA_CHANNEL		(u_int8_t ch_num);
+void	UNMAP_DMA_CHANNEL	(u_int8_t ch_num);
+void	PRINT_DMA_STATUS	(u_int8_t ch_num);
+void 	INIT_DMA_LIST 		(_dma_item_ *page);
 
-void INIT_DMA_LIST (_dma_item_ *page);
+
 
 

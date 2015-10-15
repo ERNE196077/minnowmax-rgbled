@@ -227,4 +227,27 @@ int		SET_GPIO_FUNC		(int pin_n, u_int8_t func){
 	return 0;
 }
 
+void	GET_REG_VALUE		(u_int32_t address){
+	int memory_file;
+	if (( memory_file = open("/dev/mem",O_RDWR|O_SYNC)) < 0 ){
+		return;
+	}
+	void *memory_map = mmap(
+				NULL,
+				8,
+				PROT_READ|PROT_WRITE,
+				MAP_SHARED,
+				memory_file,
+				address
+				);
+	if ( memory_map == MAP_FAILED ) {
+		        perror("Memory Mapping Failed");
+		        close(memory_file);
+		        return;
+	}
+	volatile unsigned int 	*memory_address = (volatile unsigned int*)memory_map;
+	printf("Address: %04x\nValue: %04x\n",address,*memory_address);
+	munmap(memory_map);
+	close(memory_file);
+}
 
