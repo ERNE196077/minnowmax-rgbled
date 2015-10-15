@@ -29,8 +29,8 @@ _info_gpio_ gpio_pins_t[28]={
 		{"","",0x0},
 		{"Pin 1",	"GND",			"",				0x0},
 		{"Pin 2",	"GND",			"",				0x0},
-		{"Pin 3",	"",				"",				0x0},
-		{"Pin 4",	"",				"",				0x0},
+		{"Pin 3",	"+5v",			"",				0x0},
+		{"Pin 4",	"+3.3v",		"",				0x0},
 		{"Pin 5",	"GPIO66",		"SPI_CS#",		GPIO_BASE_SCORE,	GPIO_OFF_PIN5},
 		{"Pin 6",	"GPIO71",		"UART1_TXD",	GPIO_BASE_SCORE,	GPIO_OFF_PIN6},
 		{"Pin 7",	"GPIO67",		"SPI_MISO",		GPIO_BASE_SCORE,	GPIO_OFF_PIN7},
@@ -125,7 +125,7 @@ void GET_GPIO_STATUS(int pin_n){
 	else{
 		printf("STATUS:\t\tReading\n");
 
-		printf("Functions:\t");
+		printf("Functions:\n");
 		int8_t func=*(pin_gpio_t[pin_n]->__pin_gpio_memory_address+pin_gpio_t[pin_n]->__pin_gpio_offset__) & 0x7;
 			printf("%s",gpio_pins_t[pin_n].__pin_gpio_function0__);	if ( func==0 )	printf(" <<ACTIVE>> \n");	else	printf("\n");
 			printf("%s",gpio_pins_t[pin_n].__pin_gpio_function1__);	if ( func==1 )	printf(" <<ACTIVE>> \n");	else	printf("\n");

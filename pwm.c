@@ -127,8 +127,8 @@ Set and update the PWM duty cycle
 @returns	0 if successful, -1 if the value is out of range.
 
 */
-int 	SET_PWM_DUTY		(u_int8_t pwm_n, u_int8_t duty){
-	if ( div < 65536 ){ 
+int 	SET_PWM_DUTY		(u_int8_t pwm_n, u_int16_t duty){
+	if ( duty < 65536 ){
 	*(pwm_device_t[pwm_n]->__pwm_memory_address__) &=  ~( 0xFFFF << 8 ) ;
 	*(pwm_device_t[pwm_n]->__pwm_memory_address__) |=  ( duty << 8 ) ;
 	*(pwm_device_t[pwm_n]->__pwm_memory_address__) |= ( 1 << 30 );
@@ -152,6 +152,7 @@ int 	SET_PWM_DIV			(u_int8_t pwm_n, u_int8_t div){
 	*(pwm_device_t[pwm_n]->__pwm_memory_address__) &=  ~(0xFF) ;
 	*(pwm_device_t[pwm_n]->__pwm_memory_address__) |=  div ;
 	*(pwm_device_t[pwm_n]->__pwm_memory_address__) |= ( 1 << 30 );
+	//printf("%04x\n",*(pwm_device_t[pwm_n]->__pwm_memory_address__) &  (0xFF) );
 	return 0;
 	}
 	printf("PWM divisor value out of range\n");
@@ -187,7 +188,7 @@ void	PRINT_PWM_STATUS	(u_int8_t pwm_n){
 		printf("Output:\tEnabled\n");
 
 	pwm_base_unit_b = (*(pwm_device_t[pwm_n]->__pwm_memory_address__) >> 8 ) & 0xFFFF ;
-	float pwm_freq = 25/(65536/(float)pwm_base_unit_b);
+	float pwm_freq = 25/(65536/(float)(256*pwm_base_unit_b));
 	char* freq_unit = pwm_freq < 0 ? "Mhz" : "Khz";
 	pwm_freq *= pwm_freq > 0 ? 1000 : 1 ;
 	printf("Frequency:\t%5.2f %s -> %d\n", pwm_freq ,freq_unit, pwm_base_unit_b);

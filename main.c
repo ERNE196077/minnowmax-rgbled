@@ -6,7 +6,7 @@
 #include <fcntl.h>
 #include <time.h>
 #include <math.h>
-
+#include <sys/time.h>
 #include "headers/pwm.h"
 
 
@@ -16,18 +16,40 @@ int main (){
 
 
 
-//INIT_GPIO(22);
+INIT_GPIO(22);
 //SET_GPIO_FUNC(22,1);
-//GET_GPIO_STATUS(22);
-//CLOSE_GPIO(22);
+GET_GPIO_STATUS(22);
+CLOSE_GPIO(22);
 
 MAP_PWM(0);
-int i=0;
-while (i<255){
-SET_PWM_DIV(0,i);
-usleep(500000);
+SET_PWM_DUTY(0,13);
+INIT_PWM(0);
+/*
+while ( 1 ){
+SET_PWM_DIV(0,0);
+nanosleep((const struct timespec[]){{0, 30710L}}, NULL);
+SET_PWM_DIV(0,255);
+nanosleep((const struct timespec[]){{0, 50710L}}, NULL);
+
+}
+*/
+SET_PWM_DIV(0,7);
+
+/*
+int i = 0 ;
+while (1){
+while (i<3){
+	SET_PWM_DIV(0,i);
+	usleep(100000);
 i++;
 }
+while (i>=0){
+	SET_PWM_DIV(0,i);
+	usleep(100000);
+i--;
+}
+}
+*/
 PRINT_PWM_STATUS(0);
 UNMAP_PWM(0);
 /*
