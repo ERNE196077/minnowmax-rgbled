@@ -40,29 +40,29 @@ typedef struct{
 };
 
 typedef struct{
-	u_int32_t __SAR_L__;			// Source Address Register
-	u_int32_t __SAR_H__;			// Reserved
-	u_int32_t __DAR_L__;			// Destination Address Register
-	u_int32_t __DAR_H__;			// Reserved
-	u_int32_t __LLP_L__;			// Linked List Pointer Register
-	#define DMA_LLP_L_LOC(value)		((value & 0xFFFFFFFF) << 2)		// Starting Address In Memory of next LLI if block chaining is enabled.
-	#define DMA_LLP_L(value)			(value & 0xF)					// Identifies the AHB layer/interface where the memory device that stores the next linked list item resides.
-	u_int32_t __LLP_H__;			// Reserved
-	u_int32_t __CTL_L__;			// Control Register
-	#define DMA_CTL_L_LLP_SRC_EN	(1 << 28)							// Block chaining is enabled on the source side only if the LLP_SRC_EN field is high and LLPx.LOC is non-zero
-	#define DMA_CTL_L_LLP_DST_EN	(1 << 27)							// Block chaining is enabled on the destination side only if the LLP_DST_EN field is high and LLPx.LOC is non-zero.
-	#define DMA_CTL_L_SMS(value)	((value & 0x3) << 25)				// Identifies the Master Interface layer from which the	source device (peripheral or memory) is accessed.
-	#define DMA_CTL_L_DMS(value)
-	#define DMA_CTL_L
-	#define DMA_CTL_L
-	#define DMA_CTL_L
-	#define DMA_CTL_L
-	#define DMA_CTL_L
-	#define DMA_CTL_L
-	#define DMA_CTL_L
-	#define DMA_CTL_L
-	#define DMA_CTL_L
-	#define DMA_CTL_L
+	u_int32_t __SAR_L__;					// Source Address Register
+	u_int32_t __SAR_H__;					// Reserved
+	u_int32_t __DAR_L__;					// Destination Address Register
+	u_int32_t __DAR_H__;					// Reserved
+	u_int32_t __LLP_L__;					// Linked List Pointer Register
+	#define DMA_LLP_L_LOC(value)			((value & 0xFFFFFFFF) << 2)			// Starting Address In Memory of next LLI if block chaining is enabled.
+	#define DMA_LLP_L(value)				(value & 0xF)						// Identifies the AHB layer/interface where the memory device that stores the next linked list item resides.
+	u_int32_t __LLP_H__;					// Reserved
+	u_int32_t __CTL_L__;					// Control Register
+	#define DMA_CTL_L_LLP_SRC_EN			(1 << 28)							// Block chaining is enabled on the source side only if the LLP_SRC_EN field is high and LLPx.LOC is non-zero
+	#define DMA_CTL_L_LLP_DST_EN			(1 << 27)							// Block chaining is enabled on the destination side only if the LLP_DST_EN field is high and LLPx.LOC is non-zero.
+	#define DMA_CTL_L_SMS(value)			((value & 0x3) << 25)				// Identifies the Master Interface layer from which the	source device (peripheral or memory) is accessed.
+	#define DMA_CTL_L_DMS(value)			((value & 0x3) << 23)				// Identifies the Master Interface layer where the destination device (peripheral or memory) resides.
+	#define DMA_CTL_L_TT_FC(value)			((value & 0x7) << 20)				// Config Mem-to-Mem, Mem-to-Peri, Pery-to-Mem or Peri-to-Peri. Flow Control can be assigned to the DW_ahb_dmac, the source peripheral, or the destination peripheral.
+	#define DMA_CTL_L_DST_SCATTER_EN		(1 << 18)							// 0 - Disabled; 1 - Enabled
+	#define DMA_CTL_L_SRC_GATHER_EN			(1 << 17)							// 0 - Disabled; 1 - Enabled
+	#define DMA_CTL_L_SRC_MSIZE(value)		((value & 0x7) << 14)				// Number of data items, each of width CTLx.SRC_TR_WIDTH, to be read from the source every time a source burst transaction request is made from either the corresponding hardware or software handshaking interface.
+	#define DMA_CTL_L_DEST_MSIZE(value)		((value & 0x7) << 11)				// Number of data items, each of width CTLx.DST_TR_WIDTH, to be written to the destination every time a destination burst transaction request is made from either the corresponding hardware or software handshaking interface.
+	#define DMA_CTL_L_SINC(value)			((value & 0x3) << 9)				// 00 - Increment, 01 - Decrement, 1x - No Change
+	#define DMA_CTL_L_DINC(value)			((value & 0x3) << 7)				// 00 - Increment, 01 - Decrement, 1x - No Change
+	#define DMA_CTL_L_SRC_TR_WIDTH(value)	((value & 0x7) << 4)				// This value must be less than or equal to DMAH_Mx_HDATA_WIDTH, where x is the AHB layer 1 to 4 where the source resides
+	#define DMA_CTL_L_DST_TR_WIDTH(value)	((value & 0x7) << 1)				// This value must be less than or equal to DMAH_Mk_HDATA_WIDTH, where k is the AHB layer 1 to 4 where the destination resides.
+	#define DMA_CTL_L_INT_EN				(1 << 0)							// If set, then all interrupt-generating sources are enabled.
 	u_int32_t __CTL_H__;			// Control Register 2
 	u_int32_t __SSTAT_L__;			// Source Status Register
 	u_int32_t __SSTAT_H__;			//
