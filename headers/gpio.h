@@ -68,7 +68,7 @@
 #define GPIO_OFF_PIN9			(0x130	/4)
 #define GPIO_OFF_PIN10			(0x40	/4)
 #define GPIO_OFF_PIN11			(0x100	/4)
-#define GPIO_OFF_PIN12			(0x0	/4)
+#define GPIO_OFF_PIN12			(0x0	/4)  -- 
 #define GPIO_OFF_PIN13			(0x140	/4)
 #define GPIO_OFF_PIN14			(0xD0	/4)
 #define GPIO_OFF_PIN15			(0x150	/4)
@@ -96,8 +96,6 @@ typedef struct {
 		int 					__pin_gpio_memory_file__;
 		void 					*__pin_gpio_memory_map_;
 		volatile unsigned int 	*__pin_gpio_memory_address;
-
-
 }_pin_gpio_;
 
 typedef struct {
@@ -106,8 +104,6 @@ typedef struct {
 		char* 					__pin_gpio_function1__;
 		unsigned long 			__pin_gpio_base_addr_ptr__;
 		u_int32_t 				__pin_gpio_offset__;
-
-
 }_info_gpio_;
 
 

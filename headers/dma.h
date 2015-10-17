@@ -64,6 +64,7 @@ typedef struct{
 	#define DMA_CTL_L_DST_TR_WIDTH(value)	((value & 0x7) << 1)				// This value must be less than or equal to DMAH_Mk_HDATA_WIDTH, where k is the AHB layer 1 to 4 where the destination resides.
 	#define DMA_CTL_L_INT_EN				(1 << 0)							// If set, then all interrupt-generating sources are enabled.
 	u_int32_t __CTL_H__;			// Control Register 2
+	#define DMA_CTL_H_DONE
 	u_int32_t __SSTAT_L__;			// Source Status Register
 	u_int32_t __SSTAT_H__;			//
 	u_int32_t __DSTAT_L__;			// Destination Status Register
