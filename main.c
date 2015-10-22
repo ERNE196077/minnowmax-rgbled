@@ -7,60 +7,22 @@
 #include <time.h>
 #include <math.h>
 #include <sys/time.h>
-#include "headers/pwm.h"
+#include "headers/gpio.h"
 
 
 int main (){
 
 	printf("Hello World! Biatch\n");
 
+	volatile gpio_t *gpio_map = MAP_GPIO();
+	printf("%08x\n", gpio_map->__gpio_13_cfg__);
+	printf("%08x\n\n", gpio_map->__gpio_13_val__);
+	GPIO_CFG_FUNCTION(gpio_map->__gpio_13_cfg__,0);
+	gpio_map->__gpio_13_cfg__ |= (1 <<	10);
+	GPIO_VAL_SET(gpio_map->__gpio_13_val__);
+	printf("%08x\n", gpio_map->__gpio_13_cfg__);
+	printf("%08x\n", gpio_map->__gpio_13_val__);
+	UNMAP_GPIO(gpio_map);
 
-
-INIT_GPIO(22);
-//SET_GPIO_FUNC(22,1);
-GET_GPIO_STATUS(22);
-CLOSE_GPIO(22);
-
-
-GET_REG_VALUE(0x90818000);
-
-//MAP_PWM(0);
-//SET_PWM_DUTY(0,13);
-//INIT_PWM(0);
-/*
-while ( 1 ){
-SET_PWM_DIV(0,0);
-nanosleep((const struct timespec[]){{0, 30710L}}, NULL);
-SET_PWM_DIV(0,255);
-nanosleep((const struct timespec[]){{0, 50710L}}, NULL);
-
-}
-*/
-//SET_PWM_DIV(0,7);
-
-/*
-int i = 0 ;
-while (1){
-while (i<3){
-	SET_PWM_DIV(0,i);
-	usleep(100000);
-i++;
-}
-while (i>=0){
-	SET_PWM_DIV(0,i);
-	usleep(100000);
-i--;
-}
-}
-*/
-//RINT_PWM_STATUS(0);
-//UNMAP_PWM(0);
-/*
-INIT_GPIO(22);
-GET_GPIO_STATUS(22);
-CLOSE_GPIO(22);
-
-INIT_PWM();
-*/
 return 0;
 }

@@ -61,60 +61,19 @@
 //#define GPIO_PIN2			GND
 //#define GPIO_PIN3			+5v
 //#define GPIO_PIN4			+3.3v
-#define GPIO_OFF_PIN5			(0x110	/4) 
-#define GPIO_OFF_PIN6			(0x10	/4) 
-#define GPIO_OFF_PIN7			(0x120	/4) 
-#define GPIO_OFF_PIN8			(0x20	/4) 
-#define GPIO_OFF_PIN9			(0x130	/4) 
-#define GPIO_OFF_PIN10			(0x40	/4) 
-#define GPIO_OFF_PIN11			(0x100	/4) 
-#define GPIO_OFF_PIN12			(0x0	/4)  
-#define GPIO_OFF_PIN13			(0x140	/4) 
-#define GPIO_OFF_PIN14			(0xD0	/4) 
-#define GPIO_OFF_PIN15			(0x150	/4) 
-#define GPIO_OFF_PIN16			(0xC0	/4) 
-#define GPIO_OFF_PIN17			(0x70	/4) 
-#define GPIO_OFF_PIN18			(0xF0	/4)  
-#define GPIO_OFF_PIN19			(0x60	/4) 
-#define GPIO_OFF_PIN20			(0xE0	/4)  
-#define GPIO_OFF_PIN21			(0x1D0	/4)
-#define GPIO_OFF_PIN22			(0xA0	/4) 
-#define GPIO_OFF_PIN23			(0x210	/4)
-#define GPIO_OFF_PIN24			(0xB0	/4) 
-#define GPIO_OFF_PIN25			(0x1E0	/4) 
-#define GPIO_OFF_PIN26			(0x670	/4) 
 
-#define GPIO_INPUT				(0X1 << 1)
-#define GPIO_OUTPUT				(0X0 << 1)
-#define GPIO_VALUE(value)		(GPIO_OUTPUT | (value << 0))
-#define GPIO_VALUE_SET			(GPIO_OUTPUT | (1 << 0))
-#define GPIO_VALUE_CLR			GPIO_OUTPUT
-#define GPIO_FUNCTION(func) 	(func << 0)
+#define GPIO_VAL_INPUT(pin_v)			pin_v = (0X1 << 1)
+#define GPIO_VAL_OUTPUT(pin_v)			pin_v = (0X0 << 1)
+#define GPIO_VAL(pin_v, value)			pin_v = 0x0
+#define GPIO_VAL_SET(pin_v)				pin_v = 0x1
+#define GPIO_VAL_CLR(pin_v)				GPIO_VAL_OUTPUT(pin_v)
+#define GPIO_VAL_INPUT_GET(pinv)		(pin_v & 0x1)
+#define GPIO_CFG_FUNCTION(pin_c,func)	pin_c &= ~0x3; pin_c |= func
 
 
 
 
 /*****			GPIO STRUCTURES			*****/
-
-typedef struct {
-		char* 					__pin_gpio_name__;
-		char* 					__pin_gpio_function0__;
-		char* 					__pin_gpio_function1__;
-		unsigned long 			__pin_gpio_base_addr_ptr__;
-		u_int32_t 				__pin_gpio_offset__;
-		int 					__pin_gpio_memory_file__;
-		void 					*__pin_gpio_memory_map_;
-		volatile unsigned int 	*__pin_gpio_memory_address;
-}_pin_gpio_;
-
-typedef struct {
-		char* 					__pin_gpio_name__;
-		char* 					__pin_gpio_function0__;
-		char* 					__pin_gpio_function1__;
-		unsigned long 			__pin_gpio_base_addr_ptr__;
-		u_int32_t 				__pin_gpio_offset__;
-}_info_gpio_;
-
 
 typedef struct{
 	u_int32_t __gpio_12_cfg__;
@@ -198,22 +157,8 @@ typedef struct{
 
 /*****			GPIO FUNCTIONS			*****/
 
-int 	INIT_GPIO			(int pin_n);
-int 	NEW_INIT_GPIO		();
-void 	NEW_CLOSE_GPIO		();
-
-void 	CLOSE_GPIO			(int pin_n);
-void 	GET_GPIO_STATUS		(int pin_n);
-
-int 	SET_GPIO_VALUE		(int pin_n);
-int 	CLEAR_GPIO_VALUE	(int pin_n);
-
-int		SET_GPIO_FUNC		(int pin_n, u_int8_t value);
-
-int		SET_GPIO_DIR_INP	(int pin_n);
-int		SET_GPIO_DIR_OUT	(int pin_n);
-
-void	GET_REG_VALUE		(u_int32_t address);
+void 	*MAP_GPIO			();
+void 	UNMAP_GPIO			(volatile void* map);
 
 
 
