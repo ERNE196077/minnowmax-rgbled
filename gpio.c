@@ -23,6 +23,8 @@
 
 /*****			GPIO VARIABLES			*****/
 
+
+gpio_t gpio_map;
 _pin_gpio_ *pin_gpio_t[26];
 
 _info_gpio_ gpio_pins_t[28]={
@@ -97,6 +99,38 @@ int INIT_GPIO(int pin_n){
 	return 0;
 }
 
+
+
+int NEW_INIT_GPIO(){
+	
+	int file
+	u_int32_t size = sizeof(gpio_t);
+	void *temp_map;
+
+	if (( file = open("/dev/mem",O_RDWR|O_SYNC)) < 0 ){
+			printf("Chingo a su madre, problema de permisos. Resultado: %d\n",pin_gpio_t[pin_n]->__pin_gpio_memory_file__);
+			return -1;
+		}
+
+		temp_map = mmap(
+				NULL,
+				size,
+				PROT_READ|PROT_WRITE,
+				MAP_SHARED,
+				file,
+				GPIO_BASE_SCORE
+				);
+
+		if ( temp_map == MAP_FAILED ) {
+		        perror("Memory Mapping Failed");
+		        return -1;
+		   }
+		gpio_map = (volatile unsigned int*)temp_map;
+		close(file);
+
+
+	return 0;
+}
 
 /*
 Unmap the GPIO device and release the memory. **NEED TO IMPROVE**

@@ -40,6 +40,7 @@ typedef struct{
 };
 
 typedef struct{
+	#define DMA_CHANNEL_BASE(channel)		( channel * (0x58 / 4 ) )
 	u_int32_t __SAR_L__;					// Source Address Register
 	u_int32_t __SAR_H__;					// Reserved
 	u_int32_t __DAR_L__;					// Destination Address Register
