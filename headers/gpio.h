@@ -50,17 +50,12 @@
 
 /*****			GPIO BASE REGISTERS			*****/
 
-#define BLOCK_SIZE			(4*1024)
-#define	GPIO_BASE_SCORE 	0xFED0C000
-#define	GPIO_BASE_SSUS		0xFED0E000
+#define BLOCK_SIZE					(4*1024)
+#define	GPIO_SCORE_BASE_ADDRESS 	0xFED0C000
+#define	GPIO_SSUS_BASE_ADDRESS		0xFED0E000
 
 
-/*****			GPIO PIN REGISTER OFFSETS			*****/
-
-//#define GPIO_PIN1			GND
-//#define GPIO_PIN2			GND
-//#define GPIO_PIN3			+5v
-//#define GPIO_PIN4			+3.3v
+/*****			GPIO MACROS			*****/
 
 #define GPIO_VAL_INPUT(pin_v)			pin_v = (0X1 << 1)
 #define GPIO_VAL_OUTPUT(pin_v)			pin_v = (0X0 << 1)
@@ -69,8 +64,6 @@
 #define GPIO_VAL_CLR(pin_v)				GPIO_VAL_OUTPUT(pin_v)
 #define GPIO_VAL_INPUT_GET(pinv)		(pin_v & 0x1)
 #define GPIO_CFG_FUNCTION(pin_c,func)	pin_c &= ~0x3; pin_c |= func
-
-
 
 
 /*****			GPIO STRUCTURES			*****/
@@ -153,13 +146,4 @@ typedef struct{
 	u_int32_t __gpio_26_val__;	
 	u_int32_t __resv_0x067C__[610];
 } __attribute__ ((packed)) gpio_t;
-
-
-/*****			GPIO FUNCTIONS			*****/
-
-void 	*MAP_GPIO			();
-void 	UNMAP_GPIO			(volatile void* map);
-
-
-
 

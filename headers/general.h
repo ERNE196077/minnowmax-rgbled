@@ -1,29 +1,25 @@
 /*
- * gpio.c
+ * general.h
  *
- * GPIO Functionality.
- * When a GPIO device is read (INIT_GPIO), it's mapping is stored in the respective number of the "pin_gpio_t" table. 
- * "gpio_pins_t" stores only the main information of the GPIO's (Functions, address, offset).
+ * General functions, my assumption is that all the blocks of the IO space address
+ * in the Minnowboard Max are of size 4096. This size will be used to create the
+ * below functions.
  *
- *
- *  Created on: Sep 3, 2015
+ *  Created on: Jul 30, 2015
  *      Author: minnow
  */
 
-#include <stdlib.h>
 #include <stdio.h>
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <string.h>
-
 #include "headers/gpio.h"
 
-/*****			GPIO VARIABLES			*****/
-
-
+#ifndef GENERAL_H_
+#define GENERAL_H_
+#endif /* GENERAL_H_ */
 
 
 /*
@@ -34,10 +30,9 @@ Maps the GPIO structure in the IO memory, is needed to run UNMAP_GPIO to unmap t
 @returns 	Pointer to the mapped gpio structure.
 
 */
-void *MAP_GPIO(){
+void *MAP_DEVICE(u_int32_t address){
 	
 	int file;
-	u_int32_t size = sizeof(gpio_t);
 	void *temp_map;
 
 	if (( file = open("/dev/mem",O_RDWR|O_SYNC)) < 0 ){
@@ -47,11 +42,11 @@ void *MAP_GPIO(){
 
 		temp_map = mmap(
 				NULL,
-				size,
+				4096,
 				PROT_READ|PROT_WRITE,
 				MAP_SHARED,
 				file,
-				GPIO_BASE_SCORE
+				address
 				);
 
 		if ( temp_map == MAP_FAILED ) {
@@ -72,7 +67,8 @@ Unmaps the GPIO structure from the IO memory, it is necessary to mantain clean t
 
 */
 
-void UNMAP_GPIO(volatile void* map){
+void UNMAP_DEVICE(volatile void* map){
 	munmap((void *)map, 4096);
 }
+
 

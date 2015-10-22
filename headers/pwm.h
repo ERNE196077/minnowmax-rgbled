@@ -12,36 +12,21 @@
 #define 	PWM1_PIN_NUM	24
 
 
-/*****			PWM REGISTER OFFSETS			*****/
+/*****			PWM MACROS			*****/
 
-#define 	PWM0_CTRL_OFF	(0x0 / 4)
-#define 	PWM0_RES_OFF	(804 / 4)
-#define 	PWM0_GEN_OFF	(808 / 4)
-#define 	PWM1_CTRL_OFF	(0x0 / 4)
-#define 	PWM1_RES_OFF	(804 / 4)
-#define 	PWM1_GEN_OFF	(808 / 4)
+#define 	PWM_CTRL_ENABLE(pwm_reg)			pwm_reg |= (1 << 31)
+#define 	PWM_CTRL_DISABLE(pwm_reg)			pwm_reg &= ~(1 << 31)
+#define 	PWM_CTRL_BASE_UNIT(pwm_reg,value)	pwm_reg &= ~(0xFFFF << 8); pwm_reg |= (value << 8)
+#define 	PWM_CTRL_ON_DIVISOR(pwm_reg,value)	pwm_reg &= ~0xFF; pwm_reg
 
 
 /*****			PWM STRUCTURES			*****/
 
 typedef struct {
-	unsigned long 			__pwm_base_addr_ptr__;
-	int 					__pwm_memory_file__;
-	void 					*__pwm_memory_map__;
-	volatile unsigned int 	*__pwm_memory_address__;
-}_pwm_device_t_ ;
-
-
-/*****			PWM 			*****/
-
-int 	MAP_PWM				(u_int8_t pwm_n);
-void 	UNMAP_PWM			(u_int8_t pwm_n);
-void 	INIT_PWM			(u_int8_t pwm_n);
-void 	STOP_PWM			(u_int8_t pwm_n);
-int 	SET_PWM_DUTY		(u_int8_t pwm_n, u_int16_t duty);
-int 	SET_PWM_DIV			(u_int8_t pwm_n, u_int8_t div);
-void 	PRINT_PWM_STATUS	(u_int8_t pwm_n);
-
-
-
+	u_int32_t __pwm_ctrl__;
+	u_int32_t __resv_0x0004__[512];
+	u_int32_t __pwm_rest__;
+	u_int32_t __pwm_greg__;
+	u_int32_t __resv_0x080C__[509];
+}__attribute__ ((packed)) pwm_t ;
 
