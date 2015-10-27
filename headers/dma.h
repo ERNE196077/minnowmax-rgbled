@@ -35,9 +35,6 @@ typedef struct dmapage{
 //	dmapage *__prev__;
 }_dma_page_;
 
-typedef struct{
-	u_int32_t __CH0_sar_;
-};
 
 typedef struct{
 	#define DMA_CHANNEL_BASE(channel)			( channel * (0x58 / 4 ) )
@@ -106,7 +103,6 @@ typedef struct{
 	#define DMA_DSR_L_DSC(value)				(value << 20)				// Destination contiguous transfer count between successive scatter boundaries.
 	#define DMA_DSR_L_DSI(value)				(value)						// Specifies the destination address increment/decrement in multiples of CTLx.DST_TR_WIDTH on a scatter boundary, when scatter mode is enabled for the destination transfer.
 	u_int32_t __CH0_DSR_H__;					// Reserved
-
 	u_int32_t __CH1_SAR_L__;					// Source Address Register
 	u_int32_t __CH1_SAR_H__;					// Reserved
 	u_int32_t __CH1_DAR_L__;					// Destination Address Register
@@ -129,7 +125,6 @@ typedef struct{
 	u_int32_t __CH1_SGR_H__;					// Reserved
 	u_int32_t __CH1_DSR_L__;					// Destination Scatter Register
 	u_int32_t __CH1_DSR_H__;					// Reserved
-
 	u_int32_t __CH2_SAR_L__;					// Source Address Register
 	u_int32_t __CH2_SAR_H__;					// Reserved
 	u_int32_t __CH2_DAR_L__;					// Destination Address Register
@@ -152,7 +147,6 @@ typedef struct{
 	u_int32_t __CH2_SGR_H__;					// Reserved
 	u_int32_t __CH2_DSR_L__;					// Destination Scatter Register
 	u_int32_t __CH2_DSR_H__;					// Reserved
-
 	u_int32_t __CH3_SAR_L__;					// Source Address Register
 	u_int32_t __CH3_SAR_H__;					// Reserved
 	u_int32_t __CH3_DAR_L__;					// Destination Address Register
@@ -175,7 +169,6 @@ typedef struct{
 	u_int32_t __CH3_SGR_H__;					// Reserved
 	u_int32_t __CH3_DSR_L__;					// Destination Scatter Register
 	u_int32_t __CH3_DSR_H__;					// Reserved
-
 	u_int32_t __CH4_SAR_L__;					// Source Address Register
 	u_int32_t __CH4_SAR_H__;					// Reserved
 	u_int32_t __CH4_DAR_L__;					// Destination Address Register
@@ -198,7 +191,6 @@ typedef struct{
 	u_int32_t __CH4_SGR_H__;					// Reserved
 	u_int32_t __CH4_DSR_L__;					// Destination Scatter Register
 	u_int32_t __CH4_DSR_H__;					// Reserved
-
 	u_int32_t __CH5_SAR_L__;					// Source Address Register
 	u_int32_t __CH5_SAR_H__;					// Reserved
 	u_int32_t __CH5_DAR_L__;					// Destination Address Register
@@ -221,7 +213,6 @@ typedef struct{
 	u_int32_t __CH5_SGR_H__;					// Reserved
 	u_int32_t __CH5_DSR_L__;					// Destination Scatter Register
 	u_int32_t __CH5_DSR_H__;					// Reserved
-
 	u_int32_t __CH6_SAR_L__;					// Source Address Register
 	u_int32_t __CH6_SAR_H__;					// Reserved
 	u_int32_t __CH6_DAR_L__;					// Destination Address Register
@@ -244,7 +235,6 @@ typedef struct{
 	u_int32_t __CH6_SGR_H__;					// Reserved
 	u_int32_t __CH6_DSR_L__;					// Destination Scatter Register
 	u_int32_t __CH6_DSR_H__;					// Reserved
-
 	u_int32_t __CH7_SAR_L__;					// Source Address Register
 	u_int32_t __CH7_SAR_H__;					// Reserved
 	u_int32_t __CH7_DAR_L__;					// Destination Address Register
@@ -268,11 +258,13 @@ typedef struct{
 	u_int32_t __CH7_DSR_L__;					// Destination Scatter Register
 	u_int32_t __CH7_DSR_H__;					// Reserved
 	u_int32_t __resv_0x02C0__[54];
-
-	unsigned long 			__pwm_base_addr_ptr__;
-	int 					__pwm_memory_file__;
-	void 					*__pwm_memory_map__;
-	volatile unsigned int 	*__pwm_memory_address__;
+	u_int32_t __DMA_CFGREG_L__;					// DW_ahb_dmac Configuration Register
+	#define DMA_DMACFGREG_L_DMA_EN				(0x1)					// 0 - DW_ahb_dmac Disabled; 1 - DW_ahb_dmac Enabled	
+	u_int32_t __resv_0x039C__;
+	u_int32_t __DMA_CHENREG_L__;				// DW_ahb_dmac Channel Enable Register
+	#define DMA_DMACHENREG_L_CH_EN_WE(value)	(1 << (value + 8))		// This register enables the CH_EN to be written in the bit choosen		
+	#define DMA_DMACHENREG_L_CH_EN(value)		(1 << value)			// 0 - Disable the channel; 1 - Enable the channel
+	u_int32_t __resv_0x03A4__[791];
 }_dma_channel_
 
 
