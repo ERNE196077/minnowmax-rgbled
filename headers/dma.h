@@ -267,6 +267,7 @@ typedef struct{
 	u_int32_t __CH7_SGR_H__;					// Reserved
 	u_int32_t __CH7_DSR_L__;					// Destination Scatter Register
 	u_int32_t __CH7_DSR_H__;					// Reserved
+	u_int32_t __resv_0x02C0__[54];
 
 	unsigned long 			__pwm_base_addr_ptr__;
 	int 					__pwm_memory_file__;
