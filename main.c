@@ -14,7 +14,9 @@ int main (){
 
 	printf("Hello World! Biatch\n");
 
-	volatile gpio_t *gpio_map = MAP_GPIO();
+	volatile gpio_t *gpio_map = MAP_DEVICE(0XFED0C000);
+	
+
 	printf("%08x\n", gpio_map->__gpio_13_cfg__);
 	printf("%08x\n\n", gpio_map->__gpio_13_val__);
 	GPIO_CFG_FUNCTION(gpio_map->__gpio_13_cfg__,0);
