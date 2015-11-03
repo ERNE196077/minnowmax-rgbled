@@ -267,11 +267,19 @@ typedef struct{
 	u_int32_t __resv_0x03A4__[791];
 }_dma_channel_
 
+typedef struct _dma_lli_{
+	_dma_lli_ __prev__;
+	_dma_lli_ __next__;
+	void *__address__;
+};
+
 
 /*****			DMA 			*****/
-int 	MAP_DMA_CHANNEL		(u_int8_t ch_num);
-void	UNMAP_DMA_CHANNEL	(u_int8_t ch_num);
-void	PRINT_DMA_STATUS	(u_int8_t ch_num);
+void 		INIT_DMA_LIST 		(_dma_lli_ *head);
+_dma_lli_	*ADD_DMA_ITEM		(_dma_lli_ *head);
+_dma_lli_ 	*NEXT_DMA_ITEM 		(_dma_lli_ *lli);
+_dma_lli_ 	*PREV_DMA_ITEM 		(_dma_lli_ *lli);
+void		PRINT_DMA_STATUS	(u_int8_t ch_num);
 //void 	INIT_DMA_LIST 		(_dma_item_ *page);
 
 

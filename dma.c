@@ -24,3 +24,33 @@
 #include "headers/dma.h"
 
 
+_dma_lli_ llist = NULL;
+
+void INIT_DMA_LIST(_dma_lli_ *head){
+	void *add = head->__address__;
+	memset(add,0,sizeof(add));
+	head->__next__ = head;
+	head->__prev__ = head;
+}
+
+
+
+_dma_lli_ *NEXT_DMA_ITEM (_dma_lli_ *head, _dma_lli_ *lli){
+	_dma_lli_ *temp = head;
+	for ( temp != lli  ){
+		temp = temp->__next__;
+	}
+
+	return temp->__next__;
+}
+
+void PRINT_DMA_LIST(_dma_lli_ head){
+	_dma_lli_ *temp = head;
+	if ( (temp->__next__ == head) && (temp->__prev__ == head) )
+	{
+		printf("1: %08x\n", temp->__address__);
+	}
+	for ( temp != lli  ){
+		temp = temp->__next__;
+	}
+}
