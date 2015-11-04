@@ -30,12 +30,6 @@
 
 /*****			PWM STRUCTURES			*****/
 
-typedef struct dmapage{
-//	dmapage *__next__;
-//	dmapage *__prev__;
-}_dma_page_;
-
-
 typedef struct{
 	#define DMA_CHANNEL_BASE(channel)			( channel * (0x58 / 4 ) )
 	u_int32_t __CH0_SAR_L__;					// Source Address Register
@@ -265,21 +259,21 @@ typedef struct{
 	#define DMA_DMACHENREG_L_CH_EN_WE(value)	(1 << (value + 8))		// This register enables the CH_EN to be written in the bit choosen		
 	#define DMA_DMACHENREG_L_CH_EN(value)		(1 << value)			// 0 - Disable the channel; 1 - Enable the channel
 	u_int32_t __resv_0x03A4__[791];
-}_dma_channel_
+}_dma_channel_;
 
-typedef struct _dma_lli_{
-	_dma_lli_ __prev__;
-	_dma_lli_ __next__;
-	void *__address__;
-};
+typedef struct dma_lli{
+	struct dma_lli *prev;
+	struct dma_lli *next;
+	void *address;
+}_dma_lli_t_;
 
 
 /*****			DMA 			*****/
-void 		INIT_DMA_LIST 		(_dma_lli_ *head);
-_dma_lli_	*ADD_DMA_ITEM		(_dma_lli_ *head);
-_dma_lli_ 	*NEXT_DMA_ITEM 		(_dma_lli_ *lli);
-_dma_lli_ 	*PREV_DMA_ITEM 		(_dma_lli_ *lli);
-void		PRINT_DMA_STATUS	(u_int8_t ch_num);
+void 			INIT_DMA_LIST 		(_dma_lli_t_ *head);
+_dma_lli_t_		*ADD_DMA_ITEM		(_dma_lli_t_ *head);
+_dma_lli_t_ 	*NEXT_DMA_ITEM 		(_dma_lli_t_ *lli);
+_dma_lli_t_ 	*PREV_DMA_ITEM 		(_dma_lli_t_ *lli);
+void			PRINT_DMA_STATUS	(u_int8_t ch_num);
 //void 	INIT_DMA_LIST 		(_dma_item_ *page);
 
 

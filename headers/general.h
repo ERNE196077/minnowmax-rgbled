@@ -15,7 +15,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include "headers/gpio.h"
 
 #ifndef GENERAL_H_
 #define GENERAL_H_
