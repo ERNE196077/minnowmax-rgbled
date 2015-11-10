@@ -17,18 +17,20 @@ int main (){
 
 	printf("Hello World! Biatch\n");
 
-	volatile gpio_t *gpio_map = MAP_DEVICE(GPIO_SCORE_BASE_ADDRESS);
+	//volatile gpio_t *gpio_map = MAP_DEVICE(GPIO_SCORE_BASE_ADDRESS);
 	volatile pwm_t *pwm_map = MAP_DEVICE(PWM0_BASE_ADDR);
 
 
-	printf("%08x\n", gpio_map->__gpio_22_cfg__);
-	printf("%08x\n\n", gpio_map->__gpio_22_val__);
+	//printf("%08x\n", gpio_map->__gpio_22_cfg__);
+	//printf("%08x\n\n", gpio_map->__gpio_22_val__);
+	//GPIO_CFG_FUNCTION(gpio_map->__gpio_22_cfg__,1);
+	PWM_CTRL_ON_DIVISOR(pwm_map->__pwm_ctrl__,20);
+	//PWM_CTRL_BASE_UNIT(pwm_map->__pwm_ctrl__,8);
 
-	PWM_CTRL_BASE_UNIT(pwm_map->__pwm_ctrl__,8);
 	PWM_CTRL_SW_UPDATE(pwm_map->__pwm_ctrl__);
-	PWM_CTRL_ENABLE(pwm_map->__pwm_ctrl__);
+	//PWM_CTRL_ENABLE(pwm_map->__pwm_ctrl__);
 
-	for ( int i = 0 ; i <= 255 ; i++ ){
+	/*for ( int i = 0 ; i <= 255 ; i++ ){
 		PWM_CTRL_ON_DIVISOR(pwm_map->__pwm_ctrl__,i)
 		PWM_CTRL_SW_UPDATE(pwm_map->__pwm_ctrl__);
 		usleep(10000);
@@ -42,10 +44,24 @@ int main (){
 	}
 	PRINT_PWM_STATUS(pwm_map->__pwm_ctrl__);
 
+*/
 
+
+	for (int i=0; i< 20000 ; i++){
+		PWM_CTRL_ON_DIVISOR(pwm_map->__pwm_ctrl__,80);
+		usleep(10);
+		PWM_CTRL_ON_DIVISOR(pwm_map->__pwm_ctrl__,80);
+		usleep(11);
+		PWM_CTRL_ON_DIVISOR(pwm_map->__pwm_ctrl__,80);
+		usleep(10);
+
+		PWM_CTRL_ON_DIVISOR(pwm_map->__pwm_ctrl__,255);
+		usleep(51);
+
+	}
 
 	UNMAP_DEVICE(pwm_map);
-	UNMAP_DEVICE(gpio_map);
+	//UNMAP_DEVICE(gpio_map);
 
 return 0;
 }

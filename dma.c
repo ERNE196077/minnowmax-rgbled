@@ -22,9 +22,9 @@
 #include <string.h>
 #include <linux/pci.h>
 #include "headers/dma.h"
+/*
 
-
-/*_dma_lli_t_ llist = NULL;
+_dma_lli_t_ llist = NULL;
 
 void INIT_DMA_LIST(_dma_lli_t_ *head){
 	void *add = head->address;
@@ -49,4 +49,5 @@ void PRINT_DMA_LIST(_dma_lli_t_ head){
 		printf("1: %08x\n", temp->address);
 	}
 }
+
 */
