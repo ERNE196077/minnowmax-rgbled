@@ -22,14 +22,15 @@
 
 
 /*
-Maps the GPIO structure in the IO memory, is needed to run UNMAP_GPIO to unmap the GPIO device.
+Maps the size of bytes of a structure into IO memory.
 
-@param		n/a
+@param		address		Address of the IO map to be mapped
+@param		size 		Amount of bytes to be reserved
 
 @returns 	Pointer to the mapped gpio structure.
 
 */
-void *MAP_DEVICE(u_int32_t address){
+void *MAP_DEVICE(u_int32_t address, u_int32_t size){
 	
 	int file;
 	void *temp_map;
@@ -41,7 +42,7 @@ void *MAP_DEVICE(u_int32_t address){
 
 		temp_map = mmap(
 				NULL,
-				4096,
+				size,
 				PROT_READ|PROT_WRITE,
 				MAP_SHARED,
 				file,
@@ -53,6 +54,8 @@ void *MAP_DEVICE(u_int32_t address){
 		        return NULL;
 		   }
 
+		fclose(file);
+
 		return (void *)((u_int8_t *)temp_map);
 }
 
@@ -61,13 +64,14 @@ void *MAP_DEVICE(u_int32_t address){
 Unmaps the GPIO structure from the IO memory, it is necessary to mantain clean the system memory.
 
 @param		volatile void *		Mapped gpio structure to be unmapped.
+@param		size				Size of memory to be released
 
 @returns 	n/a
 
 */
 
-void UNMAP_DEVICE(volatile void* map){
-	munmap((void *)map, 4096);
+void UNMAP_DEVICE(volatile void* map, u_int32_t size){
+	munmap((void *)map, size);
 }
 
 
