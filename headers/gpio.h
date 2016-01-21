@@ -50,20 +50,19 @@
 
 /*****			GPIO BASE REGISTERS			*****/
 
-#define BLOCK_SIZE					(4*1024)
-#define	GPIO_SCORE_BASE_ADDRESS 	0xFED0C000
-#define	GPIO_SSUS_BASE_ADDRESS		0xFED0E000
+#define BLOCK_SIZE					4096
+#define	GPIO_SCORE_BASE_ADDRESS 	0xFED0C000				// ALL GPIO's WITH THE EXCEPTION OF 21, 23 & 25
+#define	GPIO_SSUS_BASE_ADDRESS		0xFED0E000+0x1D0		// GPIO's 21, 23 & 25
 
 
 /*****			GPIO MACROS			*****/
 
-#define GPIO_VAL_INPUT(pin_v)			pin_v = (0X1 << 1)
-#define GPIO_VAL_OUTPUT(pin_v)			pin_v = (0X0 << 1)
-#define GPIO_VAL(pin_v, value)			pin_v = 0x0
-#define GPIO_VAL_SET(pin_v)				pin_v = 0x1
-#define GPIO_VAL_CLR(pin_v)				GPIO_VAL_OUTPUT(pin_v)
-#define GPIO_VAL_INPUT_GET(pinv)		(pin_v & 0x1)
-#define GPIO_CFG_FUNCTION(pin_c,func)	pin_c &= ~0x3; pin_c |= func
+#define GPIO_VAL_INPUT(val_reg)				val_reg |= (0X1 << 1);
+#define GPIO_VAL_OUTPUT(val_reg)			val_reg &= ~(0X1 << 1);
+#define GPIO_VAL_SET(val_reg)				val_reg |= 0x1;
+#define GPIO_VAL_CLR(val_reg)				val_reg &= ~0x1;
+#define GPIO_VAL_INPUT_GET(val_reg)			(val_reg & 0x1);
+#define GPIO_CFG_FUNCTION(cfg_reg,func)		cfg_reg &= ~0x7; cfg_reg |= func;
 
 
 /*****			GPIO STRUCTURES			*****/
@@ -143,7 +142,19 @@ typedef struct{
 	u_int32_t __resv_0x015C__[325];
 	u_int32_t __gpio_26_cfg__;
 	u_int32_t __resv_0x0674__;
-	u_int32_t __gpio_26_val__;	
-	u_int32_t __resv_0x067C__[610];
-} __attribute__ ((packed)) gpio_t;
+	u_int32_t __gpio_26_val__;
+} __attribute__ ((packed)) gpio_score_t;
 
+typedef struct{
+	u_int32_t __gpio_21_cfg__;	
+	u_int32_t __resv_0x01D4__;
+	u_int32_t __gpio_21_val__;
+	u_int32_t __resv_0x01DC__;
+	u_int32_t __gpio_25_cfg__;	
+	u_int32_t __resv_0x01E4__;
+	u_int32_t __gpio_25_val__;
+	u_int32_t __resv_0x01EC__[9];
+	u_int32_t __gpio_23_cfg__;	
+	u_int32_t __resv_0x0214__;
+	u_int32_t __gpio_23_val__;
+} __attribute__ ((packed)) gpio_sus_t;
