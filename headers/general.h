@@ -71,7 +71,9 @@ Unmaps the GPIO structure from the IO memory, it is necessary to mantain clean t
 */
 
 void UNMAP_DEVICE(volatile void* map, u_int32_t size){
-	munmap((void *)map, size);
+	int r = munmap((void *)map, size);
+	if( r != 0 )
+		perror("Unmapping memory problem");
 }
 
 
