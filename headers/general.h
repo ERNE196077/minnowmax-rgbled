@@ -31,7 +31,7 @@ Maps the size of bytes of a structure into IO memory.
 
 */
 void *MAP_DEVICE(u_int32_t address, u_int32_t size){
-	
+
 	int file;
 	void *temp_map;
 
@@ -40,21 +40,14 @@ void *MAP_DEVICE(u_int32_t address, u_int32_t size){
 			return NULL;
 		}
 
-		temp_map = mmap(
-				NULL,
-				size,
-				PROT_READ|PROT_WRITE,
-				MAP_SHARED,
-				file,
-				address
-				);
+		temp_map = mmap(NULL, size, PROT_READ|PROT_WRITE, MAP_SHARED, file, address );
+		printf("No pues no\n");
 
 		if ( temp_map == MAP_FAILED ) {
-		        perror("Memory Mapping Failed");
-		        return NULL;
+					        perror("Memory Mapping Failed");
+		        		        return NULL;
 		   }
-
-		fclose(file);
+		close(file);
 
 		return (void *)((u_int8_t *)temp_map);
 }
