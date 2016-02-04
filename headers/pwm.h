@@ -5,7 +5,6 @@
 
 /*****			PWM BASE REGISTERS			*****/
 
-#define 	PWM_BLOCK_SIZE	(4*1024)
 #define 	PWM0_BASE_ADDR	0x90825000
 #define		PWM1_BASE_ADDR	0x90827000 
 #define		PWM0_PIN_NUM	22
@@ -16,8 +15,8 @@
 
 #define 	PWM_CTRL_ENABLE(pwm_reg)			pwm_reg |= (1 << 31);
 #define 	PWM_CTRL_DISABLE(pwm_reg)			pwm_reg &= ~(1 << 31);
-#define 	PWM_CTRL_SW_UPDATE(pwm_reg)			pwm_reg |= (1 << 30);
-#define 	PWM_CTRL_BASE_UNIT(pwm_reg,value)	pwm_reg &= ~(0xFFFF << 8); pwm_reg |= (value << 8);
+#define 	PWM_CTRL_SW_UPDATE(pwm_reg)		pwm_reg |= (1 << 30);
+#define 	PWM_CTRL_BASE_UNIT(pwm_reg,value)		pwm_reg &= ~(0xFFFF << 8); pwm_reg |= (value << 8);
 #define 	PWM_CTRL_ON_DIVISOR(pwm_reg,value)	pwm_reg &= ~0xFF; pwm_reg|=value;
 
 

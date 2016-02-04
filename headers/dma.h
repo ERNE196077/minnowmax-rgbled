@@ -6,7 +6,6 @@
 
 /*****			DMA BASE REGISTERS			*****/
 
-#define 	DMA_BLOCK_SIZE		(4*1024)
 #define 	DMA_BASE_ADDR		0x90818000
 #define		DMA_CHANNEL0_OFF	(0x0  / 4)
 #define		DMA_CHANNEL1_OFF	(0x58  / 4)

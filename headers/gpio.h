@@ -50,7 +50,6 @@
 
 /*****			GPIO BASE REGISTERS			*****/
 
-#define BLOCK_SIZE					4096
 #define	GPIO_SCORE_BASE_ADDRESS 	0xFED0C000				// ALL GPIO's WITH THE EXCEPTION OF 21, 23 & 25
 #define	GPIO_SUS_BASE_ADDRESS		0xFED0E000				// GPIO's 21, 23 & 25 Registers start in 0xFED0E1D0 using a page size multiple.
 
