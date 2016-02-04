@@ -28,6 +28,5 @@ typedef struct {
 	u_int32_t __resv_0x0004__[512];
 	u_int32_t __pwm_rest__;
 	u_int32_t __pwm_greg__;
-	u_int32_t __resv_0x080C__[509];
 }__attribute__ ((packed)) pwm_t;
 

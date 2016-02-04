@@ -52,7 +52,7 @@
 
 #define BLOCK_SIZE					4096
 #define	GPIO_SCORE_BASE_ADDRESS 	0xFED0C000				// ALL GPIO's WITH THE EXCEPTION OF 21, 23 & 25
-#define	GPIO_SUS_BASE_ADDRESS		0xFED0E1D0				// GPIO's 21, 23 & 25
+#define	GPIO_SUS_BASE_ADDRESS		0xFED0E000				// GPIO's 21, 23 & 25 Registers start in 0xFED0E1D0 using a page size multiple.
 
 
 /*****			GPIO MACROS			*****/
@@ -146,6 +146,7 @@ typedef struct{
 } __attribute__ ((packed)) gpio_score_t;
 
 typedef struct{
+	u_int32_t __resv_0x0000__[116];
 	u_int32_t __gpio_21_cfg__;	
 	u_int32_t __resv_0x01D4__;
 	u_int32_t __gpio_21_val__;
