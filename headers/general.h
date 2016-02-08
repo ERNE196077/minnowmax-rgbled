@@ -1,3 +1,7 @@
+#ifndef GENERAL_H_
+#define GENERAL_H_
+#endif /* GENERAL_H_ */
+
 /*
  * general.h
  *
@@ -15,10 +19,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
-
-#ifndef GENERAL_H_
-#define GENERAL_H_
-#endif /* GENERAL_H_ */
 
 
 /*
