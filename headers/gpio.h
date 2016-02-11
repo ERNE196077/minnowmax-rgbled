@@ -158,3 +158,10 @@ typedef struct{
 	u_int32_t __resv_0x0214__;
 	u_int32_t __gpio_23_val__;
 } __attribute__ ((packed)) gpio_sus_t;
+
+typedef struct{
+	u_int32_t __gpio_cfg__;	
+	u_int32_t __resv__;
+	u_int32_t __gpio_val__;
+	
+}__attribute__ ((packed)) gpio_t;

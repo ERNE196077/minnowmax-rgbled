@@ -18,7 +18,7 @@ int main (){
 	printf("%ld\n",sysconf(_SC_PAGESIZE));
 
 	volatile gpio_score_t *gpio_score = MAP_DEVICE(GPIO_SCORE_BASE_ADDRESS, sizeof(gpio_score_t));
-
+	gpio_t *gpio26 = (gpio_score+)
 
 	//printf("%08x\n", gpio_map->__gpio_22_cfg__);
 	//printf("%08x\n\n", gpio_map->__gpio_22_val__);
