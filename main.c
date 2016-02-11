@@ -18,9 +18,9 @@ int main (){
 	printf("%ld\n",sysconf(_SC_PAGESIZE));
 
 	volatile gpio_score_t *gpio_score = MAP_DEVICE(GPIO_SCORE_BASE_ADDRESS, sizeof(gpio_score_t));
-	gpio_t *gpio26 = (gpio_score+)
+	gpio_t *gpio26 = (gpio_t *)(gpio_score+GPIO_26_OFFSET);
 
-	//printf("%08x\n", gpio_map->__gpio_22_cfg__);
+	printf("%08x\n", gpio26->__gpio_val__);
 	//printf("%08x\n\n", gpio_map->__gpio_22_val__);
 	//GPIO_CFG_FUNCTION(gpio_map->__gpio_22_cfg__,1);
 	//PWM_CTRL_ON_DIVISOR(pwm_map->__pwm_ctrl__,20);
