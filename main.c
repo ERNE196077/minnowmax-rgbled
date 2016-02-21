@@ -15,20 +15,24 @@
 
 int main (){
 
-	printf("%ld\n",sysconf(_SC_PAGESIZE));
+	volatile u_int32_t *base = MAP_DEVICE(GPIO_SCORE_BASE_ADDRESS, BLOCK_SIZE);
 
-	volatile gpio_score_t *gpio_score = MAP_DEVICE(GPIO_SCORE_BASE_ADDRESS, sizeof(gpio_score_t));
-	gpio_t *gpio26 = ((gpio_t *)gpio_score)+(GPIO_26_OFFSET/4);
+	volatile gpio_t *gpio6 = GPIO_MAP(6,base)
+		//printf("%08x\n\n", gpio_map->__gpio_22_val__);
+	//GPIO_CFG_FUNCTION(gpio6->__gpio_cfg__,0);
+	//GPIO_VAL_OUTPUT(gpio6->__gpio_val__);
+	GPIO_VAL_CLR(gpio6->__val__);
 
-	printf("%08x\n", gpio26->__gpio_cfg__);
-	//printf("%08x\n\n", gpio_map->__gpio_22_val__);
-	//GPIO_CFG_FUNCTION(gpio_map->__gpio_22_cfg__,1);
-	//PWM_CTRL_ON_DIVISOR(pwm_map->__pwm_ctrl__,20);
+
+			printf("%08x\n", gpio6->__val__);
+			printf("%08x\n", gpio6->__cfg__);
+				//PWM_CTRL_ON_DIVISOR(pwm_map->__pwm_ctrl__,20);
 	//PWM_CTRL_BASE_UNIT(pwm_map->__pwm_ctrl__,8);
 
 	//PWM_CTRL_SW_UPDATE(pwm_map->__pwm_ctrl__);
 	//PWM_CTRL_ENABLE(pwm_map->__pwm_ctrl__);
-	UNMAP_DEVICE(gpio_score, sizeof(gpio_score_t));
+
+			UNMAP_DEVICE(base,4096);
 
 return 0;
 }

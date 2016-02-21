@@ -21,6 +21,11 @@
 #include <fcntl.h>
 
 
+/*****			PWM REGISTER OFFSETS			*****/
+
+#define BLOCK_SIZE	4096
+
+
 /*
 Maps the size of bytes of a structure into IO memory.
 
