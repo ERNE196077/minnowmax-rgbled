@@ -11,9 +11,9 @@
  *      Author: minnow
  */
 
-#include "headers/dma.h"
-#include "headers/gpio.h"
-#include "headers/pwm.h"
+//#include "headers/dma.h"
+//#include "headers/gpio.h"
+//#include "headers/pwm.h"
 
 
 /*****			WS281X DEFAULT VALUES			*****/
@@ -27,22 +27,31 @@
 
 
  /*****			WS281X STRUCTURES			*****/
+typedef struct {
+	u_int8_t r;
+	u_int8_t g;
+	u_int8_t b;
+}led_t;
 
-typedef struct ws281x_devices_t;
 
+//typedef struct ws281x_devices_t;
+/*
 typedef struct
 {
 	u_int32_t			__lednumber__:
 	u_int32_t			__gpio_pinnumber__;
 	u_int32_t			__dma_channel__;
+
 	pwm_fifo_t			__pwm_fifo__;
 	ws281x_devices_t 	__devices__;
 	
 }__attribute__ ((packed)) ws281x_t;
 
-
+*/
 /*****			WS281X FUNCTIONS			*****/
 
+
+/*
 int 		ws281x_init					(ws281x_t *ws281x);
 int 		ws281x_deinit				(ws281x_t *ws281x);
 int 		ws281x_devices_map			(ws281x_devices_t *devices);
@@ -53,3 +62,4 @@ void		ws281x_pwmfifo_set			(ws281x_t *ws281x);
 void		ws281x_dma_init				(ws281x_devices_t *devices);
 void		ws281x_dma_deint			(ws281x_devices_t *devices);
 
+*/
