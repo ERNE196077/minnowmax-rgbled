@@ -14,16 +14,7 @@
 #include "headers/ws281x.h"
 
 
-led_t led_array[3] = {{255,0,0},{0,255,0},{0,0,255}};
 
-ws281x_t myws281x = {
-	.lednumber = 3 ;
-	.ledarray = led_array ;
-	.gpio_pinnumber = 22 ;
-	.dma_channel = 2 ;
-	ws281x_devices 		*devices;
-	
-};
 
 
 int main (){
@@ -34,15 +25,25 @@ int main (){
 
 	volatile gpio_t *gpio22 = GPIO_MAP(22,gpio_base)
 
-	u_int32_t high = PWM_ENABLE | PWM_SW_UPDATE | PWM_BASE_UNIT(2120) | PWM_ON_TIME_DIVISOR(WS281X_PWM_BIT_HIGH);;
-	u_int32_t low = PWM_ENABLE | PWM_SW_UPDATE | PWM_BASE_UNIT(2120) | PWM_ON_TIME_DIVISOR(WS281X_PWM_BIT_LOW);
+		led_t led_array[3] = {{255,0,0},{0,255,0},{0,0,255}};
+
 
 	printf ( "%d , %d , %d  \n",led_array[0].r, led_array[0].g, led_array[0].b);
 	printf ( "%d , %d , %d  \n",led_array[1].r, led_array[1].g, led_array[1].b);
 	printf ( "%d , %d , %d  \n",led_array[2].r, led_array[2].g, led_array[2].b);
 
 
-	ws281x_int(myws281x);
+	ws281x_t myws281x = {
+		.lednumber = 3 ,
+		.ledarray = (led_t *)led_array ,
+		.gpio_pinnumber = 22 ,
+		.dma_channel = 2
+
+	};
+
+
+
+	ws281x_init(&myws281x);
 
 		//printf("%08x\n\n", gpio_map->__gpio_22_val__);
 //	GPIO_CFG_FUNCTION(gpio22->__cfg__,1);
@@ -58,252 +59,6 @@ int main (){
 	}
 
 */
-		while(0){
-			pwm_base->__pwm_ctrl__ = PWM_ENABLE | PWM_SW_UPDATE
-								| PWM_BASE_UNIT(2120) | PWM_ON_TIME_DIVISOR(0);
-						usleep(50);
-	/////////GREEEEEEEN
-						pwm_base->__pwm_ctrl__ = high;
-							while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-							pwm_base->__pwm_ctrl__ = high;
-							while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-							pwm_base->__pwm_ctrl__ = high;
-							while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-							pwm_base->__pwm_ctrl__ = high;
-							while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-							pwm_base->__pwm_ctrl__ = high;
-							while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-							pwm_base->__pwm_ctrl__ = high;
-							while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-							pwm_base->__pwm_ctrl__ = high;
-							while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-							pwm_base->__pwm_ctrl__ = high;
-							while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-
-
-
-
-
-
-	/////////////BLUEEEEEE
-
-							pwm_base->__pwm_ctrl__ = low;
-				while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-			pwm_base->__pwm_ctrl__ = low;
-			while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-			pwm_base->__pwm_ctrl__ = low;
-			while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-			pwm_base->__pwm_ctrl__ = low;
-			while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-			pwm_base->__pwm_ctrl__ = low;
-			while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-			pwm_base->__pwm_ctrl__ = low;
-			while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-
-		pwm_base->__pwm_ctrl__ = low;
-			while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-			pwm_base->__pwm_ctrl__ = low;
-			while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-	/////////////RED
-			pwm_base->__pwm_ctrl__ = low;
-				while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-				pwm_base->__pwm_ctrl__ = low;
-				while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-				pwm_base->__pwm_ctrl__ = low;
-				while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-				pwm_base->__pwm_ctrl__ = low;
-				while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-				pwm_base->__pwm_ctrl__ = low;
-				while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-				pwm_base->__pwm_ctrl__ = low;
-				while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-				pwm_base->__pwm_ctrl__ = low;
-				while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-				pwm_base->__pwm_ctrl__ = low;
-				while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-
-/***************** LED 222222222222222222222222222222******//////////
-	/////////REEEEEEED
-	pwm_base->__pwm_ctrl__ = low;
-	while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-	pwm_base->__pwm_ctrl__ = low;
-	while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-	pwm_base->__pwm_ctrl__ = low;
-	while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-	pwm_base->__pwm_ctrl__ = low;
-	while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-	pwm_base->__pwm_ctrl__ = low;
-	while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-	pwm_base->__pwm_ctrl__ = low;
-	while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-	pwm_base->__pwm_ctrl__ = low;
-	while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-	pwm_base->__pwm_ctrl__ = low;
-	while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-		/////////////GREEEEN
-
-
-
-		pwm_base->__pwm_ctrl__ = high;
-				while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-				pwm_base->__pwm_ctrl__ = high;
-				while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-				pwm_base->__pwm_ctrl__ = high;
-				while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-				pwm_base->__pwm_ctrl__ = high;
-				while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-				pwm_base->__pwm_ctrl__ = high;
-				while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-				pwm_base->__pwm_ctrl__ = high;
-				while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-				pwm_base->__pwm_ctrl__ = high;
-				while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-				pwm_base->__pwm_ctrl__ = high;
-				while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-		/////////////BLUEEEEEEEEE
-
-		pwm_base->__pwm_ctrl__ = low;
-		while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-		pwm_base->__pwm_ctrl__ = low;
-		while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-		pwm_base->__pwm_ctrl__ = low;
-		while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-		pwm_base->__pwm_ctrl__ = low;
-		while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-		pwm_base->__pwm_ctrl__ = low;
-		while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-		pwm_base->__pwm_ctrl__ = low;
-		while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-		pwm_base->__pwm_ctrl__ = low;
-		while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-		pwm_base->__pwm_ctrl__ = low;
-		while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-
-		/////////REEEEEEED
-
-
-		pwm_base->__pwm_ctrl__ = low;
-		while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-		pwm_base->__pwm_ctrl__ = low;
-		while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-		pwm_base->__pwm_ctrl__ = low;
-		while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-		pwm_base->__pwm_ctrl__ = low;
-		while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-		pwm_base->__pwm_ctrl__ = low;
-		while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-		pwm_base->__pwm_ctrl__ = low;
-		while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-		pwm_base->__pwm_ctrl__ = low;
-		while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-		pwm_base->__pwm_ctrl__ = low;
-		while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-			/////////////GREEEEN
-
-			pwm_base->__pwm_ctrl__ = low;
-			while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-			pwm_base->__pwm_ctrl__ = low;
-			while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-			pwm_base->__pwm_ctrl__ = low;
-			while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-			pwm_base->__pwm_ctrl__ = low;
-			while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-			pwm_base->__pwm_ctrl__ = low;
-			while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-			pwm_base->__pwm_ctrl__ = low;
-			while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-			pwm_base->__pwm_ctrl__ = low;
-			while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-			pwm_base->__pwm_ctrl__ = low;
-			while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-
-			/////////////BLUEEEEEEEEE
-			pwm_base->__pwm_ctrl__ = high;
-			while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-			pwm_base->__pwm_ctrl__ = high;
-			while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-			pwm_base->__pwm_ctrl__ = high;
-			while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-			pwm_base->__pwm_ctrl__ = high;
-			while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-			pwm_base->__pwm_ctrl__ = high;
-			while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-			pwm_base->__pwm_ctrl__ = high;
-			while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-			pwm_base->__pwm_ctrl__ = high;
-			while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-			pwm_base->__pwm_ctrl__ = high;
-			while (pwm_base->__pwm_ctrl__ & PWM_SW_UPDATE) ;
-
-	pwm_base->__pwm_ctrl__ = PWM_ENABLE | PWM_SW_UPDATE
-			| PWM_BASE_UNIT(2120) | PWM_ON_TIME_DIVISOR(0);
-	usleep(50);
-		}
 			printf("%08x\n", gpio22->__val__);
 			printf("%08x\n", gpio22->__cfg__);
 			printf("%08x\n", pwm_base->__pwm_ctrl__);
