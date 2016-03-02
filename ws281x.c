@@ -91,26 +91,29 @@ volatile u_int32_t *fifo_data = ws281x->devices->fifo_data;
 
 int ws281x_init (ws281x_t *ws281x){
 
-ws281x_devices_t *devices = ws281x->devices;
-volatile gpio_t *gpio = devices->gpio_dev;
-volatile pwm_t *pwm = devices->pwm_dev;
-volatile dma_t *dma = devices->dma_dev;
-volatile u_int32_t *fifo_data = devices->fifo_data;
+ws281x_devices_t *devices;
+ws281x->devices = malloc(sizeof(*ws281x->devices));
+devices = ws281x->devices;
+//volatile gpio_t *gpio = devices->gpio_dev;
+//volatile pwm_t *pwm = devices->pwm_dev;
+//volatile dma_t *dma = devices->dma_dev;
 u_int8_t gpio_pinnumber = ws281x->gpio_pinnumber;
 	
 	if( (gpio_pinnumber != 22) && (gpio_pinnumber != 24) )
 		return -1;
 
-	fifo_data = (malloc(BYTECOUNT(ws281x->lednumber));
+	devices->fifo_data = malloc(BYTECOUNT(ws281x->lednumber));
 
-	if( !fifo_data)
-		return -1;
+	if( !devices->fifo_data)
+	return -1;
 
-memset(fifo_data, 0, BYTECOUNT(ws281x->lednumber));
-ws281x_pwmfifo_init (ws281x);  // Will be move after few tests.
+u_int32_t *word = &((u_int32_t *)devices->fifo_data)[0];
+*word = 0x091231;
+//memset((u_int32_t *)fifo, 0, BYTECOUNT(ws281x->lednumber));
+//ws281x_pwmfifo_init (ws281x);  // Will be move after few tests.
 
-for ( int i = 0 ; i < 24 ; i++)
-printf("%d\n", devices->fifo_data[i] );
+for ( int i = 0 ; i < 24  ; i++)
+printf("%08x\n", devices->fifo_data[i]	 	 );
 
 return 0 ;
 }
