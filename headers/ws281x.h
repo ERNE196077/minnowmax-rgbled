@@ -54,9 +54,9 @@ int 		ws281x_init					(ws281x_t *ws281x);
 int 		ws281x_deinit				(ws281x_t *ws281x);
 //int 		ws281x_devices_map			(ws281x_devices_t *devices);
 //void 		ws281x_devices_unmap 		(ws281x_devices_t *devices);
-int 		ws281x_pwmfifo_init			(ws281x_t *ws281x);
-void 		ws281x_pwmfifo_deinit		(ws281x_t *ws281x);
-void		ws281x_pwmfifo_set			(ws281x_t *ws281x);
+int 		ws281x_fifo_init			(ws281x_t *ws281x);
+void 		ws281x_fifo_deinit		(ws281x_t *ws281x);
+void		ws281x_fifo_set			(ws281x_t *ws281x);
 //void		ws281x_dma_init				(ws281x_devices_t *devices);
 //void		ws281x_dma_deint			(ws281x_devices_t *devices);
 
