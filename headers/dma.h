@@ -15,6 +15,7 @@
 #define		DMA_CHANNEL5_OFF	(0x1B8  / 4)
 #define		DMA_CHANNEL6_OFF	(0x210  / 4)
 #define		DMA_CHANNEL7_OFF	(0x268  / 4)
+#define     DMA_DMACCFG_OFF		(0x398 / 4)
 
 
 /*****			PWM REGISTER OFFSETS			*****/
@@ -31,15 +32,15 @@
 
 typedef struct{
 	#define DMA_CHANNEL_BASE(channel)			( channel * (0x58 / 4 ) )
-	u_int32_t __CH0_SAR_L__;					// Source Address Register
-	u_int32_t __CH0_SAR_H__;					// Reserved
-	u_int32_t __CH0_DAR_L__;					// Destination Address Register
-	u_int32_t __CH0_DAR_H__;					// Reserved
-	u_int32_t __CH0_LLP_L__;					// Linked List Pointer Register
+	u_int32_t __sar_l__;						// Source Address Register
+	u_int32_t __rsv_0x04__;						// Reserved
+	u_int32_t __dar_l__;						// Destination Address Register
+	u_int32_t __rsv_0x0c__;						// Reserved
+	u_int32_t __llp_l__;						// Linked List Pointer Register
 	#define DMA_LLP_L_LOC(value)				(value << 2)				// Starting Address In Memory of next LLI if block chaining is enabled.
 	#define DMA_LLP_L(value)					(value)						// Identifies the AHB layer/interface where the memory device that stores the next linked list item resides.
-	u_int32_t __CH0_LLP_H__;					// Reserved
-	u_int32_t __CH0_CTL_L__;					// Control Register
+	u_int32_t __rsv_0x14__;						// Reserved
+	u_int32_t __ctl_l__;						// Control Register
 	#define DMA_CTL_L_LLP_SRC_EN				(1 << 28)					// Block chaining is enabled on the source side only if the LLP_SRC_EN field is high and LLPx.LOC is non-zero
 	#define DMA_CTL_L_LLP_DST_EN				(1 << 27)					// Block chaining is enabled on the destination side only if the LLP_DST_EN field is high and LLPx.LOC is non-zero.
 	#define DMA_CTL_L_SMS(value)				(value & 0x3) << 25)		// Identifies the Master Interface layer from which the	source device (peripheral or memory) is accessed.
@@ -54,18 +55,18 @@ typedef struct{
 	#define DMA_CTL_L_SRC_TR_WIDTH(value)		(value << 4)				// This value must be less than or equal to DMAH_Mx_HDATA_WIDTH, where x is the AHB layer 1 to 4 where the source resides
 	#define DMA_CTL_L_DST_TR_WIDTH(value)		(value << 1)				// This value must be less than or equal to DMAH_Mk_HDATA_WIDTH, where k is the AHB layer 1 to 4 where the destination resides.
 	#define DMA_CTL_L_INT_EN					(1 << 0)					// If set, then all interrupt-generating sources are enabled.
-	u_int32_t __CH0_CTL_H__;					// Control Register 2
+	u_int32_t __ctl_h__;						// Control Register 2
 	#define DMA_CTL_H_DONE						(1 << 12)					// Software can poll the LLI CTLx.DONE bit to see when a block transfer is complete. 
 	#define DMA_CTL_H_BLOCK_TS(value)			(value)						//  When the DW_ahb_dmac is the flow controller, the user writes this field before the channel is enabled, to indicate the block size
-	u_int32_t __CH0_SSTAT_L__;					// Source Status Register
-	u_int32_t __CH0_SSTAT_H__;					// Reserved
-	u_int32_t __CH0_DSTAT_L__;					// Destination Status Register
-	u_int32_t __CH0_DSTAT_H__;					// Reserved
-	u_int32_t __CH0_SSTATAR_L__;				// Source Status Address Register
-	u_int32_t __CH0_SSTATAR_H__;				// Reserved
-	u_int32_t __CH0_DSTATAR_L__;				// Destination Status Address Register
-	u_int32_t __CH0_DSTATAR_H__;				// Reserved
-	u_int32_t __CH0_CFG_L__;					// Configuration Register
+	u_int32_t __ssta_l__;						// Source Status Register
+	u_int32_t __rsv_0x24;						// Reserved
+	u_int32_t __dsta_l__;						// Destination Status Register
+	u_int32_t __rsv_0x2c;						// Reserved
+	u_int32_t __sstatar_l__;					// Source Status Address Register
+	u_int32_t __rsv_0x34__;						// Reserved
+	u_int32_t __dstatar_l__;					// Destination Status Address Register
+	u_int32_t __rsv_0x3c__;						// Reserved
+	u_int32_t __cfg_l__;						// Configuration Register
 	#define DMA_CFG_L_RELOAD_DST				(1 << 31)					// The DARx register can be automatically reloaded from its initial value at the end of every block for multi-block transfers.
 	#define DMA_CFG_L_RELOAD_SRC				(1 << 30)					// The SARx register can be automatically reloaded from its initial value at the end of every block for multi-block transfers.
 	#define	DMA_CFG_L_MAX_ABRST(value)			(value << 20)				// Maximum AMBA burst length that is used for DMA transfers on this channel. A value of 0 indicates that software is not limiting the maximum AMBA burst length 
@@ -80,7 +81,7 @@ typedef struct{
  	#define DMA_CFG_L_FIFO_EMPTY				(1 << 9)					// Indicates whether there is data left in the channel FIFO.
  	#define DMA_CFG_L_CH_SUSP					(1 << 8)					// Suspends all DMA transfers from source until this bit is cleared.
  	#define	DMA_CFG_L_CH_PRIOR(value)			(value << 5)				// Priority of 7 is the highest priority.
-	u_int32_t __CH0_CFG_H__;					// Configuration Register 2
+	u_int32_t __cfg_h__;						// Configuration Register 2
 	#define	DMA_CFG_H_DEST_PER(value)			(value << 11)				// Assigns a hardware handshaking interface (0 - DMAH_NUM_HS_INT-1) to the destination of channel x if the CFGx.HS_SEL_DST field is 0; otherwise, this field is ignored.
 	#define DMA_CFG_H_SRC_PER(value)			(value << 7)				// Assigns a hardware handshaking interface (0 - DMAH_NUM_HS_INT-1) to the source of channel x if the CFGx.HS_SEL_SRC field is 0; otherwise, this field is ignored.
 	#define DMA_CFG_H_SS_UPD_EN					(1 << 6)					// Source status information is fetched only from the location pointed to by the SSTATARx register, stored in the SSTATx register and written out to the SSTATx location of the LLI if SS_UPD_EN is high.
@@ -88,177 +89,25 @@ typedef struct{
 	#define DMA_CFG_H_PROTCTL(value)			(value << 2)				// Protection Control bits used to drive the AHB HPROT[3:1] bus. 
 	#define DMA_CFG_H_FIFO_MODE					(1 << 1)					// Determines how much space or data needs to be available in the FIFO before a burst transaction request is serviced. 0 - Space/data available for single AHB transfer of the specified transfer width; 1 - Data available is greater than or equal to half the FIFO depth for destination transfers
 	#define DMA_CFG_H_FCMODE					(1 << 0)					// Determines when source transaction requests are serviced when the Destination Peripheral is the flow controller. 0 - Source transaction requests are serviced when they occur. Data pre-fetching is enabled; 1 - Source transaction requests are not serviced until a destination transaction request occurs. 
-	u_int32_t __CH0_SGR_L__;					// Source Gather Register
+	u_int32_t __srg_l__;						// Source Gather Register
 	#define DMA_SGR_L_SGC(value)				(value << 20)				// Source contiguous transfer count between successive gather boundaries.
 	#define DMA_SGR_L_SGI(value)				(value)						// Specifies the source address increment/decrement in multiples of CTLx.SRC_TR_WIDTH on a gather boundary when gather mode is enabled for the source transfer.
-	u_int32_t __CH0_SGR_H__;					// Reserved
-	u_int32_t __CH0_DSR_L__;					// Destination Scatter Register
+	u_int32_t __rsv_0x4c__;						// Reserved
+	u_int32_t __dsr_l__;						// Destination Scatter Register
 	#define DMA_DSR_L_DSC(value)				(value << 20)				// Destination contiguous transfer count between successive scatter boundaries.
 	#define DMA_DSR_L_DSI(value)				(value)						// Specifies the destination address increment/decrement in multiples of CTLx.DST_TR_WIDTH on a scatter boundary, when scatter mode is enabled for the destination transfer.
-	u_int32_t __CH0_DSR_H__;					// Reserved
-	u_int32_t __CH1_SAR_L__;					// Source Address Register
-	u_int32_t __CH1_SAR_H__;					// Reserved
-	u_int32_t __CH1_DAR_L__;					// Destination Address Register
-	u_int32_t __CH1_DAR_H__;					// Reserved
-	u_int32_t __CH1_LLP_L__;					// Linked List Pointer Register
-	u_int32_t __CH1_LLP_H__;					// Reserved
-	u_int32_t __CH1_CTL_L__;					// Control Register
-	u_int32_t __CH1_CTL_H__;					// Control Register 2
-	u_int32_t __CH1_SSTAT_L__;					// Source Status Register
-	u_int32_t __CH1_SSTAT_H__;					// Reserved
-	u_int32_t __CH1_DSTAT_L__;					// Destination Status Register
-	u_int32_t __CH1_DSTAT_H__;					// Reserved
-	u_int32_t __CH1_SSTATAR_L__;				// Source Status Address Register
-	u_int32_t __CH1_SSTATAR_H__;				// Reserved
-	u_int32_t __CH1_DSTATAR_L__;				// Destination Status Address Register
-	u_int32_t __CH1_DSTATAR_H__;				// Reserved
-	u_int32_t __CH1_CFG_L__;					// Configuration Register
-	u_int32_t __CH1_CFG_H__;					// Configuration Register 2
-	u_int32_t __CH1_SGR_L__;					// Source Gather Register
-	u_int32_t __CH1_SGR_H__;					// Reserved
-	u_int32_t __CH1_DSR_L__;					// Destination Scatter Register
-	u_int32_t __CH1_DSR_H__;					// Reserved
-	u_int32_t __CH2_SAR_L__;					// Source Address Register
-	u_int32_t __CH2_SAR_H__;					// Reserved
-	u_int32_t __CH2_DAR_L__;					// Destination Address Register
-	u_int32_t __CH2_DAR_H__;					// Reserved
-	u_int32_t __CH2_LLP_L__;					// Linked List Pointer Register
-	u_int32_t __CH2_LLP_H__;					// Reserved
-	u_int32_t __CH2_CTL_L__;					// Control Register
-	u_int32_t __CH2_CTL_H__;					// Control Register 2
-	u_int32_t __CH2_SSTAT_L__;					// Source Status Register
-	u_int32_t __CH2_SSTAT_H__;					// Reserved
-	u_int32_t __CH2_DSTAT_L__;					// Destination Status Register
-	u_int32_t __CH2_DSTAT_H__;					// Reserved
-	u_int32_t __CH2_SSTATAR_L__;				// Source Status Address Register
-	u_int32_t __CH2_SSTATAR_H__;				// Reserved
-	u_int32_t __CH2_DSTATAR_L__;				// Destination Status Address Register
-	u_int32_t __CH2_DSTATAR_H__;				// Reserved
-	u_int32_t __CH2_CFG_L__;					// Configuration Register
-	u_int32_t __CH2_CFG_H__;					// Configuration Register 2
-	u_int32_t __CH2_SGR_L__;					// Source Gather Register
-	u_int32_t __CH2_SGR_H__;					// Reserved
-	u_int32_t __CH2_DSR_L__;					// Destination Scatter Register
-	u_int32_t __CH2_DSR_H__;					// Reserved
-	u_int32_t __CH3_SAR_L__;					// Source Address Register
-	u_int32_t __CH3_SAR_H__;					// Reserved
-	u_int32_t __CH3_DAR_L__;					// Destination Address Register
-	u_int32_t __CH3_DAR_H__;					// Reserved
-	u_int32_t __CH3_LLP_L__;					// Linked List Pointer Register
-	u_int32_t __CH3_LLP_H__;					// Reserved
-	u_int32_t __CH3_CTL_L__;					// Control Register
-	u_int32_t __CH3_CTL_H__;					// Control Register 2
-	u_int32_t __CH3_SSTAT_L__;					// Source Status Register
-	u_int32_t __CH3_SSTAT_H__;					// Reserved
-	u_int32_t __CH3_DSTAT_L__;					// Destination Status Register
-	u_int32_t __CH3_DSTAT_H__;					// Reserved
-	u_int32_t __CH3_SSTATAR_L__;				// Source Status Address Register
-	u_int32_t __CH3_SSTATAR_H__;				// Reserved
-	u_int32_t __CH3_DSTATAR_L__;				// Destination Status Address Register
-	u_int32_t __CH3_DSTATAR_H__;				// Reserved
-	u_int32_t __CH3_CFG_L__;					// Configuration Register
-	u_int32_t __CH3_CFG_H__;					// Configuration Register 2
-	u_int32_t __CH3_SGR_L__;					// Source Gather Register
-	u_int32_t __CH3_SGR_H__;					// Reserved
-	u_int32_t __CH3_DSR_L__;					// Destination Scatter Register
-	u_int32_t __CH3_DSR_H__;					// Reserved
-	u_int32_t __CH4_SAR_L__;					// Source Address Register
-	u_int32_t __CH4_SAR_H__;					// Reserved
-	u_int32_t __CH4_DAR_L__;					// Destination Address Register
-	u_int32_t __CH4_DAR_H__;					// Reserved
-	u_int32_t __CH4_LLP_L__;					// Linked List Pointer Register
-	u_int32_t __CH4_LLP_H__;					// Reserved
-	u_int32_t __CH4_CTL_L__;					// Control Register
-	u_int32_t __CH4_CTL_H__;					// Control Register 2
-	u_int32_t __CH4_SSTAT_L__;					// Source Status Register
-	u_int32_t __CH4_SSTAT_H__;					// Reserved
-	u_int32_t __CH4_DSTAT_L__;					// Destination Status Register
-	u_int32_t __CH4_DSTAT_H__;					// Reserved
-	u_int32_t __CH4_SSTATAR_L__;				// Source Status Address Register
-	u_int32_t __CH4_SSTATAR_H__;				// Reserved
-	u_int32_t __CH4_DSTATAR_L__;				// Destination Status Address Register
-	u_int32_t __CH4_DSTATAR_H__;				// Reserved
-	u_int32_t __CH4_CFG_L__;					// Configuration Register
-	u_int32_t __CH4_CFG_H__;					// Configuration Register 2
-	u_int32_t __CH4_SGR_L__;					// Source Gather Register
-	u_int32_t __CH4_SGR_H__;					// Reserved
-	u_int32_t __CH4_DSR_L__;					// Destination Scatter Register
-	u_int32_t __CH4_DSR_H__;					// Reserved
-	u_int32_t __CH5_SAR_L__;					// Source Address Register
-	u_int32_t __CH5_SAR_H__;					// Reserved
-	u_int32_t __CH5_DAR_L__;					// Destination Address Register
-	u_int32_t __CH5_DAR_H__;					// Reserved
-	u_int32_t __CH5_LLP_L__;					// Linked List Pointer Register
-	u_int32_t __CH5_LLP_H__;					// Reserved
-	u_int32_t __CH5_CTL_L__;					// Control Register
-	u_int32_t __CH5_CTL_H__;					// Control Register 2
-	u_int32_t __CH5_SSTAT_L__;					// Source Status Register
-	u_int32_t __CH5_SSTAT_H__;					// Reserved
-	u_int32_t __CH5_DSTAT_L__;					// Destination Status Register
-	u_int32_t __CH5_DSTAT_H__;					// Reserved
-	u_int32_t __CH5_SSTATAR_L__;				// Source Status Address Register
-	u_int32_t __CH5_SSTATAR_H__;				// Reserved
-	u_int32_t __CH5_DSTATAR_L__;				// Destination Status Address Register
-	u_int32_t __CH5_DSTATAR_H__;				// Reserved
-	u_int32_t __CH5_CFG_L__;					// Configuration Register
-	u_int32_t __CH5_CFG_H__;					// Configuration Register 2
-	u_int32_t __CH5_SGR_L__;					// Source Gather Register
-	u_int32_t __CH5_SGR_H__;					// Reserved
-	u_int32_t __CH5_DSR_L__;					// Destination Scatter Register
-	u_int32_t __CH5_DSR_H__;					// Reserved
-	u_int32_t __CH6_SAR_L__;					// Source Address Register
-	u_int32_t __CH6_SAR_H__;					// Reserved
-	u_int32_t __CH6_DAR_L__;					// Destination Address Register
-	u_int32_t __CH6_DAR_H__;					// Reserved
-	u_int32_t __CH6_LLP_L__;					// Linked List Pointer Register
-	u_int32_t __CH6_LLP_H__;					// Reserved
-	u_int32_t __CH6_CTL_L__;					// Control Register
-	u_int32_t __CH6_CTL_H__;					// Control Register 2
-	u_int32_t __CH6_SSTAT_L__;					// Source Status Register
-	u_int32_t __CH6_SSTAT_H__;					// Reserved
-	u_int32_t __CH6_DSTAT_L__;					// Destination Status Register
-	u_int32_t __CH6_DSTAT_H__;					// Reserved
-	u_int32_t __CH6_SSTATAR_L__;				// Source Status Address Register
-	u_int32_t __CH6_SSTATAR_H__;				// Reserved
-	u_int32_t __CH6_DSTATAR_L__;				// Destination Status Address Register
-	u_int32_t __CH6_DSTATAR_H__;				// Reserved
-	u_int32_t __CH6_CFG_L__;					// Configuration Register
-	u_int32_t __CH6_CFG_H__;					// Configuration Register 2
-	u_int32_t __CH6_SGR_L__;					// Source Gather Register
-	u_int32_t __CH6_SGR_H__;					// Reserved
-	u_int32_t __CH6_DSR_L__;					// Destination Scatter Register
-	u_int32_t __CH6_DSR_H__;					// Reserved
-	u_int32_t __CH7_SAR_L__;					// Source Address Register
-	u_int32_t __CH7_SAR_H__;					// Reserved
-	u_int32_t __CH7_DAR_L__;					// Destination Address Register
-	u_int32_t __CH7_DAR_H__;					// Reserved
-	u_int32_t __CH7_LLP_L__;					// Linked List Pointer Register
-	u_int32_t __CH7_LLP_H__;					// Reserved
-	u_int32_t __CH7_CTL_L__;					// Control Register
-	u_int32_t __CH7_CTL_H__;					// Control Register 2
-	u_int32_t __CH7_SSTAT_L__;					// Source Status Register
-	u_int32_t __CH7_SSTAT_H__;					// Reserved
-	u_int32_t __CH7_DSTAT_L__;					// Destination Status Register
-	u_int32_t __CH7_DSTAT_H__;					// Reserved
-	u_int32_t __CH7_SSTATAR_L__;				// Source Status Address Register
-	u_int32_t __CH7_SSTATAR_H__;				// Reserved
-	u_int32_t __CH7_DSTATAR_L__;				// Destination Status Address Register
-	u_int32_t __CH7_DSTATAR_H__;				// Reserved
-	u_int32_t __CH7_CFG_L__;					// Configuration Register
-	u_int32_t __CH7_CFG_H__;					// Configuration Register 2
-	u_int32_t __CH7_SGR_L__;					// Source Gather Register
-	u_int32_t __CH7_SGR_H__;					// Reserved
-	u_int32_t __CH7_DSR_L__;					// Destination Scatter Register
-	u_int32_t __CH7_DSR_H__;					// Reserved
-	u_int32_t __resv_0x02C0__[54];
-	u_int32_t __DMA_CFGREG_L__;					// DW_ahb_dmac Configuration Register
+}dma_channel_t;
+
+
+typedef struct {
+	u_int32_t __dmacfgre_l__;					// DW_ahb_dmac Configuration Register
 	#define DMA_DMACFGREG_L_DMA_EN				(0x1)					// 0 - DW_ahb_dmac Disabled; 1 - DW_ahb_dmac Enabled	
-	u_int32_t __resv_0x039C__;
-	u_int32_t __DMA_CHENREG_L__;				// DW_ahb_dmac Channel Enable Register
+	u_int32_t __resv_0x39c__;
+	u_int32_t __chenreg_l__;				// DW_ahb_dmac Channel Enable Register
 	#define DMA_DMACHENREG_L_CH_EN_WE(value)	(1 << (value + 8))		// This register enables the CH_EN to be written in the bit choosen		
 	#define DMA_DMACHENREG_L_CH_EN(value)		(1 << value)			// 0 - Disable the channel; 1 - Enable the channel
-	u_int32_t __resv_0x03A4__[791];
-}_dma_channel_;
+}dma_cfg_t;
+
 
 typedef struct dma_lli{
 	struct dma_lli *prev;
@@ -268,13 +117,15 @@ typedef struct dma_lli{
 
 
 /*****			DMA 			*****/
+/*
 void 			INIT_DMA_LIST 		(_dma_lli_t_ *head);
 _dma_lli_t_		*ADD_DMA_ITEM		(_dma_lli_t_ *head);
 _dma_lli_t_ 	*NEXT_DMA_ITEM 		(_dma_lli_t_ *lli);
 _dma_lli_t_ 	*PREV_DMA_ITEM 		(_dma_lli_t_ *lli);
 void			PRINT_DMA_STATUS	(u_int8_t ch_num);
-//void 	INIT_DMA_LIST 		(_dma_item_ *page);
 
+void 	INIT_DMA_LIST 		(_dma_item_ *page);
+*/
 
 
 
