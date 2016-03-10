@@ -113,6 +113,9 @@ int ws281x_init(ws281x_t *ws281x) {
 	ws281x->devices = malloc(sizeof(*ws281x->devices));
 
 	volatile ws281x_devices_t *devices;
+	volatile dma_channel_t *dma_channel;
+	volatile gpio_t *gpio_t;
+
 	devices = ws281x->devices;
 //volatile gpio_t *gpio = devices->gpio_dev;
 //volatile pwm_t *pwm = devices->pwm_dev;

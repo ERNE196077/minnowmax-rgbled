@@ -37,11 +37,11 @@ struct ws281x_devices;
 
 typedef struct
 {
-	u_int8_t			lednumber;
-	led_t				*ledarray;
-	u_int8_t			gpio_pinnumber;
-	u_int8_t			dma_channel;
-	struct ws281x_devices 		*devices;
+	u_int8_t				lednumber;
+	led_t					*ledarray;
+	u_int8_t				gpio_pinnumber;
+	u_int8_t				dma_channel;
+	struct ws281x_devices 	*devices;
 	
 }ws281x_t;
 

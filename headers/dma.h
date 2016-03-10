@@ -7,28 +7,23 @@
 /*****			DMA BASE REGISTERS			*****/
 
 #define 	DMA_BASE_ADDR		0x90818000
-#define		DMA_CHANNEL0_OFF	(0x0  / 4)
-#define		DMA_CHANNEL1_OFF	(0x58  / 4)
-#define		DMA_CHANNEL2_OFF	(0xB0  / 4)
-#define		DMA_CHANNEL3_OFF	(0x108  / 4)
-#define		DMA_CHANNEL4_OFF	(0x160  / 4)
-#define		DMA_CHANNEL5_OFF	(0x1B8  / 4)
-#define		DMA_CHANNEL6_OFF	(0x210  / 4)
-#define		DMA_CHANNEL7_OFF	(0x268  / 4)
+#define		DMA_OFFSET_CH0		(0x0  / 4)
+#define		DMA_OFFSET_CH1		(0x58  / 4)
+#define		DMA_OFFSET_CH2		(0xB0  / 4)
+#define		DMA_OFFSET_CH3		(0x108  / 4)
+#define		DMA_OFFSET_CH4		(0x160  / 4)
+#define		DMA_OFFSET_CH5		(0x1B8  / 4)
+#define		DMA_OFFSET_CH6		(0x210  / 4)
+#define		DMA_OFFSET_CH7		(0x268  / 4)
 #define     DMA_DMACCFG_OFF		(0x398 / 4)
 
 
-/*****			PWM REGISTER OFFSETS			*****/
-
-#define 	PWM0_CTRL_OFF	(0x0 / 4)
-#define 	PWM0_RES_OFF	(804 / 4)
-#define 	PWM0_GEN_OFF	(808 / 4)
-#define 	PWM1_CTRL_OFF	(0x0 / 4)
-#define 	PWM1_RES_OFF	(804 / 4)
-#define 	PWM1_GEN_OFF	(808 / 4)
+/*****			DMA MACROS			*****/
 
 
-/*****			PWM STRUCTURES			*****/
+
+
+/*****			DMA STRUCTURES			*****/
 
 typedef struct{
 	#define DMA_CHANNEL_BASE(channel)			( channel * (0x58 / 4 ) )
