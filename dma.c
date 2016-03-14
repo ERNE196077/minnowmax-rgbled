@@ -11,7 +11,7 @@
  *  Created on: Oct 28, 2015
  *      Author: minnow
  */
-
+/*
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/mman.h>
@@ -21,7 +21,8 @@
 #include <fcntl.h>
 #include <string.h>
 #include <linux/pci.h>
-#include "headers/dma.h"
+*/
+//#include "headers/dma.h"
 /*
 
 _dma_lli_t_ llist = NULL;

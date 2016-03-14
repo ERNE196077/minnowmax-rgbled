@@ -24,6 +24,7 @@
 #include <string.h>
 #include <linux/pci.h>
 #include "headers/ws281x.h"
+#include "headers/general.h"
 #include "headers/pwm.h"
 #include "headers/dma.h"
 #include "headers/gpio.h"
@@ -32,11 +33,11 @@
 #define WORDCOUNT(led_num)		(24*led_num)
 
 typedef struct ws281x_devices {
-	volatile pwm_t *pwm_dev;
-	volatile dma_channel_t *dma_dev;
-	volatile gpio_t *gpio_dev;
-	volatile u_int32_t *fifo_data;
-	volatile u_int32_t *fifo_data2;
+	volatile pwm_t 			*pwm_dev;
+	volatile dma_channel_t 	*dma_ch;
+	volatile gpio_t 		*gpio_pin;
+	volatile u_int32_t 		*fifo_data;
+	volatile u_int32_t 		*fifo_data2;
 } ws281x_devices_t;
 
 /*
@@ -110,19 +111,44 @@ int ws281x_fifo_init(ws281x_t *ws281x) {
 }
 
 int ws281x_init(ws281x_t *ws281x) {
+	u_int8_t gpio_pin_number =ws281x->gpio_pin_number;
+	if ((gpio_pin_number != 22) && (gpio_pin_number != 24)){
+		perror("GPIO PIN SPECIFIED IS NOT SUPPORTED.");
+		return -1;
+	}
+
+	u_int8_t dma_ch_number =ws281x->dma_ch_number;
+		if ((dma_ch_number < 0) || (dma_ch_number > 7)){
+			perror("DMA CHANNEL SPECIFIED DOES NOT EXIST.\nCHOOSE BETWEEN 0 & 7.");
+			return -1;
+		}
+
 	ws281x->devices = malloc(sizeof(*ws281x->devices));
 
 	volatile ws281x_devices_t *devices;
-	volatile dma_channel_t *dma_channel;
-	volatile gpio_t *gpio_t;
-
 	devices = ws281x->devices;
-//volatile gpio_t *gpio = devices->gpio_dev;
-//volatile pwm_t *pwm = devices->pwm_dev;
-//volatile dma_t *dma = devices->dma_dev;
 
-	if ((ws281x->gpio_pinnumber != 22) && (ws281x->gpio_pinnumber != 24))
+	volatile u_int32_t *gpio_base;
+	if ( !(gpio_base = (volatile u_int32_t *)MAP_DEVICE(GPIO_SCORE_BASE_ADDR, BLOCK_SIZE)) ){
+		perror("GPIO BLOCK MAPPING FAILED!");
 		return -1;
+	}
+
+	volatile u_int32_t *dma_base;
+	if ( !(dma_base = (volatile u_int32_t *)MAP_DEVICE(DMA_BASE_ADDR, BLOCK_SIZE)) ){
+		perror("DMA BLOCK MAPPING FAILED!");
+		return -1;
+	}
+
+	//Map GPIO & DMA pointer structures above the user space mapped previously.
+	devices->gpio_pin = ((volatile gpio_t *)((gpio_base + gpio_pins[ gpio_pin_number ])));
+	devices->dma_ch = ((volatile dma_channel_t *)((dma_base + dma_channels[ dma_ch_number ])));
+	printf("%08x\n",devices->gpio_pin->__cfg__);
+	printf("%08x\n", devices->gpio_pin->__val__);
+
+	//PWM controllers registers are of u_int32_t size. Is not necessary to map an entire block for them.
+	devices->pwm_dev = (volatile pwm_t *)MAP_DEVICE(gpio_pin_number == 22 ? PWM0_BASE_ADDR : PWM1_BASE_ADDR, sizeof(pwm_t));
+	printf("%08x\n", devices->pwm_dev->__pwm_ctrl__);
 
 	ws281x_fifo_init(ws281x);
 //ws281x_pwmfifo_init (ws281x);  // Will be move after few tests.

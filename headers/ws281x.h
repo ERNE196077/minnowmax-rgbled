@@ -39,8 +39,8 @@ typedef struct
 {
 	u_int8_t				lednumber;
 	led_t					*ledarray;
-	u_int8_t				gpio_pinnumber;
-	u_int8_t				dma_channel;
+	u_int8_t				gpio_pin_number;
+	u_int8_t				dma_ch_number;
 	struct ws281x_devices 	*devices;
 	
 }ws281x_t;

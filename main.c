@@ -8,9 +8,9 @@
 #include <math.h>
 #include <sys/time.h>
 
-#include "headers/general.h"
-#include "headers/gpio.h"
-#include "headers/pwm.h"
+//#include "headers/general.h"
+//#include "headers/gpio.h"
+//#include "headers/pwm.h"
 #include "headers/ws281x.h"
 
 
@@ -36,8 +36,8 @@ int main (){
 	ws281x_t myws281x = {
 		.lednumber = 3 ,
 		.ledarray = (led_t *)led_array ,
-		.gpio_pinnumber = 22 ,
-		.dma_channel = 2
+		.gpio_pin_number = 22 ,
+		.dma_ch_number = 2
 
 	};
 

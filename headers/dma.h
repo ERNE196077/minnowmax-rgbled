@@ -17,9 +17,21 @@
 #define		DMA_OFFSET_CH7		(0x268  / 4)
 #define     DMA_DMACCFG_OFF		(0x398 / 4)
 
+u_int32_t 	dma_channels[] = {
+DMA_OFFSET_CH0,
+DMA_OFFSET_CH1,
+DMA_OFFSET_CH2,
+DMA_OFFSET_CH3,
+DMA_OFFSET_CH4,
+DMA_OFFSET_CH5,
+DMA_OFFSET_CH6,
+DMA_OFFSET_CH7
+};
+
 
 /*****			DMA MACROS			*****/
 
+//#define		DMA_MAP(base_pointer, dma_num)		(volatile dma_ch_t *)(base_pointer + dma_channels[##dma_num ]);
 
 
 

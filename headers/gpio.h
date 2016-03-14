@@ -50,9 +50,9 @@
 
 /*****			GPIO BASE REGISTERS			*****/
 
-#define	GPIO_SCORE_BASE_ADDRESS 	0xFED0C000				// ALL GPIO's WITH THE EXCEPTION OF 21, 23 & 25
+#define	GPIO_SCORE_BASE_ADDR	 	0xFED0C000				// ALL GPIO's WITH THE EXCEPTION OF 21, 23 & 25
 #define GPIO_SCORE_BASE_SIZE		0x67C
-#define	GPIO_SUS_BASE_ADDRESS		0xFED0E000				// GPIO's 21, 23 & 25 Registers start in 0xFED0E1D0 using a page size multiple.
+#define	GPIO_SUS_BASE_ADDR			0xFED0E000				// GPIO's 21, 23 & 25 Registers start in 0xFED0E1D0 using a page size multiple.
 #define GPIO_SUS_BASE_SIZE			0x21C
 #define GPIO_OFFSET_PIN5			(0x110	/4)
 #define GPIO_OFFSET_PIN6			(0x10	/4)
@@ -77,10 +77,36 @@
 #define GPIO_OFFSET_PIN25			(0x1E0	/4)
 #define GPIO_OFFSET_PIN26			(0x670	/4)
 
+u_int32_t gpio_pins[] = {
+		0x0,0x0,0x0,0x0,0x0,
+		GPIO_OFFSET_PIN5,
+		GPIO_OFFSET_PIN6,
+		GPIO_OFFSET_PIN7,
+		GPIO_OFFSET_PIN8,
+		GPIO_OFFSET_PIN9,
+		GPIO_OFFSET_PIN10,
+		GPIO_OFFSET_PIN11,
+		GPIO_OFFSET_PIN12,
+		GPIO_OFFSET_PIN13,
+		GPIO_OFFSET_PIN14,
+		GPIO_OFFSET_PIN15,
+		GPIO_OFFSET_PIN16,
+		GPIO_OFFSET_PIN17,
+		GPIO_OFFSET_PIN18,
+		GPIO_OFFSET_PIN19,
+		GPIO_OFFSET_PIN20,
+		GPIO_OFFSET_PIN21,
+		GPIO_OFFSET_PIN22,
+		GPIO_OFFSET_PIN23,
+		GPIO_OFFSET_PIN24,
+		GPIO_OFFSET_PIN25,
+		GPIO_OFFSET_PIN26
+};
+
 /*****			GPIO MACROS			*****/
 //#define GPIO_MAP_1(base)					base##+GPIO_OFFSET_PIN##
 //#define GPIO_MAP_2(number)					number##));
-#define GPIO_MAP(number,base)			 	((gpio_t *)((base + GPIO_OFFSET_PIN##number)));
+//#define GPIO_MAP(number,base_pointer)	 	((volatile gpio_t *)((base_pointer + gpio_pins[ ##number ])));
 #define GPIO_VAL_INPUT(val_reg)				val_reg |= (0X1 << 1);
 #define GPIO_VAL_OUTPUT(val_reg)			val_reg &= ~(0X1 << 1);
 #define GPIO_VAL_SET(val_reg)				val_reg |= 0x1;
