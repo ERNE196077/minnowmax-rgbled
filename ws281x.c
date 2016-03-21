@@ -40,19 +40,32 @@ typedef struct ws281x_devices {
 	volatile u_int32_t 		*fifo_data2;
 } ws281x_devices_t;
 
-/*
+void ws281x_print_registers(ws281x_t *ws281x){
+	volatile gpio_t *gpio = ws281x->devices->gpio_pin;
+	volatile pwm_t *pwm = ws281x->devices->pwm_dev;
+	volatile dma_channel_t *dma = ws281x->devices->dma_ch;
+	printf("*****\tGPIO REGISTERS\t*****\n\n");
+	printf("__cfg__\t\t%08x\n",gpio->__cfg__);
+	printf("__val__\t\t%08x\n\n",gpio->__val__);
+	printf("*****\tPWM REGISTERS\t*****\n\n");
+	printf("__pwmctrl__\t\t%08x\n\n",pwm->__pwmctrl__);
+	printf("*****\tDMA REGISTERS\t*****\n\n");
+	printf("__sar_l__\t\t%08x\n",dma->__sar_l__);
+	printf("__dar_l__\t\t%08x\n",dma->__dar_l__);
+	printf("__llp_l__\t\t%08x\n",dma->__llp_l__);
+	printf("__ctl_l__\t\t%08x\n",dma->__ctl_l__);
+	printf("__ctl_h__\t\t%08x\n",dma->__ctl_h__);
+	printf("__sstat_l__\t\t%08x\n",dma->__ssta_l__);
+	printf("__dstat_l__\t\t%08x\n",dma->__dsta_l__);
+	printf("__sstatar_l__\t\t%08x\n",dma->__sstatar_l__);
+	printf("__dstatar_l__\t\t%08x\n",dma->__dstatar_l__);
+	printf("__cfg_l__\t\t%08x\n",dma->__cfg_l__);
+	printf("__cfg_h__\t\t%08x\n",dma->__cfg_h__);
+	printf("__srg_l__\t\t%08x\n",dma->__srg_l__);
+	printf("__dsr_l__\t\t%08x\n\n",dma->__dsr_l__);
+}
 
- int 		ws281x_init					(ws281x_t *ws281x);
- int 		ws281x_deinit				(ws281x_t *ws281x);
- int 		ws281x_devices_map			(ws281x_devices_t *devices);
- void 		ws281x_devices_unmap 		(ws281x_devices_t *devices);
- void 		ws281x_pwmfifo_deinit		(ws281x_t *ws281x);
- void		ws281x_pwmfifo_set			(ws281x_t *ws281x);
- void		ws281x_dma_init				(ws281x_devices_t *devices);
- void		ws281x_dma_deint			(ws281x_devices_t *devices);
- */
-
-void ws281x_fifo_print(ws281x_t *ws281x) {
+void ws281x_print_fifo(ws281x_t *ws281x) {
 	u_int32_t *word = &((u_int32_t *) ws281x->devices->fifo_data)[0];
 	u_int32_t *word2 = &((u_int32_t *) ws281x->devices->fifo_data2)[0];
 	printf("%08x\n", word);
@@ -105,8 +118,14 @@ int ws281x_fifo_init(ws281x_t *ws281x) {
 
 	}
 
-	ws281x_fifo_print(ws281x);
+	return 0;
+}
 
+int ws281x_dma_setup(ws281x_t *ws281x){
+	volatile dma_channel_t *dma = ws281x->devices->dma_ch;
+
+	dma->__sar_l__ = (u_int32_t)ws281x->devices->fifo_data;
+	dma->__dar_l__ = (u_int32_t)ws281x->devices->fifo_data2;
 	return 0;
 }
 
@@ -143,15 +162,18 @@ int ws281x_init(ws281x_t *ws281x) {
 	//Map GPIO & DMA pointer structures above the user space mapped previously.
 	devices->gpio_pin = ((volatile gpio_t *)((gpio_base + gpio_pins[ gpio_pin_number ])));
 	devices->dma_ch = ((volatile dma_channel_t *)((dma_base + dma_channels[ dma_ch_number ])));
-	printf("%08x\n",devices->gpio_pin->__cfg__);
-	printf("%08x\n", devices->gpio_pin->__val__);
 
 	//PWM controllers registers are of u_int32_t size. Is not necessary to map an entire block for them.
 	devices->pwm_dev = (volatile pwm_t *)MAP_DEVICE(gpio_pin_number == 22 ? PWM0_BASE_ADDR : PWM1_BASE_ADDR, sizeof(pwm_t));
-	printf("%08x\n", devices->pwm_dev->__pwm_ctrl__);
 
 	ws281x_fifo_init(ws281x);
-//ws281x_pwmfifo_init (ws281x);  // Will be move after few tests.
+
+	ws281x_print_fifo(ws281x);
+
+	ws281x_dma_setup(ws281x);
+
+	ws281x_print_registers(ws281x);
+	//ws281x_pwmfifo_init (ws281x);  // Will be move after few tests.
 
 
 	return 0;
