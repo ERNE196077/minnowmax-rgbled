@@ -50,15 +50,15 @@ typedef struct
 
 
 
-int 		ws281x_init					(ws281x_t *ws281x);
-int 		ws281x_deinit				(ws281x_t *ws281x);
-//int 		ws281x_devices_map			(ws281x_devices_t *devices);
-//void 		ws281x_devices_unmap 		(ws281x_devices_t *devices);
-int 		ws281x_fifo_init			(ws281x_t *ws281x);
-void 		ws281x_fifo_deinit			(ws281x_t *ws281x);
-void		ws281x_print_fifo			(ws281x_t *ws281x);
-void 		ws281x_print_registers		(ws281x_t *ws281x);
-int			ws281x_dma_setup			(ws281x_t *ws281x);
-//void		ws281x_dma_deint			(ws281x_devices_t *devices);
+int 				ws281x_init					(ws281x_t *ws281x);
+int 				ws281x_deinit				(ws281x_t *ws281x);
+//int 				ws281x_devices_map			(ws281x_devices_t *devices);
+//void 				ws281x_devices_unmap 		(ws281x_devices_t *devices);
+int 				ws281x_fifo_init			(ws281x_t *ws281x);
+void 				ws281x_fifo_deinit			(ws281x_t *ws281x);
+void				ws281x_print_fifo			(ws281x_t *ws281x);
+void 				ws281x_print_registers		(ws281x_t *ws281x);
+int					ws281x_dma_setup			(ws281x_t *ws281x);
+//void				ws281x_dma_deint			(ws281x_devices_t *devices);
 
-
+static u_int32_t ws281x_convert_virtual	(const volatile void *addr);

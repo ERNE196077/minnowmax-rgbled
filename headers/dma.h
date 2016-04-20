@@ -6,16 +6,20 @@
 
 /*****			DMA BASE REGISTERS			*****/
 
-#define 	DMA_BASE_ADDR		0x90818000
-#define		DMA_OFFSET_CH0		(0x0  / 4)
-#define		DMA_OFFSET_CH1		(0x58  / 4)
-#define		DMA_OFFSET_CH2		(0xB0  / 4)
-#define		DMA_OFFSET_CH3		(0x108  / 4)
-#define		DMA_OFFSET_CH4		(0x160  / 4)
-#define		DMA_OFFSET_CH5		(0x1B8  / 4)
-#define		DMA_OFFSET_CH6		(0x210  / 4)
-#define		DMA_OFFSET_CH7		(0x268  / 4)
-#define     DMA_DMACCFG_OFF		(0x398 / 4)
+#define 	DMA_BASE_ADDR			0x90c04000 //90818000
+#define 	DMA_CTL_L_RESERVED_MASK	0xE0080000
+#define		DMA_CTL_H_RESERVED_MASK	0xFFFFE000
+#define		DMA_CFG_L_RESERVED_MASK	0x0000001F
+#define 	DMA_CFG_H_RESERVED_MASK	0xFFFF8000
+#define		DMA_OFFSET_CH0			(0x0  / 4)
+#define		DMA_OFFSET_CH1			(0x58  / 4)
+#define		DMA_OFFSET_CH2			(0xB0  / 4)
+#define		DMA_OFFSET_CH3			(0x108  / 4)
+#define		DMA_OFFSET_CH4			(0x160  / 4)
+#define		DMA_OFFSET_CH5			(0x1B8  / 4)
+#define		DMA_OFFSET_CH6			(0x210  / 4)
+#define		DMA_OFFSET_CH7			(0x268  / 4)
+#define     DMA_DMACCFG_OFF			(0x360 / 4)
 
 u_int32_t 	dma_channels[] = {
 DMA_OFFSET_CH0,
@@ -50,15 +54,15 @@ typedef struct{
 	u_int32_t __ctl_l__;						// Control Register
 	#define DMA_CTL_L_LLP_SRC_EN				(1 << 28)					// Block chaining is enabled on the source side only if the LLP_SRC_EN field is high and LLPx.LOC is non-zero
 	#define DMA_CTL_L_LLP_DST_EN				(1 << 27)					// Block chaining is enabled on the destination side only if the LLP_DST_EN field is high and LLPx.LOC is non-zero.
-	#define DMA_CTL_L_SMS(value)				(value & 0x3) << 25)		// Identifies the Master Interface layer from which the	source device (peripheral or memory) is accessed.
-	#define DMA_CTL_L_DMS(value)				(value & 0x3) << 23)		// Identifies the Master Interface layer where the destination device (peripheral or memory) resides.
+	#define DMA_CTL_L_SMS(value)				((value & 0x3) << 25)		// Identifies the Master Interface layer from which the	source device (peripheral or memory) is accessed.
+	#define DMA_CTL_L_DMS(value)				((value & 0x3) << 23)		// Identifies the Master Interface layer where the destination device (peripheral or memory) resides.
 	#define DMA_CTL_L_TT_FC(value)				(value << 20)				// Config Mem-to-Mem, Mem-to-Peri, Pery-to-Mem or Peri-to-Peri. Flow Control can be assigned to the DW_ahb_dmac, the source peripheral, or the destination peripheral.
 	#define DMA_CTL_L_DST_SCATTER_EN			(1 << 18)					// 0 - Disabled; 1 - Enabled
 	#define DMA_CTL_L_SRC_GATHER_EN				(1 << 17)					// 0 - Disabled; 1 - Enabled
 	#define DMA_CTL_L_SRC_MSIZE(value)			(value << 14)				// Number of data items, each of width CTLx.SRC_TR_WIDTH, to be read from the source every time a source burst transaction request is made from either the corresponding hardware or software handshaking interface.
 	#define DMA_CTL_L_DEST_MSIZE(value)			(value << 11)				// Number of data items, each of width CTLx.DST_TR_WIDTH, to be written to the destination every time a destination burst transaction request is made from either the corresponding hardware or software handshaking interface.
-	#define DMA_CTL_L_SINC(value)				(value & 0x3) << 9)			// 00 - Increment, 01 - Decrement, 1x - No Change
-	#define DMA_CTL_L_DINC(value)				(value & 0x3) << 7)			// 00 - Increment, 01 - Decrement, 1x - No Change
+	#define DMA_CTL_L_SINC(value)				((value & 0x3) << 9)			// 00 - Increment, 01 - Decrement, 1x - No Change
+	#define DMA_CTL_L_DINC(value)				((value & 0x3) << 7)			// 00 - Increment, 01 - Decrement, 1x - No Change
 	#define DMA_CTL_L_SRC_TR_WIDTH(value)		(value << 4)				// This value must be less than or equal to DMAH_Mx_HDATA_WIDTH, where x is the AHB layer 1 to 4 where the source resides
 	#define DMA_CTL_L_DST_TR_WIDTH(value)		(value << 1)				// This value must be less than or equal to DMAH_Mk_HDATA_WIDTH, where k is the AHB layer 1 to 4 where the destination resides.
 	#define DMA_CTL_L_INT_EN					(1 << 0)					// If set, then all interrupt-generating sources are enabled.
@@ -96,24 +100,38 @@ typedef struct{
 	#define DMA_CFG_H_PROTCTL(value)			(value << 2)				// Protection Control bits used to drive the AHB HPROT[3:1] bus. 
 	#define DMA_CFG_H_FIFO_MODE					(1 << 1)					// Determines how much space or data needs to be available in the FIFO before a burst transaction request is serviced. 0 - Space/data available for single AHB transfer of the specified transfer width; 1 - Data available is greater than or equal to half the FIFO depth for destination transfers
 	#define DMA_CFG_H_FCMODE					(1 << 0)					// Determines when source transaction requests are serviced when the Destination Peripheral is the flow controller. 0 - Source transaction requests are serviced when they occur. Data pre-fetching is enabled; 1 - Source transaction requests are not serviced until a destination transaction request occurs. 
-	u_int32_t __srg_l__;						// Source Gather Register
+	u_int32_t __sgr_l__;						// Source Gather Register
 	#define DMA_SGR_L_SGC(value)				(value << 20)				// Source contiguous transfer count between successive gather boundaries.
 	#define DMA_SGR_L_SGI(value)				(value)						// Specifies the source address increment/decrement in multiples of CTLx.SRC_TR_WIDTH on a gather boundary when gather mode is enabled for the source transfer.
 	u_int32_t __rsv_0x4c__;						// Reserved
 	u_int32_t __dsr_l__;						// Destination Scatter Register
 	#define DMA_DSR_L_DSC(value)				(value << 20)				// Destination contiguous transfer count between successive scatter boundaries.
 	#define DMA_DSR_L_DSI(value)				(value)						// Specifies the destination address increment/decrement in multiples of CTLx.DST_TR_WIDTH on a scatter boundary, when scatter mode is enabled for the destination transfer.
-}dma_channel_t;
+}__attribute__ ((packed)) dma_channel_t;
 
 
 typedef struct {
+	u_int32_t __statusint_l__;
+	u_int32_t __rsv_0x364__;
+	u_int32_t __reqsrcreg_l__;
+	u_int32_t __rsv_0x36c__;
+	u_int32_t __reqdstreg_l__;
+	u_int32_t __rsv_0x374__;
+	u_int32_t __sglrqsrcreg_l__;
+	u_int32_t __rsv_0x37c__;
+	u_int32_t __sglrqdstreg_l__;
+	u_int32_t __rsv_0x384__;
+	u_int32_t __lstsrcreg_l__;
+	u_int32_t __rsv_0x38c__;
+	u_int32_t __lstdstreg_l__;
+	u_int32_t __rsv_0x394__;
 	u_int32_t __dmacfgre_l__;					// DW_ahb_dmac Configuration Register
 	#define DMA_DMACFGREG_L_DMA_EN				(0x1)					// 0 - DW_ahb_dmac Disabled; 1 - DW_ahb_dmac Enabled	
 	u_int32_t __resv_0x39c__;
 	u_int32_t __chenreg_l__;				// DW_ahb_dmac Channel Enable Register
-	#define DMA_DMACHENREG_L_CH_EN_WE(value)	(1 << (value + 8))		// This register enables the CH_EN to be written in the bit choosen		
-	#define DMA_DMACHENREG_L_CH_EN(value)		(1 << value)			// 0 - Disable the channel; 1 - Enable the channel
-}dma_cfg_t;
+	#define DMA_DMACHENREG_L_CH_EN_WE(value)	(value<<8)		// This register enables the CH_EN to be written in the bit choosen
+	#define DMA_DMACHENREG_L_CH_EN(value)		(value)			// 0 - Disable the channel; 1 - Enable the channel
+}__attribute__ ((packed)) dma_cfg_t;
 
 
 typedef struct dma_lli{
