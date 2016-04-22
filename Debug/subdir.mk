@@ -7,18 +7,21 @@ C_SRCS += \
 ../dma.c \
 ../main.c \
 ../pwm.c \
+../spi.c \
 ../ws281x.c 
 
 OBJS += \
 ./dma.o \
 ./main.o \
 ./pwm.o \
+./spi.o \
 ./ws281x.o 
 
 C_DEPS += \
 ./dma.d \
 ./main.d \
 ./pwm.d \
+./spi.d \
 ./ws281x.d 
 
 
