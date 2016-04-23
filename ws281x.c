@@ -90,8 +90,8 @@ void ws281x_print_registers(ws281x_t *ws281x) {
 	volatile pwm_t *pwm = ws281x->devices->pwm_dev;
 	volatile dma_channel_t *dma = ws281x->devices->dma_ch;
 	volatile dma_cfg_t *dma_cfg = ws281x->devices->dma_cfg;
-	volatile ssp_control *ssp_ctrl = ws281x->devices->ssp_control_block;
-	volatile ssp_general *ssp_gral = ws281x->devices->ssp_general_block;
+	volatile ssp_control_t *ssp_ctrl = ws281x->devices->ssp_control_block;
+	volatile ssp_general_t *ssp_gral = ws281x->devices->ssp_general_block;
 
 	printf("###################################\n");
 	printf("##                               ##\n");
@@ -404,8 +404,60 @@ int ws281x_dma_setup(ws281x_t *ws281x) {
 }
 
 int ws281x_spi_setup(ws281x_t *ws281x){
-	volatile ssp_control_t ssp_control_block = ws281x->devices->ssp_control_block;
-	volatile ssp_general_t ssp_general_block = ws281x->devices->ssp_general_block;
+	volatile ssp_control_t *ssp_control = ws281x->devices->ssp_control_block;
+	volatile ssp_general_t *ssp_general = ws281x->devices->ssp_general_block;
+
+	ssp_control->__sscr0__ =
+			SPI_SSP_SSCR0_MOD_NORMALSSPMODE |
+			SPI_SSP_SSCR0_ACS_CLOCKBYAUDIOCLOCK |
+			SPI_SSP_SSCR0_TIM_NOINTERRUPTFIFOUNDERRUN |
+			SPI_SSP_SSCR0_RIM_NOINTERRUPTFIFOOVERRUN |
+			SPI_SSP_SSCR0_NCS_CLOCKBYECS |
+			SPI_SSP_SSCR0_EDSS_ONEPREPENDTODSS |
+			SPI_SSP_SSCR0_SCR_SERIALCLOCKRATE(1024) |
+			SPI_SSP_SSCR0_SSE_SSPDISABLE |
+			SPI_SSP_SSCR0_ECS_CLOCKFROMONCHIPCLOCK |
+			SPI_SSP_SSCR0_FRF_TEXASINSTRUMENTS |
+			SPI_SSP_SSCR0_DSS_DATASIZESELECT(0xF) ;
+
+	ssp_control->__sscr1__ =
+			SPI_SSP_SSCR1_TTELP_TXDTRISTATEONCLOCKEDGE |
+			SPI_SSP_SSCR1_TTE_TXDNOTTRISTATED |
+			SPI_SSP_SSCR1_EBCEI_NOINTERRUPTONBITCOUNTERR |
+			SPI_SSP_SSCR1_SCFR_SLAVECLKFREERUNNING |
+			SPI_SSP_SSCR1_ECRA_NOREQCLOCKFROMOTHERSSP |
+			SPI_SSP_SSCR1_ECRB_NOREQCLOCKFROMOTHERSSP |
+			SPI_SSP_SSCR1_SCLKDIR_MASTERMODECLOCK |
+			SPI_SSP_SSCR1_SFRMDIR_MASTERMODEFRAME |
+			SPI_SSP_SSCR1_RWOT_TRANSMITANDRECEIVE |
+			SPI_SSP_SSCR1_TRAIL_CPUHANDLETRAILINGBYTE | 	// NEED TO CHANGE
+			SPI_SSP_SSCR1_TSRE_DMATRANSMITREQDISABLE | 		// NEED TO CHANGE
+			SPI_SSP_SSCR1_RSRE_DMARECEIVEREQDISABLE | 		// NEED TO CHANGE
+			SPI_SSP_SSCR1_TINTE_NOINTERRUPTONTIMEOUT |
+			SPI_SSP_SSCR1_PINTE_NOTRAILINGBYTEINTERRUPT |
+			SPI_SSP_SSCR1_IFS_FRAMEPOLARITYBYTHEFORMAT |
+			SPI_SSP_SSCR1_RFT_RECEIVEFIFOTRIGTHRESHOLD(0x0) |
+			SPI_SSP_SSCR1_TFT_TRANSMITFIFOTRIGTHRESHOLD(0x0) |
+			SPI_SSP_SSCR1_TIE_TRANSFIFOLEVELINTERRDISA |  	// POSSIBLY CHANGE
+			SPI_SSP_SSCR1_RIE_RECEIFIFOLEVELINTERRDISA ; 	// POSSIBLY CHANGE
+
+	ssp_control->__ssdr__ = 0xACACACAC ;
+
+	ssp_control->__ssacd__ =
+			SPI_SSP_SSACD_ACPS_AUDIOCLK_14_857MHZ |
+			SPI_SSP_SSACD_SCDB_SYSCLKDIVIDEVBY4 |
+			SPI_SSP_SSACD_ACDS_AUDIOCLKDIVIDER(5) ;
+
+	ssp_control->__sitf__ &= ~0xFFFF ;
+	ssp_control->__sitf__ |=
+			SPI_SSP_SITF_SETTRANSLOWWATERMARKSPI(0x0) |
+			SPI_SSP_SITF_SETTRANSHIGHWATERMARKSPI(0xFF) ;
+	ssp_general->__prv_clock_params__ =
+			SPI_SSP_PRVCLKPARAMS_CLOCKUPDATE |
+			SPI_SSP_PRVCLKPARAMS_N_DIVISOR(0xFF) |
+			SPI_SSP_PRVCLKPARAMS_M_DIVIDEND(0x2) |
+			SPI_SSP_PRVCLKPARAMS_ENABLECLOCK ;
+
 }
 
 int ws281x_init(ws281x_t *ws281x) {
@@ -487,6 +539,11 @@ int ws281x_init(ws281x_t *ws281x) {
 	}
 	}
 	*/
+
+
+	ws281x_print_registers(ws281x);
+
+	ws281x_spi_setup(ws281x);
 
 	ws281x_print_registers(ws281x);
 
