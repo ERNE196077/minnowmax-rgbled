@@ -41,8 +41,8 @@ typedef struct ws281x_devices {
 	volatile gpio_t *gpio_pin_spi_clk;
 	volatile u_int32_t *fifo_data;
 	volatile u_int32_t *fifo_data2;
-	volatile ssp_control *ssp_control_block;
-	volatile ssp_general *ssp_general_block;
+	volatile ssp_control_t *ssp_control_block;
+	volatile ssp_general_t *ssp_general_block;
 } ws281x_devices_t;
 
 static u_int32_t ws281x_convert_virtual	(const volatile void *addr) {
@@ -156,8 +156,6 @@ void ws281x_print_registers(ws281x_t *ws281x) {
 	printf("General Purpose\t\t%08x\n", ssp_gral->__general__);
 	printf("SSP_REG\t\t\t%08x\n", ssp_gral->__ssp_reg__);
 	printf("SPI_CS_CTRL_REG\t\t%08x\n", ssp_gral->__spi_cs_ctrl__);
-
-
 }
 
 void ws281x_print_fifo(ws281x_t *ws281x) {
@@ -171,7 +169,6 @@ void ws281x_print_fifo(ws281x_t *ws281x) {
 
 	for (int i = 0; i < WORDCOUNT(ws281x->lednumber); i++)
 		printf("%08x\t%08x\n", *(word + (i)), *(word2 + (i)));
-
 }
 
 int ws281x_fifo_init(ws281x_t *ws281x) {
@@ -406,6 +403,11 @@ int ws281x_dma_setup(ws281x_t *ws281x) {
 	return 0;
 }
 
+int ws281x_spi_setup(ws281x_t *ws281x){
+	volatile ssp_control_t ssp_control_block = ws281x->devices->ssp_control_block;
+	volatile ssp_general_t ssp_general_block = ws281x->devices->ssp_general_block;
+}
+
 int ws281x_init(ws281x_t *ws281x) {
 	/*
 	 *
@@ -452,8 +454,8 @@ int ws281x_init(ws281x_t *ws281x) {
 	devices->gpio_pin_spi_clk = (volatile gpio_t *) (gpio_base + gpio_pins[11]);
 	devices->dma_ch = (volatile dma_channel_t *) (dma_base + dma_channels[dma_ch_number]);
 	devices->dma_cfg = (volatile dma_cfg_t *) (dma_base + DMA_DMACCFG_OFF);
-	devices->ssp_control_block = (volatile ssp_control *) spi_base;
-	devices->ssp_general_block = (volatile ssp_general *) (spi_base + SPI_SSP_GENERAL_OFFSET);
+	devices->ssp_control_block = (volatile ssp_control_t *) spi_base;
+	devices->ssp_general_block = (volatile ssp_general_t *) (spi_base + SPI_SSP_GENERAL_OFFSET);
 
 	/*
 	 *

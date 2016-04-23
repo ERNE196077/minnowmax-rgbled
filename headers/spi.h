@@ -4,7 +4,7 @@
 
 
 
-#define SPI_BAR 			0x90c18000
+#define SPI_BAR 				0x90c18000
 #define SPI_SSP_GENERAL_OFFSET	(0x400 / 4)
 
 
@@ -71,47 +71,84 @@ u_int32_t __sscr1__;
 #define SPI_SSP_SSCR1_MWDS_MICROWIRE16BITDATASIZE	(1 << 5)
 #define SPI_SSP_SSCR1_SPH_MOTOROLACLKOFFATFRMSTART	(0 << 4)
 #define SPI_SSP_SSCR1_SPH_MOTOROLACLKONATFRMSTART	(1 << 4)
-#define SPI_SSP_SSCR1_SPO_MOTO
-#define SPI_SSP_SSCR1_SPO_
-#define SPI_SSP_SSCR1_LBM_
-#define SPI_SSP_SSCR1_LBM_
-#define SPI_SSP_SSCR1_TIE_
-#define SPI_SSP_SSCR1_TIE_
-#define SPI_SSP_SSCR1_RIE_
-#define SPI_SSP_SSCR1_RIE_
+#define SPI_SSP_SSCR1_SPO_MOTOROLACLOCKIDLEASLOW	(0 << 3)
+#define SPI_SSP_SSCR1_SPO_MOTOROLACLOCKIDLEASHIGH	(1 << 3)
+#define SPI_SSP_SSCR1_TIE_TRANSFIFOLEVELINTERRDISA	(0 << 1)
+#define SPI_SSP_SSCR1_TIE_TRANSFIFOLEVELINTERRENA	(1 << 1)
+#define SPI_SSP_SSCR1_RIE_RECEIFIFOLEVELINTERRDISA	(0)
+#define SPI_SSP_SSCR1_RIE_RECEIFIFOLEVELINTERRENA	(1)
 
 u_int32_t __sssr__;
-#define SPI_SSP_
-u_int32_t __ssitr__;
-#define SPI_SSP_
-u_int32_t __ssdr__;
-#define SPI_SSP_
-u_int32_t __rsv_0x014__[5];
+#define SPI_SSP_SSSR_BCE_BITCOUNTERROR				(1 << 23)
+#define SPI_SSP_SSSR_CSS_CLOCKSYNCSTATUS			(1 << 22)
+#define SPI_SSP_SSSR_TUR_TRANSMITFIFOUNDERRUN		(1 << 21)
+#define SPI_SSP_SSSR_EOC_ENDOFDMACHAIN				(1 << 20)
+#define SPI_SSP_SSSR_TINT_RECEIVERTIMEOUTINTERRUPT	(1 << 19)
+#define SPI_SSP_SSSR_PINT_PENDINGTRAILINGBYTE		(1 << 18)
+#define SPI_SSP_SSSR_RFL_RECEIVEFIFOLEVEL			(0xF << 12)
+#define SPI_SSP_SSSR_TFL_TRANSMITFIFOLEVEL			(0xF << 8)
+#define SPI_SSP_SSSR_ROR_RECEIVEFIFOOVERRUN			(1 << 7)
+#define SPI_SSP_SSSR_RFS_RECEIVEFIFOSERVICEREQ		(1 << 6)
+#define SPI_SSP_SSSR_TFS_TRANSMITFIFOSERVICEREQ		(1 << 5)
+#define SPI_SSP_SSSR_BSY_SPIBUSY					(1 << 4)
+#define SPI_SSP_SSSR_RNE_RECEIVEFIFONOTEMPTY		(1 << 3)
+#define SPI_SSP_SSSR_TNF_TRANSMITFIFONOTFULL		(1 << 2)
+
+u_int32_t __ssitr__;	//ONLY FOR TESTING
+
+u_int32_t __ssdr__;		// DATA REGISTER, USED TO READ WRITE DATA FROM/TO THE RECEIVE/TRANSMIT FIFO'S
+
+u_int32_t __rsv_0x014__[5]; // POSSIBLY ARE DATA REGISTERS
 u_int32_t __ssto__;
-#define SPI_SSP_
-u_int32_t __sspsp__;
-#define SPI_SSP_
-u_int32_t __sstsa__;
-#define SPI_SSP_
-u_int32_t __ssrsa__;
-#define SPI_SSP_
-u_int32_t __sstss__;
-#define SPI_SSP_
+#define SPI_SSP_SSTO_INACTIVITYWITHINTHERECEIVEFIFO(value)	(value & 0xFFFFFF)
+
+u_int32_t __sspsp__;	// USED FOR SPI IN NETWORK MODE
+
+u_int32_t __sstsa__;	// USED FOR SPI IN NETWORK MODE
+
+u_int32_t __ssrsa__;	// USED FOR SPI IN NETWORK MODE
+
+u_int32_t __sstss__;	// USED FOR SPI IN NETWORK MODE
+
 u_int32_t __ssacd__;
-#define SPI_SSP_
-u_int32_t __itf__;
-#define SPI_SSP_
+#define SPI_SSP_SSACD_ACPS_AUDIOCLK_5_622MHZ		(0 << 4)
+#define SPI_SSP_SSACD_ACPS_AUDIOCLK_11_345MHZ		(1 << 4)
+#define SPI_SSP_SSACD_ACPS_AUDIOCLK_12_235MHZ		(2 << 4)
+#define SPI_SSP_SSACD_ACPS_AUDIOCLK_14_857MHZ		(3 << 4)
+#define SPI_SSP_SSACD_ACPS_AUDIOCLK_32_842MHZ		(4 << 4)
+#define SPI_SSP_SSACD_ACPS_AUDIOCLK_48_000MHZ		(5 << 4)
+#define SPI_SSP_SSACD_SCDB_SYSCLKDIVIDEVBY4			(0 << 3)
+#define SPI_SSP_SSACD_SCDB_SYSCLKNODIVIDED			(1 << 3)
+#define SPI_SSP_SSACD_ACDS_AUDIOCLKDIVIDER(value)	(value)		// 1 - 5
+
+u_int32_t __itf__;		// INTEGRATED IN-CHIP SOUND INTERFACE
+#define SPI_SSP_ITF_READTRANSFIFOENTRIESI2S			(0x7FF << 20)
+#define SPI_SSP_ITF_SETTRANSLOWWATERMARKI2S(value)	((value & 0x3FF) << 10)
+#define SPI_SSP_ITF_SETTRANSHIGHWATERMARK12S(value)	(value & 0x3FF)
+
 u_int32_t __sitf__;
-#define SPI_SSP_
+#define SPI_SSP_SITF_READTRANSFIFOENTRIESSPI		(0x7FF << 20)
+#define SPI_SSP_SITF_SETTRANSLOWWATERMARKSPI(value)	((value & 0x3FF) << 10)
+#define SPI_SSP_SITF_SETTRANSHIGHWATERMARKSPI(value)	(value & 0x3FF)
+
 u_int32_t __sirf__;
-#define SPI_SSP_
-}__attribute__((packed)) ssp_control;
+#define SPI_SSP_SITF_READRECEIFIFOENTRIESSPI		(0x7FF << 20)
+#define SPI_SSP_SITF_SETRECEILOWWATERMARKSPI(value)	((value & 0x3FF) << 10)
+#define SPI_SSP_SITF_SETRECEIHIGHWATERMARKSPI(value)	(value & 0x3FF)
+
+}__attribute__((packed)) ssp_control_t;
 
 typedef struct{
 u_int32_t __prv_clock_params__;
+#define SPI_SSP_PRVCLKPARAMS_CLOCKUPDATE			(1 << 31)
+#define SPI_SSP_PRVCLKPARAMS_N_DIVISOR(value)		((value & 0x7FFF) << 16)
+#define SPI_SSP_PRVCLKPARAMS_M_DIVIDEND(value)		((value & 0x7FFF) << 1)
+#define SPI_SSP_PRVCLKPARAMS_ENABLECLOCK			(1)
+#define SPI_SSP_PRVCLKPARAMS_DISABLECLOCK			(0)
+
 u_int32_t __resets__;
 u_int32_t __general__;
 u_int32_t __ssp_reg__;
 u_int32_t __rsv_0x410__[2];
 u_int32_t __spi_cs_ctrl__;
-}__attribute__((packed)) ssp_general;
+}__attribute__((packed)) ssp_general_t;
