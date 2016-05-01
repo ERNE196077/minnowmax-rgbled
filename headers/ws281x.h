@@ -59,6 +59,13 @@ void 				ws281x_fifo_deinit			(ws281x_t *ws281x);
 void				ws281x_print_fifo			(ws281x_t *ws281x);
 void 				ws281x_print_registers		(ws281x_t *ws281x);
 int					ws281x_dma_setup			(ws281x_t *ws281x);
+int					ws281x_dma_start			(ws281x_t *ws281x);
+int					ws281x_dma_stop				(ws281x_t *ws281x);
+int					ws281x_gpio_setup			(ws281x_t *ws281x);
+int					ws281x_spi_setup			(ws281x_t *ws281x);
+int 				ws281x_spi_start 			(ws281x_t *ws281x);
+int 				ws281x_spi_stop 			(ws281x_t *ws281x);
+int 				ws281x_spi_additems			(ws281x_t *ws281x);
+int 				ws281x_spi_getreceived		(ws281x_t *ws281x);
 //void				ws281x_dma_deint			(ws281x_devices_t *devices);
 
-static u_int32_t ws281x_convert_virtual	(const volatile void *addr);

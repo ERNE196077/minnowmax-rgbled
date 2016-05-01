@@ -37,7 +37,7 @@ int main (){
 		.lednumber = 3 ,
 		.ledarray = (led_t *)led_array ,
 		.gpio_pin_number = 24 ,
-		.dma_ch_number = 3
+		.dma_ch_number = 0
 
 	};
 
@@ -70,7 +70,7 @@ int main (){
 
 			//UNMAP_DEVICE(gpio_base,GPIO_SCORE_BASE_SIZE);
 			//UNMAP_DEVICE(gpio_base,sizeof(pwm_t));
-	char s;
-	s = getchar();
+
+	getchar();
 return 0;
 }
