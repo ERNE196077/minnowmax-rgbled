@@ -41,7 +41,7 @@ typedef struct ws281x_devices {
 	volatile gpio_t *gpio_pin_spi_mosi;
 	volatile gpio_t *gpio_pin_spi_clk;
 	volatile u_int32_t *fifo_data;
-	volatile u_int32_t *fifo_data2;
+	volatile u_int32_t fifo_data2[11];
 	volatile ssp_control_t *ssp_control_block;
 	volatile ssp_general_t *ssp_general_block;
 } ws281x_devices_t;
@@ -164,8 +164,11 @@ void ws281x_print_registers(ws281x_t *ws281x) {
 	printf("SPI_CS_CTRL_REG\t\t%08x\n", ssp_gral->__spi_cs_ctrl__);
 
 	print_spi_status(ssp_ctrl->__sssr__);
-	//print_dma_status(dma_cfg->__dmaparamsch0__);
-
+	print_dma_status(dma_cfg->__dmaparamsch0__);
+	printf ( "%08x [0]\n", ws281x_convert_virtual(&ws281x->devices->fifo_data2[0]));
+	printf ( "%08x [1]\n", ws281x_convert_virtual(&ws281x->devices->fifo_data2[1]));
+	printf ( "%08x [2]\n", ws281x_convert_virtual(&ws281x->devices->fifo_data2[2]));
+	printf ( "%08x [3]\n", ws281x_convert_virtual(&ws281x->devices->fifo_data2[3]));
 }
 
 void ws281x_print_fifo(ws281x_t *ws281x) {
@@ -186,7 +189,30 @@ int ws281x_fifo_init(ws281x_t *ws281x) {
 
 	//Allocate memory for the led color data
 	ws281x->devices->fifo_data = malloc(BYTECOUNT(ws281x->lednumber));
-	ws281x->devices->fifo_data2 = malloc(BYTECOUNT(ws281x->lednumber));
+
+	ws281x->devices->fifo_data2[0] = 0x009249B6;
+		ws281x->devices->fifo_data2[1] = 0x00DB6DA4;
+		ws281x->devices->fifo_data2[2] = 0x00936DB6;
+		ws281x->devices->fifo_data2[3] = 0x00DB6DA4;
+		ws281x->devices->fifo_data2[4] = 0x009249B6;
+		ws281x->devices->fifo_data2[5] = 0x00DB6DA4;
+		ws281x->devices->fifo_data2[6] = 0x00936DB6;
+		ws281x->devices->fifo_data2[7] = 0x00DB6DA4;
+
+		ws281x->devices->fifo_data2[8] = 0x009249B6;
+		/*
+		 * 	ws281x->devices->fifo_data2[0] = 0x9249B6DB;
+	ws281x->devices->fifo_data2[1] = 0x6DA4936D;
+	ws281x->devices->fifo_data2[2] = 0xB69249B6;
+	ws281x->devices->fifo_data2[3] = 0xDB6DA400;
+	ws281x->devices->fifo_data2[4] = 0xDB6DA400;
+	ws281x->devices->fifo_data2[5] = 0xDB6DA400;
+	ws281x->devices->fifo_data2[6] = 0xDB6DA400;
+	ws281x->devices->fifo_data2[7] = 0xDB6DA400;
+	ws281x->devices->fifo_data2[8] = 0xDB6DA400;
+	ws281x->devices->fifo_data2[9] = 0xDB6DA400;
+	ws281x->devices->fifo_data2[10] = 0xDB6DA400;
+*/
 	if (!ws281x->devices->fifo_data)
 		return -1;
 
@@ -195,10 +221,10 @@ int ws281x_fifo_init(ws281x_t *ws281x) {
 
 	for (int i = 0; i < ws281x->lednumber; i++) {
 		int j = 24 * i;
-		*(word + (j++)) = 0xFFFFFFAA;//((*ledarray).r & 1) ? WS281X_PWM_REG_HIGH : WS281X_PWM_REG_LOW;
-		*(word + (j++)) = ((*ledarray).r & 2) ? WS281X_PWM_REG_HIGH : WS281X_PWM_REG_LOW;
-		*(word + (j++)) = ((*ledarray).r & 4) ? WS281X_PWM_REG_HIGH : WS281X_PWM_REG_LOW;
-		*(word + (j++)) = ((*ledarray).r & 8) ? WS281X_PWM_REG_HIGH : WS281X_PWM_REG_LOW;
+		*(word + (j++)) = 0x9249B6DB;//((*ledarray).r & 1) ? WS281X_PWM_REG_HIGH : WS281X_PWM_REG_LOW;
+		*(word + (j++)) = 0x6DA4936D;
+		*(word + (j++)) = 0xB69249B6;
+		*(word + (j++)) = 0xDB6DA400;
 		*(word + (j++)) = ((*ledarray).r & 16) ? WS281X_PWM_REG_HIGH : WS281X_PWM_REG_LOW;
 		*(word + (j++)) = ((*ledarray).r & 32) ? WS281X_PWM_REG_HIGH : WS281X_PWM_REG_LOW;
 		*(word + (j++)) = ((*ledarray).r & 64) ? WS281X_PWM_REG_HIGH : WS281X_PWM_REG_LOW;
@@ -231,7 +257,7 @@ int ws281x_dma_setup(ws281x_t *ws281x) {
 
 	dma_cfg->__dmacfgre_l__ = 0x1;
 
-	dma->__sar_l__ = ws281x_convert_virtual(ws281x->devices->fifo_data);
+	dma->__sar_l__ = ws281x_convert_virtual(&ws281x->devices->fifo_data2[0]);
 
 	dma->__dar_l__ = SPI_BAR+0x10;//(u_int32_t)0x90825000;
 
@@ -243,9 +269,9 @@ int ws281x_dma_setup(ws281x_t *ws281x) {
 			DMA_CTL_LO_TTFC_FLOWCONTROLBYANYDEVICE |
 			DMA_CTL_LO_DSTSCATTEREN_DESTSCATTERDISABLE |
 			DMA_CTL_LO_SRCGATHEREN_SOURCEGATHERDISABLE |
-			DMA_CTL_LO_SRCMSIZE_SRCBURSTITEMNUM(0x1) |
-			DMA_CTL_LO_DESTMSIZE_DSTBURSTITEMNUM(0x1) |
-			DMA_CTL_LO_SINC_SOURCEADDRNOCHANGE |
+			DMA_CTL_LO_SRCMSIZE_SRCBURSTITEMNUM(7) |
+			DMA_CTL_LO_DESTMSIZE_DSTBURSTITEMNUM(7) |
+			DMA_CTL_LO_SINC_SOURCEADDRINCREMENT |
 			DMA_CTL_LO_DINC_DESTADDRNOCHANGE |
 			DMA_CTL_LO_SRCTRWIDTH_SRCTRANSFEROF32BITS |
 			DMA_CTL_LO_DSTTRWIDTH_DSTTRANSFEROF32BITS |
@@ -254,7 +280,7 @@ int ws281x_dma_setup(ws281x_t *ws281x) {
 
 	dma->__ctl_h__ =
 			DMA_CTL_HI_DONE_DONEBITZERO |
-			DMA_CTL_HI_BLOCKTS_DMAFLOWBLOCKSIZE(2) ;
+			DMA_CTL_HI_BLOCKTS_DMAFLOWBLOCKSIZE(9) ;
 
 	dma->__cfg_l__ =
 			DMA_CFG_LO_RELOADDST_NORELOADDSTAFTERTRANSFER |
@@ -281,7 +307,7 @@ int ws281x_dma_setup(ws281x_t *ws281x) {
 			DMA_CFG_HI_FIFOMODE_SPACEDATAEQTOTRANSWDITH |
 			DMA_CFG_HI_FCMODE_SRCTRANSREQWHENTHEYOCURR ;
 
-	dma->__sgr_l__ = DMA_SGR_LO_SGI_SRCGATHERINCDECMULTIPLE(32);
+	dma->__sgr_l__ = DMA_SGR_LO_SGI_SRCGATHERINCDECMULTIPLE(64);
 
 	dma->__dsr_l__ = DMA_DSR_LO_DSI_DESTSCATTERINCDECMULTIPLE(32);
 
@@ -293,8 +319,8 @@ int	ws281x_dma_start (ws281x_t *ws281x){
 	u_int8_t ch_num = ws281x->dma_ch_number;
 
 	dma_cfg->__chenreg_l__ = (0x1 << (8 + ch_num)) | (0x1 << ch_num);
-	//dma_cfg->__reqdstreg_l__ = (0x1 << (8 + ch_num)) | (0x1 << ch_num);
-	//dma_cfg->__reqsrcreg_l__ = (0x1 << (8 + ch_num)) | (0x1 << ch_num);
+	dma_cfg->__reqdstreg_l__ = (0x1 << (8 + ch_num)) | (0x1 << ch_num);
+	dma_cfg->__reqsrcreg_l__ = (0x1 << (8 + ch_num)) | (0x1 << ch_num);
 
 	dma_cfg->__sglrqdstreg_l__ = (0x1 << (8 + ch_num)) | (0x1 << ch_num);
 	dma_cfg->__sglrqsrcreg_l__ = (0x1 << (8 + ch_num)) | (0x1 << ch_num);
@@ -343,7 +369,7 @@ int ws281x_spi_setup (ws281x_t *ws281x){
 			SPI_SSP_SSCR0_SSE_SSPDISABLE |
 			SPI_SSP_SSCR0_ECS_EXTERNALCLOCKFROMGPIO |
 			SPI_SSP_SSCR0_FRF_TEXASINSTRUMENTS |
-			SPI_SSP_SSCR0_DSS_DATASIZESELECT(0xF) ;
+			SPI_SSP_SSCR0_DSS_DATASIZESELECT(0x7) ;
 
 	ssp_control->__sscr1__ =
 			SPI_SSP_SSCR1_TTELP_TXDTRISTATEONCLOCKEDGE |
@@ -408,10 +434,10 @@ int ws281x_spi_additems (ws281x_t *ws281x){
 	//u_int32_t testnumber[2] = 0xACACACAC , 0xBCBCBCBC);
 	//ssp_control->__ssdr__ = 0xDB6DB600;
 	//ssp_control->__ssdr__ = 0xDB492400;
-	ssp_control->__ssdr__ = 0x9249B6DB;
-	ssp_control->__ssdr__ = 0x6DA4936D;
-	ssp_control->__ssdr__ = 0xB69249B6;
-	ssp_control->__ssdr__ = 0xDB6DA400;
+	ssp_control->__ssdr__ = 0x9249B6;
+	ssp_control->__ssdr__ = 0xDB6DA4;
+	ssp_control->__ssdr__ = 0x936DB6;
+	ssp_control->__ssdr__ = 0x9249B6;
 	/*
 	ssp_control->__ssdr__ =  0xACACACAC;
 	ssp_control->__ssdr__ =  0xACACACAC;
@@ -529,6 +555,7 @@ int ws281x_init (ws281x_t *ws281x) {
 	}
 	}
 	*/
+	ws281x_spi_stop(ws281x);
 
 	ws281x_dma_stop(ws281x);
 	usleep(100);
@@ -541,8 +568,8 @@ int ws281x_init (ws281x_t *ws281x) {
 	//ws281x_print_registers(ws281x);
 
 
-	//ws281x_spi_setup(ws281x);
-	//ws281x_spi_start(ws281x);
+	ws281x_spi_setup(ws281x);
+	ws281x_spi_start(ws281x);
 
 
 	ws281x_dma_setup(ws281x);
@@ -554,30 +581,6 @@ int ws281x_init (ws281x_t *ws281x) {
 	ws281x_print_registers(ws281x);
 
 
-
-	/*
-	ws281x_dma_setup(ws281x);
-<
-	//ws281x->devices->dma_cfg->__chenreg_l__ = DMA_DMACHENREG_L_CH_EN_WE(0xC3) | DMA_DMACHENREG_L_CH_EN(0xC3);
-	ws281x->devices->dma_cfg->__chenreg_l__ = DMA_DMACHENREG_L_CH_EN_WE(0x3C) | DMA_DMACHENREG_L_CH_EN(0x3C);
-		//ws281x->devices->dma_cfg->__reqsrcreg_l__ = DMA_DMACHENREG_L_CH_EN_WE(0x1) | DMA_DMACHENREG_L_CH_EN(0x1);
-	//ws281x->devices->dma_cfg->__reqdstreg_l__ = DMA_DMACHENREG_L_CH_EN_WE(0x1) | DMA_DMACHENREG_L_CH_EN(0x1);
-	//ws281x->devices->dma_cfg->__lstsrcreg_l__ = DMA_DMACHENREG_L_CH_EN_WE(0x1) | DMA_DMACHENREG_L_CH_EN(0x1);
-	//ws281x->devices->dma_cfg->__lstdstreg_l__ = DMA_DMACHENREG_L_CH_EN_WE(0x1) | DMA_DMACHENREG_L_CH_EN(0x1);
-	usleep(10);
-	//ws281x->devices->dma_cfg->__reqdstreg_l__ = DMA_DMACHENREG_L_CH_EN_WE(0x3C) | DMA_DMACHENREG_L_CH_EN(0x3C);
-	ws281x->devices->dma_cfg->__sglrqdstreg_l__ = DMA_DMACHENREG_L_CH_EN_WE(0x3C) | DMA_DMACHENREG_L_CH_EN(0x3C);
-	usleep(10);
-	//ws281x->devices->dma_cfg->__reqsrcreg_l__ = DMA_DMACHENREG_L_CH_EN_WE(0x3C) | DMA_DMACHENREG_L_CH_EN(0x3C);
-	ws281x->devices->dma_cfg->__sglrqsrcreg_l__ = DMA_DMACHENREG_L_CH_EN_WE(0x3C) | DMA_DMACHENREG_L_CH_EN(0x3C);
-
-//	ws281x->devices->dma_cfg->__chenreg_l__ = DMA_DMACHENREG_L_CH_EN_WE(0x00) | DMA_DMACHENREG_L_CH_EN(0x00);	ws281x->devices->dma_cfg->__sglrqdstreg_l__ = DMA_DMACHENREG_L_CH_EN_WE(0x00) | DMA_DMACHENREG_L_CH_EN(0x00);	ws281x->devices->dma_cfg->__sglrqsrcreg_l__ = DMA_DMACHENREG_L_CH_EN_WE(0x00) | DMA_DMACHENREG_L_CH_EN(0x00);
-
-	usleep(1000);
-
-	ws281x_print_registers(ws281x);
-	*/
-	//ws281x_print_fifo(ws281x);
 
 	return 0;
 }

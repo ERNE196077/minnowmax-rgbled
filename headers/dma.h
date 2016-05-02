@@ -73,14 +73,14 @@ typedef struct{
 	#define DMA_CTL_LO_DINC_DESTADDRINCREMENT			(0x0 << 7)			// 00 - Increment, 01 - Decrement, 1x - No Change
 	#define DMA_CTL_LO_DINC_DESTADDRDECREMENT			(0x1 << 7)
 	#define DMA_CTL_LO_DINC_DESTADDRNOCHANGE			(0x2 << 7)
-	#define DMA_CTL_LO_SRCTRWIDTH_SRCTRANSFEROF32BITS	(0x0 << 4)				// This value must be less than or equal to DMAH_Mx_HDATA_WIDTH, where x is the AHB layer 1 to 4 where the source resides
-	#define DMA_CTL_LO_SRCTRWIDTH_SRCTRASNFEROF64BITS	(0x1 << 4)
-	#define DMA_CTL_LO_SRCTRWIDTH_SRCTRASNFEROF128BITS	(0x2 << 4)
-	#define DMA_CTL_LO_SRCTRWIDTH_SRCTRASNFEROF256BITS	(0x3 << 4)
-	#define DMA_CTL_LO_DSTTRWIDTH_DSTTRANSFEROF32BITS	(0x0 << 1)				// This value must be less than or equal to DMAH_Mx_HDATA_WIDTH, where x is the AHB layer 1 to 4 where the source resides
-	#define DMA_CTL_LO_DSTTRWIDTH_DSTTRASNFEROF64BITS	(0x1 << 1)
-	#define DMA_CTL_LO_DSTTRWIDTH_DSTTRASNFEROF128BITS	(0x2 << 1)
-	#define DMA_CTL_LO_DSTTRWIDTH_DSTTRASNFEROF256BITS	(0x3 << 1)
+	#define DMA_CTL_LO_SRCTRWIDTH_SRCTRANSFEROF8BITS	(0x0 << 4) //8 bits				// This value must be less than or equal to DMAH_Mx_HDATA_WIDTH, where x is the AHB layer 1 to 4 where the source resides
+	#define DMA_CTL_LO_SRCTRWIDTH_SRCTRANSFEROF16BITS	(0x1 << 4) //16 bits
+	#define DMA_CTL_LO_SRCTRWIDTH_SRCTRANSFEROF32BITS	(0x2 << 4) //32 bits
+	#define DMA_CTL_LO_SRCTRWIDTH_SRCTRANSFEROF64BITS	(0x3 << 4) //64 bits
+	#define DMA_CTL_LO_DSTTRWIDTH_DSTTRANSFEROF8BITS	(0x0 << 1)				// This value must be less than or equal to DMAH_Mx_HDATA_WIDTH, where x is the AHB layer 1 to 4 where the source resides
+	#define DMA_CTL_LO_DSTTRWIDTH_DSTTRANSFEROF16BITS	(0x1 << 1)
+	#define DMA_CTL_LO_DSTTRWIDTH_DSTTRANSFEROF32BITS	(0x2 << 1)
+	#define DMA_CTL_LO_DSTTRWIDTH_DSTTRANSFEROF64BITS	(0x3 << 1)
 	#define DMA_CTL_LO_INTEN_INTERRUPTSDISABLED			(0x0)					// If set, then all interrupt-generating sources are enabled.
 	#define DMA_CTL_LO_INTEN_INTERRUPTSENABLED			(0x1)
 
