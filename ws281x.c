@@ -23,6 +23,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <linux/pci.h>
+#include <linux/slab.h>
 #include <inttypes.h>			//DELETE AFTER FINISH LIB
 #include "headers/ws281x.h"
 #include "headers/general.h"
@@ -37,7 +38,10 @@
 typedef struct ws281x_devices {
 	volatile pwm_t *pwm_dev;
 	volatile dma_channel_t *dma_ch;
-	volatile dma_cfg_t *dma_cfg;
+	volatile dma_channel_t *dma_ch_2;
+	volatile dma_channel_t *dma_ch_3;
+	volatile dma_channel_t *dma_ch_4;
+		volatile dma_cfg_t *dma_cfg;
 	volatile gpio_t *gpio_pin_spi_mosi;
 	volatile gpio_t *gpio_pin_spi_clk;
 	volatile u_int32_t *fifo_data;
@@ -114,7 +118,9 @@ void ws281x_print_registers(ws281x_t *ws281x) {
 	printf("*****\tDMA REGISTERS\t*****\n\n");
 	printf("__sar_l__\t\t%08x\n", dma->__sar_l__);
 	printf("__dar_l__\t\t%08x\n", dma->__dar_l__);
+	printf("__dar_h__\t\t%08x\n", dma->__rsv_0x0c__);
 	printf("__llp_l__\t\t%08x\n", dma->__llp_l__);
+	printf("__llp_h__\t\t%08x\n", dma->__rsv_0x14__);
 	printf("__ctl_l__\t\t%08x\n", dma->__ctl_l__);
 	printf("__ctl_h__\t\t%08x\n", dma->__ctl_h__);
 	printf("__sstat_l__\t\t%08x\n", dma->__ssta_l__);
@@ -168,7 +174,19 @@ void ws281x_print_registers(ws281x_t *ws281x) {
 	printf ( "%08x [0]\n", ws281x_convert_virtual(&ws281x->devices->fifo_data2[0]));
 	printf ( "%08x [1]\n", ws281x_convert_virtual(&ws281x->devices->fifo_data2[1]));
 	printf ( "%08x [2]\n", ws281x_convert_virtual(&ws281x->devices->fifo_data2[2]));
-	printf ( "%08x [3]\n", ws281x_convert_virtual(&ws281x->devices->fifo_data2[3]));
+	printf ( "%08x [3]\n\n", ws281x_convert_virtual(&ws281x->devices->fifo_data2[3]));
+	printf ( "%08x [3]\n", ws281x_convert_virtual(&ws281x->devices->dma_ch));
+	printf ( "%08x block[2]\n", (intptr_t)&ws281x->devices->dma_ch);
+		printf ( "%08x block[2]\n\n", (intptr_t)ws281x->devices->dma_ch);
+
+	printf ( "%08x block[]\n", ws281x_convert_virtual(&ws281x->devices->dma_ch_2));
+	printf ( "%08x block[2]\n", (intptr_t)&ws281x->devices->dma_ch_2);
+	printf ( "%08x block[2]\n\n", (intptr_t)ws281x->devices->dma_ch_2);
+
+	printf ( "%08x block[3]\n", ws281x_convert_virtual(ws281x->devices->dma_ch_3 	));
+	printf ( "%08x block[2]\n", (intptr_t)&ws281x->devices->dma_ch_3);
+		printf ( "%08x block[2]\n\n", (intptr_t)ws281x->devices->dma_ch_3);
+
 }
 
 void ws281x_print_fifo(ws281x_t *ws281x) {
@@ -255,6 +273,21 @@ int ws281x_dma_setup(ws281x_t *ws281x) {
 	volatile dma_channel_t *dma = ws281x->devices->dma_ch;
 	volatile dma_cfg_t *dma_cfg = ws281x->devices->dma_cfg;
 
+	volatile dma_channel_t *dma2 = ws281x->devices->dma_ch_2;
+	u_int32_t addr2 = (uintptr_t)ws281x_convert_virtual(&ws281x->devices->dma_ch_2);
+	printf("\n\n\n\n%08x\n",addr2);
+	printf("%08x\n",(intptr_t)addr2);
+	printf("%08x\n",(intptr_t)(addr2 << 2));
+	printf("%08x\n\n\n\n",(intptr_t)(addr2 >> 29));
+
+
+
+	volatile dma_channel_t *dma3 = ws281x->devices->dma_ch_3;
+
+	u_int32_t addr3 = (uintptr_t)ws281x_convert_virtual(&ws281x->devices->dma_ch_3);
+		printf("\n\n\n\n%08x\n",addr3);
+		printf("%08x\n\n\n\n",(intptr_t)&ws281x->devices->dma_ch_3);
+
 	dma_cfg->__dmacfgre_l__ = 0x1;
 
 	dma->__sar_l__ = ws281x_convert_virtual(&ws281x->devices->fifo_data2[0]);
@@ -262,7 +295,7 @@ int ws281x_dma_setup(ws281x_t *ws281x) {
 	dma->__dar_l__ = SPI_BAR+0x10;//(u_int32_t)0x90825000;
 
 	dma->__ctl_l__ =
-			DMA_CTL_LO_LLPSRCEN_SRCLLPCHAINNINGDISABLE |
+			DMA_CTL_LO_LLPSRCEN_SRCLLPCHAINNINGENABLE |
 			DMA_CTL_LO_LLPDSTEN_DSTLLPCHAINNINGDISABLE |
 			DMA_CTL_LO_SMS_SRCMASTERLAYER1 |
 			DMA_CTL_LO_DMS_DSTMASTERLAYER1 |
@@ -271,16 +304,17 @@ int ws281x_dma_setup(ws281x_t *ws281x) {
 			DMA_CTL_LO_SRCGATHEREN_SOURCEGATHERDISABLE |
 			DMA_CTL_LO_SRCMSIZE_SRCBURSTITEMNUM(7) |
 			DMA_CTL_LO_DESTMSIZE_DSTBURSTITEMNUM(7) |
-			DMA_CTL_LO_SINC_SOURCEADDRINCREMENT |
+			DMA_CTL_LO_SINC_SOURCEADDRNOCHANGE |
 			DMA_CTL_LO_DINC_DESTADDRNOCHANGE |
 			DMA_CTL_LO_SRCTRWIDTH_SRCTRANSFEROF32BITS |
 			DMA_CTL_LO_DSTTRWIDTH_DSTTRANSFEROF32BITS |
 			DMA_CTL_LO_INTEN_INTERRUPTSENABLED ;
-
+	dma->__llp_l__ = DMA_LLP_LO_ADDRESSOFNEXTLLP((uintptr_t)addr2);
+	dma->__rsv_0x14__ = (uintptr_t)(addr2 >> 29);
 
 	dma->__ctl_h__ =
 			DMA_CTL_HI_DONE_DONEBITZERO |
-			DMA_CTL_HI_BLOCKTS_DMAFLOWBLOCKSIZE(9) ;
+			DMA_CTL_HI_BLOCKTS_DMAFLOWBLOCKSIZE(1) ;
 
 	dma->__cfg_l__ =
 			DMA_CFG_LO_RELOADDST_NORELOADDSTAFTERTRANSFER |
@@ -310,6 +344,120 @@ int ws281x_dma_setup(ws281x_t *ws281x) {
 	dma->__sgr_l__ = DMA_SGR_LO_SGI_SRCGATHERINCDECMULTIPLE(64);
 
 	dma->__dsr_l__ = DMA_DSR_LO_DSI_DESTSCATTERINCDECMULTIPLE(32);
+
+
+	/////////////////////// Segundo
+
+	dma2->__sar_l__ = ws281x_convert_virtual(&ws281x->devices->fifo_data2[1]);
+
+	dma2->__dar_l__ = SPI_BAR+0x10;//(u_int32_t)0x90825000;
+
+	dma2->__ctl_l__ =
+			DMA_CTL_LO_LLPSRCEN_SRCLLPCHAINNINGENABLE |
+			DMA_CTL_LO_LLPDSTEN_DSTLLPCHAINNINGDISABLE |
+			DMA_CTL_LO_SMS_SRCMASTERLAYER1 |
+			DMA_CTL_LO_DMS_DSTMASTERLAYER1 |
+			DMA_CTL_LO_TTFC_FLOWCONTROLBYANYDEVICE |
+			DMA_CTL_LO_DSTSCATTEREN_DESTSCATTERDISABLE |
+			DMA_CTL_LO_SRCGATHEREN_SOURCEGATHERDISABLE |
+			DMA_CTL_LO_SRCMSIZE_SRCBURSTITEMNUM(7) |
+			DMA_CTL_LO_DESTMSIZE_DSTBURSTITEMNUM(7) |
+			DMA_CTL_LO_SINC_SOURCEADDRNOCHANGE |
+			DMA_CTL_LO_DINC_DESTADDRNOCHANGE |
+			DMA_CTL_LO_SRCTRWIDTH_SRCTRANSFEROF32BITS |
+			DMA_CTL_LO_DSTTRWIDTH_DSTTRANSFEROF32BITS |
+			DMA_CTL_LO_INTEN_INTERRUPTSENABLED ;
+	dma2->__llp_l__ = DMA_LLP_LO_ADDRESSOFNEXTLLP((uintptr_t)addr3);
+	dma2->__rsv_0x14__ = (uintptr_t)(addr2 >> 29);
+
+	dma2->__ctl_h__ =
+			DMA_CTL_HI_DONE_DONEBITZERO |
+			DMA_CTL_HI_BLOCKTS_DMAFLOWBLOCKSIZE(1) ;
+
+	dma2->__cfg_l__ =
+			DMA_CFG_LO_RELOADDST_NORELOADDSTAFTERTRANSFER |
+			DMA_CFG_LO_RELOADSRC_NORELOADSRCAFTERTRANSFER |
+			DMA_CFG_LO_MAXABRST_NOLIMITBURSTTRANSFER |
+			DMA_CFG_LO_SRCHSPOL_SRCHANDSHAKEACTIVEHIGH |
+			DMA_CFG_LO_DSTHSPOL_DSTHANDSHAKEACTIVEHIGH |
+			DMA_CFG_LO_LOCKB_BUSNOTLOCKED |
+			DMA_CFG_LO_LOCKCH_CHANNELNOTLOCKED |
+			DMA_CFG_LO_LOCKBL_BUSLOCKEDOVERDMATRANSFER |
+			DMA_CFG_LO_LOCKCHL_CHLOCKEDOVERDMATRANSFER |
+			DMA_CFG_LO_HSSELSRC_SOURCESWHANDSHAKING |				// TO BE CHANGED PROBABLY
+			DMA_CFG_LO_HSSELDST_DESTSWHANDSHAKING |
+			DMA_CFG_LO_FIFOEMPTY_SETVALUEZERO |
+			DMA_CFG_LO_CHSUSP_NOSUSREACTIVATEDMAACTIVITY |
+			DMA_CFG_LO_CHPRIOR_HIGHESTPRIORITY ;
+
+
+	dma2->__cfg_h__ =
+			DMA_CFG_HI_DESTPER_DSTHWHANDSHAKEIFACE(0x0) |
+			DMA_CFG_HI_SRCPER_SRCHWHANDSHAKEIFACE(0x0) |
+			DMA_CFG_HI_SSUPDEN_DISABLESRCSTATUSUPDATE |
+			DMA_CFG_HI_DSUPDEN_DISABLEDSTSTATUSUPDATE |
+			DMA_CFG_HI_FIFOMODE_SPACEDATAEQTOTRANSWDITH |
+			DMA_CFG_HI_FCMODE_SRCTRANSREQWHENTHEYOCURR ;
+
+	dma2->__sgr_l__ = DMA_SGR_LO_SGI_SRCGATHERINCDECMULTIPLE(64);
+
+	dma2->__dsr_l__ = DMA_DSR_LO_DSI_DESTSCATTERINCDECMULTIPLE(32);
+
+	/////////////////////// Tercero
+
+		dma3->__sar_l__ = ws281x_convert_virtual(&ws281x->devices->fifo_data2[2]);
+
+		dma3->__dar_l__ = SPI_BAR+0x10;//(u_int32_t)0x90825000;
+
+		dma3->__ctl_l__ =
+				DMA_CTL_LO_LLPSRCEN_SRCLLPCHAINNINGENABLE |
+				DMA_CTL_LO_LLPDSTEN_DSTLLPCHAINNINGDISABLE |
+				DMA_CTL_LO_SMS_SRCMASTERLAYER1 |
+				DMA_CTL_LO_DMS_DSTMASTERLAYER1 |
+				DMA_CTL_LO_TTFC_FLOWCONTROLBYANYDEVICE |
+				DMA_CTL_LO_DSTSCATTEREN_DESTSCATTERDISABLE |
+				DMA_CTL_LO_SRCGATHEREN_SOURCEGATHERDISABLE |
+				DMA_CTL_LO_SRCMSIZE_SRCBURSTITEMNUM(7) |
+				DMA_CTL_LO_DESTMSIZE_DSTBURSTITEMNUM(7) |
+				DMA_CTL_LO_SINC_SOURCEADDRNOCHANGE |
+				DMA_CTL_LO_DINC_DESTADDRNOCHANGE |
+				DMA_CTL_LO_SRCTRWIDTH_SRCTRANSFEROF32BITS |
+				DMA_CTL_LO_DSTTRWIDTH_DSTTRANSFEROF32BITS |
+				DMA_CTL_LO_INTEN_INTERRUPTSENABLED ;
+		dma3->__llp_l__ = 0x0;
+		dma3->__rsv_0x14__ = 0x0;
+		dma3->__ctl_h__ =
+				DMA_CTL_HI_DONE_DONEBITZERO |
+				DMA_CTL_HI_BLOCKTS_DMAFLOWBLOCKSIZE(0) ;
+
+		dma3->__cfg_l__ =
+				DMA_CFG_LO_RELOADDST_NORELOADDSTAFTERTRANSFER |
+				DMA_CFG_LO_RELOADSRC_NORELOADSRCAFTERTRANSFER |
+				DMA_CFG_LO_MAXABRST_NOLIMITBURSTTRANSFER |
+				DMA_CFG_LO_SRCHSPOL_SRCHANDSHAKEACTIVEHIGH |
+				DMA_CFG_LO_DSTHSPOL_DSTHANDSHAKEACTIVEHIGH |
+				DMA_CFG_LO_LOCKB_BUSNOTLOCKED |
+				DMA_CFG_LO_LOCKCH_CHANNELNOTLOCKED |
+				DMA_CFG_LO_LOCKBL_BUSLOCKEDOVERDMATRANSFER |
+				DMA_CFG_LO_LOCKCHL_CHLOCKEDOVERDMATRANSFER |
+				DMA_CFG_LO_HSSELSRC_SOURCESWHANDSHAKING |				// TO BE CHANGED PROBABLY
+				DMA_CFG_LO_HSSELDST_DESTSWHANDSHAKING |
+				DMA_CFG_LO_FIFOEMPTY_SETVALUEZERO |
+				DMA_CFG_LO_CHSUSP_NOSUSREACTIVATEDMAACTIVITY |
+				DMA_CFG_LO_CHPRIOR_HIGHESTPRIORITY ;
+
+
+		dma3->__cfg_h__ =
+				DMA_CFG_HI_DESTPER_DSTHWHANDSHAKEIFACE(0x0) |
+				DMA_CFG_HI_SRCPER_SRCHWHANDSHAKEIFACE(0x0) |
+				DMA_CFG_HI_SSUPDEN_DISABLESRCSTATUSUPDATE |
+				DMA_CFG_HI_DSUPDEN_DISABLEDSTSTATUSUPDATE |
+				DMA_CFG_HI_FIFOMODE_SPACEDATAEQTOTRANSWDITH |
+				DMA_CFG_HI_FCMODE_SRCTRANSREQWHENTHEYOCURR ;
+
+		dma3->__sgr_l__ = DMA_SGR_LO_SGI_SRCGATHERINCDECMULTIPLE(64);
+
+		dma3->__dsr_l__ = DMA_DSR_LO_DSI_DESTSCATTERINCDECMULTIPLE(32);
 
 	return 0;
 }
@@ -534,6 +682,21 @@ int ws281x_init (ws281x_t *ws281x) {
 	//PWM controllers registers are of u_int32_t size. Is not necessary to map an entire block for them.
 	devices->pwm_dev = (volatile pwm_t *) MAP_DEVICE(gpio_pin_number == 22 ? PWM0_BASE_ADDR : PWM1_BASE_ADDR,sizeof(pwm_t));
 
+    devices->dma_ch_2 = (volatile dma_channel_t *) aligned_alloc(32,sizeof(dma_channel_t));
+    devices->dma_ch_3 = (volatile dma_channel_t *) aligned_alloc(32,sizeof(dma_channel_t));
+    devices->dma_ch_4 = (volatile dma_channel_t *) aligned_alloc(32,sizeof(dma_channel_t));
+	printf ( "%08x &devices->dma_ch_2\n", ws281x_convert_virtual(&devices->dma_ch_2 	));
+	printf ( "%08x &devices->dma_ch_2\n", (intptr_t)&devices->dma_ch_2);
+		printf ( "%08x devices->dma_ch_2\n\n", (intptr_t)devices->dma_ch_2);
+
+		printf ( "%08x &devices->dma_ch_3\n", ws281x_convert_virtual(&devices->dma_ch_3 	));
+		printf ( "%08x &devices->dma_ch_3\n", (intptr_t)&devices->dma_ch_3);
+			printf ( "%08x devices->dma_ch_3\n\n", (intptr_t)devices->dma_ch_3);
+
+			printf ( "%08x Convert &devices->dma_ch_4\n", ws281x_convert_virtual(&devices->dma_ch_4 	));
+				printf ( "%08x &devices->dma_ch_4\n", (intptr_t)&devices->dma_ch_4);
+					printf ( "%08x devices->dma_ch_4\n", (intptr_t)devices->dma_ch_4);
+					printf ( "%08x Convert devices->ch4\n\n", ws281x_convert_virtual(devices->dma_ch_4 	));
 
 
 
@@ -555,7 +718,7 @@ int ws281x_init (ws281x_t *ws281x) {
 	}
 	}
 	*/
-	ws281x_spi_stop(ws281x);
+	//ws281x_spi_stop(ws281x);
 
 	ws281x_dma_stop(ws281x);
 	usleep(100);
@@ -568,11 +731,13 @@ int ws281x_init (ws281x_t *ws281x) {
 	//ws281x_print_registers(ws281x);
 
 
-	ws281x_spi_setup(ws281x);
-	ws281x_spi_start(ws281x);
+	//ws281x_spi_setup(ws281x);
+	//ws281x_spi_start(ws281x);
 
 
 	ws281x_dma_setup(ws281x);
+	ws281x_print_registers(ws281x);
+
 	ws281x_dma_start(ws281x);
 	//ws281x_spi_additems(ws281x);
 
