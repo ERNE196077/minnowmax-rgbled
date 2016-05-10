@@ -18,8 +18,14 @@ static const struct modversion_info ____versions[]
 __used
 __attribute__((section("__versions"))) = {
 	{ 0x5e862211, __VMLINUX_SYMBOL_STR(module_layout) },
-	{ 0x6bc3fbc0, __VMLINUX_SYMBOL_STR(__unregister_chrdev) },
-	{ 0xbf747902, __VMLINUX_SYMBOL_STR(__register_chrdev) },
+	{ 0xcaa6d0ed, __VMLINUX_SYMBOL_STR(device_destroy) },
+	{ 0x13b955c5, __VMLINUX_SYMBOL_STR(cdev_add) },
+	{ 0x6dc0ff64, __VMLINUX_SYMBOL_STR(cdev_init) },
+	{ 0xbd58457d, __VMLINUX_SYMBOL_STR(class_destroy) },
+	{ 0xe1a1579d, __VMLINUX_SYMBOL_STR(device_create) },
+	{ 0x7485e15e, __VMLINUX_SYMBOL_STR(unregister_chrdev_region) },
+	{ 0x231651bc, __VMLINUX_SYMBOL_STR(__class_create) },
+	{ 0x29537c9e, __VMLINUX_SYMBOL_STR(alloc_chrdev_region) },
 	{ 0xb2fd5ceb, __VMLINUX_SYMBOL_STR(__put_user_4) },
 	{ 0xd2b09ce5, __VMLINUX_SYMBOL_STR(__kmalloc) },
 	{ 0x6729d3df, __VMLINUX_SYMBOL_STR(__get_user_4) },

@@ -22,10 +22,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <string.h>
-#include <linux/version.h>
-#include <linux/pci.h>
-#include <linux/types.h>
-#include <linux/slab.h>
+#include <sys/ioctl.h>
+#include "ws281x_dma.h"
 
 			//DELETE AFTER FINISH LIB
 #include "headers/ws281x.h"
@@ -175,21 +173,6 @@ void ws281x_print_registers(ws281x_t *ws281x) {
 
 	print_spi_status(ssp_ctrl->__sssr__);
 	print_dma_status(dma_cfg->__dmaparamsch0__);
-	printf ( "%08x [0]\n", ws281x_convert_virtual(&ws281x->devices->fifo_data2[0]));
-	printf ( "%08x [1]\n", ws281x_convert_virtual(&ws281x->devices->fifo_data2[1]));
-	printf ( "%08x [2]\n", ws281x_convert_virtual(&ws281x->devices->fifo_data2[2]));
-	printf ( "%08x [3]\n\n", ws281x_convert_virtual(&ws281x->devices->fifo_data2[3]));
-	printf ( "%08x [3]\n", ws281x_convert_virtual(&ws281x->devices->dma_ch));
-	printf ( "%08x block[2]\n", (intptr_t)&ws281x->devices->dma_ch);
-		printf ( "%08x block[2]\n\n", (intptr_t)ws281x->devices->dma_ch);
-
-	printf ( "%08x block[]\n", ws281x_convert_virtual(&ws281x->devices->dma_ch_2));
-	printf ( "%08x block[2]\n", (intptr_t)&ws281x->devices->dma_ch_2);
-	printf ( "%08x block[2]\n\n", (intptr_t)ws281x->devices->dma_ch_2);
-
-	printf ( "%08x block[3]\n", ws281x_convert_virtual(ws281x->devices->dma_ch_3 	));
-	printf ( "%08x block[2]\n", (intptr_t)&ws281x->devices->dma_ch_3);
-		printf ( "%08x block[2]\n\n", (intptr_t)ws281x->devices->dma_ch_3);
 
 }
 
@@ -280,9 +263,9 @@ int ws281x_dma_setup(ws281x_t *ws281x) {
 	volatile dma_channel_t *dma2 = ws281x->devices->dma_ch_2;
 	u_int32_t addr2 = (intptr_t)ws281x_convert_virtual(&ws281x->devices->dma_ch_2);
 	printf("\n\n\n\n%08x\n",addr2);
-	printf("%08x\n",(intptr_t)addr2);
-	printf("%08x\n",(intptr_t)(addr2 << 2));
-	printf("%08x\n\n\n\n",(intptr_t)(addr2 >> 29));
+	printf("%p\n",(intptr_t)addr2);
+	printf("%p\n",(intptr_t)(addr2 << 2));
+	printf("%p\n\n\n\n",(intptr_t)(addr2 >> 29));
 
 
 
@@ -290,7 +273,7 @@ int ws281x_dma_setup(ws281x_t *ws281x) {
 
 	u_int32_t addr3 = (intptr_t)ws281x_convert_virtual(&ws281x->devices->dma_ch_3);
 		printf("\n\n\n\n%08x\n",addr3);
-		printf("%08x\n\n\n\n",(intptr_t)&ws281x->devices->dma_ch_3);
+		printf("%p\n\n\n\n",(intptr_t)&ws281x->devices->dma_ch_3);
 
 	dma_cfg->__dmacfgre_l__ = 0x1;
 
@@ -495,6 +478,9 @@ int	ws281x_dma_stop (ws281x_t *ws281x){
 	return 0;
 }
 
+
+
+
 int	ws281x_gpio_setup (ws281x_t *ws281x){
 	volatile gpio_t *gpio_mosi = ws281x->devices->gpio_pin_spi_mosi;
 	volatile gpio_t *gpio_clk = ws281x->devices->gpio_pin_spi_clk;
@@ -628,6 +614,24 @@ int ws281x_spi_getreceived (ws281x_t *ws281x){
 	return 0;
 }
 
+int ioctl_printdmamem(int file_desc, u_int32_t *dma_reg){
+    ioctl(file_desc, IOCTL_PRINTDMAMEM, dma_reg);
+    printf("DEFERENCED *dma_reg FROM KERNEL %08x\n", *dma_reg);
+    printf("POINTER dma_reg FROM KERNEL %p\n", dma_reg);
+
+    return 0;
+}
+
+
+int ioctl_reldmamem(int file_desc){
+    ioctl(file_desc, IOCTL_RELDMAMEM);
+    return 0;
+}
+
+int ioctl_reqdmamem(int file_desc, u_int32_t *dma_reg){
+    ioctl(file_desc, IOCTL_REQDMAMEM, dma_reg);
+    return 0;
+}
 
 int ws281x_init (ws281x_t *ws281x) {
 	/*
@@ -700,9 +704,29 @@ int ws281x_init (ws281x_t *ws281x) {
 			printf ( "%08x Convert &devices->dma_ch_4\n", ws281x_convert_virtual(&devices->dma_ch_4 	));
 				printf ( "%08x &devices->dma_ch_4\n", (intptr_t)&devices->dma_ch_4);
 					printf ( "%08x devices->dma_ch_4\n", (intptr_t)devices->dma_ch_4);
-					printf ( "%08x Convert devices->ch4\n\n", ws281x_convert_virtual(devices->dma_ch_4 	));
+					printf ( "%08x Convert devicesLlego?->ch4\n\n", ws281x_convert_virtual(devices->dma_ch_4 	));
 
 
+u_int32_t prueba = 4;
+
+    int file = open("/dev/"DEV_NAME,0);
+	if (file < 0) {
+		printf("Can't open device file: %s\n", DEV_NAME);
+		exit(-1);
+	}
+
+/*	ioctl_printdmamem(file, &prueba);
+    printf("DEFERENCED prueba FROM KERNEL %08x\n", prueba);
+    printf("POINTER &prueba FROM KERNEL %p\n", &prueba);
+
+    prueba = 8;
+    ioctl_reldmamem(file);
+    printf("DEFERENCED prueba FROM KERNEL %08x\n", prueba);
+    printf("POINTER &prueba FROM KERNEL %p\n", &prueba);
+*/
+    ioctl_reqdmamem(file,&prueba);
+    printf("DEFERENCED prueba FROM KERNEL %08x\n", prueba);
+    printf("POINTER &prueba FROM KERNEL %p\n", &prueba);
 
 	/*
 	 *
@@ -724,10 +748,10 @@ int ws281x_init (ws281x_t *ws281x) {
 	*/
 	//ws281x_spi_stop(ws281x);
 
-	ws281x_dma_stop(ws281x);
-	usleep(100);
+	//ws281x_dma_stop(ws281x);
+	//usleep(100);
 	//ws281x_print_registers(ws281x);
-	ws281x_fifo_init(ws281x);
+	//ws281x_fifo_init(ws281x);
 
 	//ws281x_gpio_setup(ws281x);
 
@@ -739,15 +763,15 @@ int ws281x_init (ws281x_t *ws281x) {
 	//ws281x_spi_start(ws281x);
 
 
-	ws281x_dma_setup(ws281x);
-	ws281x_print_registers(ws281x);
+	//ws281x_dma_setup(ws281x);
+	//ws281x_print_registers(ws281x);
 
-	ws281x_dma_start(ws281x);
+	//ws281x_dma_start(ws281x);
 	//ws281x_spi_additems(ws281x);
 
-	usleep(100);
+	//usleep(100);
 
-	ws281x_print_registers(ws281x);
+	//ws281x_print_registers(ws281x);
 
 
 
