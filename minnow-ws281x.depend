@@ -1,0 +1,47 @@
+# depslib dependency file v1.0
+1462001216 source:/home/minnow/workspace/minnow-ws281x/dma.c
+	<stdint.h>
+	<stdio.h>
+	<string.h>
+	<stdlib.h>
+	"headers/dma.h"
+
+1462122652 /home/minnow/workspace/minnow-ws281x/headers/dma.h
+
+1462081545 source:/home/minnow/workspace/minnow-ws281x/main.c
+	<stdio.h>
+	<sys/mman.h>
+	<sys/types.h>
+	<sys/stat.h>
+	<unistd.h>
+	<fcntl.h>
+	<time.h>
+	<math.h>
+	<sys/time.h>
+	"headers/ws281x.h"
+
+1462081517 /home/minnow/workspace/minnow-ws281x/headers/ws281x.h
+
+1446659088 source:/home/minnow/workspace/minnow-ws281x/pwm.c
+	<stdlib.h>
+	<stdio.h>
+	<sys/mman.h>
+	<sys/types.h>
+	<sys/stat.h>
+	<unistd.h>
+	<fcntl.h>
+	<string.h>
+	<linux/pci.h>
+	"headers/pwm.h"
+
+1459273017 /home/minnow/workspace/minnow-ws281x/headers/pwm.h
+
+1461700836 source:/home/minnow/workspace/minnow-ws281x/spi.c
+	<stdlib.h>
+	<stdio.h>
+	<sys/mman.h>
+	<sys/types.h>
+	"headers/spi.h"
+
+1461695190 /home/minnow/workspace/minnow-ws281x/headers/spi.h
+

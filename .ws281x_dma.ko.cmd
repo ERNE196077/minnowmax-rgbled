@@ -1,0 +1,1 @@
+cmd_/home/minnow/workspace/minnow-ws281x/ws281x_dma.ko := ld -r -m elf_x86_64 -T ./scripts/module-common.lds --build-id  -o /home/minnow/workspace/minnow-ws281x/ws281x_dma.ko /home/minnow/workspace/minnow-ws281x/ws281x_dma.o /home/minnow/workspace/minnow-ws281x/ws281x_dma.mod.o

@@ -2,11 +2,11 @@
  * ws281x.c
  *
  * WS281x Functionality
- * The basic functionality is to set the clock of the PWM as close as possible 
+ * The basic functionality is to set the clock of the PWM as close as possible
  * to the frequency specified in the WS281x documentation.
  * A FIFO is created to contain the registers of the PWM_ON_TIME_DIVISOR which
  * will be varying to draw the logical bits in the PWM signal.
- * 
+ *
  * My assumption is that the PWM Controller contains a FIFO which will be fill
  * with the data from the DMA transfer.
  *
@@ -22,9 +22,12 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <string.h>
+#include <linux/version.h>
 #include <linux/pci.h>
+#include <linux/types.h>
 #include <linux/slab.h>
-#include <inttypes.h>			//DELETE AFTER FINISH LIB
+
+			//DELETE AFTER FINISH LIB
 #include "headers/ws281x.h"
 #include "headers/general.h"
 #include "headers/pwm.h"
@@ -34,6 +37,7 @@
 
 #define BYTECOUNT(led_num) 		(24*led_num*4)   	//24 registers per led... Each register of 4 bytes (u_int32_t)
 #define WORDCOUNT(led_num)		(24*led_num)
+
 
 typedef struct ws281x_devices {
 	volatile pwm_t *pwm_dev;
@@ -80,12 +84,12 @@ static u_int32_t ws281x_convert_virtual	(const volatile void *addr) {
 	}
 
 	close(file_descriptor);
-	printf("BEFORE STRIP:\t%"PRIx64"\n", page_frame_buffer);
+	//printf("BEFORE STRIP:\t%" PRIx64 "\n", page_frame_buffer);
 
 	page_frame_buffer &= 0x7fffffffffffff; 									// We are only interested in the first 54 bits.
 	page_frame_buffer <<= 12;												// Need to move bits left 12 times to get the correct boundary.
 	page_frame_buffer += reminder;											// We add the reminder offset.
-	printf("AFTER STRIP:\t%"PRIx64"\n", page_frame_buffer);
+	//printf("AFTER STRIP:\t%" PRIx64 "\n", page_frame_buffer);
 	return (u_int32_t) page_frame_buffer;
 }
 
@@ -274,7 +278,7 @@ int ws281x_dma_setup(ws281x_t *ws281x) {
 	volatile dma_cfg_t *dma_cfg = ws281x->devices->dma_cfg;
 
 	volatile dma_channel_t *dma2 = ws281x->devices->dma_ch_2;
-	u_int32_t addr2 = (uintptr_t)ws281x_convert_virtual(&ws281x->devices->dma_ch_2);
+	u_int32_t addr2 = (intptr_t)ws281x_convert_virtual(&ws281x->devices->dma_ch_2);
 	printf("\n\n\n\n%08x\n",addr2);
 	printf("%08x\n",(intptr_t)addr2);
 	printf("%08x\n",(intptr_t)(addr2 << 2));
@@ -284,7 +288,7 @@ int ws281x_dma_setup(ws281x_t *ws281x) {
 
 	volatile dma_channel_t *dma3 = ws281x->devices->dma_ch_3;
 
-	u_int32_t addr3 = (uintptr_t)ws281x_convert_virtual(&ws281x->devices->dma_ch_3);
+	u_int32_t addr3 = (intptr_t)ws281x_convert_virtual(&ws281x->devices->dma_ch_3);
 		printf("\n\n\n\n%08x\n",addr3);
 		printf("%08x\n\n\n\n",(intptr_t)&ws281x->devices->dma_ch_3);
 
@@ -309,8 +313,8 @@ int ws281x_dma_setup(ws281x_t *ws281x) {
 			DMA_CTL_LO_SRCTRWIDTH_SRCTRANSFEROF32BITS |
 			DMA_CTL_LO_DSTTRWIDTH_DSTTRANSFEROF32BITS |
 			DMA_CTL_LO_INTEN_INTERRUPTSENABLED ;
-	dma->__llp_l__ = DMA_LLP_LO_ADDRESSOFNEXTLLP((uintptr_t)addr2);
-	dma->__rsv_0x14__ = (uintptr_t)(addr2 >> 29);
+	dma->__llp_l__ = DMA_LLP_LO_ADDRESSOFNEXTLLP((intptr_t)addr2);
+	dma->__rsv_0x14__ = (intptr_t)(addr2 >> 29);
 
 	dma->__ctl_h__ =
 			DMA_CTL_HI_DONE_DONEBITZERO |
@@ -367,8 +371,8 @@ int ws281x_dma_setup(ws281x_t *ws281x) {
 			DMA_CTL_LO_SRCTRWIDTH_SRCTRANSFEROF32BITS |
 			DMA_CTL_LO_DSTTRWIDTH_DSTTRANSFEROF32BITS |
 			DMA_CTL_LO_INTEN_INTERRUPTSENABLED ;
-	dma2->__llp_l__ = DMA_LLP_LO_ADDRESSOFNEXTLLP((uintptr_t)addr3);
-	dma2->__rsv_0x14__ = (uintptr_t)(addr2 >> 29);
+	dma2->__llp_l__ = DMA_LLP_LO_ADDRESSOFNEXTLLP((intptr_t)addr3);
+	dma2->__rsv_0x14__ = (intptr_t)(addr2 >> 29);
 
 	dma2->__ctl_h__ =
 			DMA_CTL_HI_DONE_DONEBITZERO |
