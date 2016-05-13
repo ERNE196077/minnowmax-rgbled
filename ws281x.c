@@ -633,6 +633,16 @@ int ioctl_reqdmamem(int file_desc, u_int32_t *dma_reg){
     return 0;
 }
 
+int ioctl_dmatest(int file_desc, u_int32_t **dma_reg){
+    ioctl(file_desc, IOCTL_TESTDMA, dma_reg);
+    return 0;
+}
+
+int ioctl_dmatestreverse(int file_desc, u_int32_t **dma_reg){
+    ioctl(file_desc, IOCTL_TESTDMAREVERSE, dma_reg);
+    return 0;
+}
+
 int ws281x_init (ws281x_t *ws281x) {
 	/*
 	 *
@@ -707,28 +717,37 @@ int ws281x_init (ws281x_t *ws281x) {
 					printf ( "%08x Convert devicesLlego?->ch4\n\n", ws281x_convert_virtual(devices->dma_ch_4 	));
 
 
-u_int32_t prueba = 4;
-
+u_int32_t prueba = 4096;
+u_int32_t *ptr_user = &prueba;
     int file = open("/dev/"DEV_NAME,0);
 	if (file < 0) {
 		printf("Can't open device file: %s\n", DEV_NAME);
 		exit(-1);
 	}
-
-/*	ioctl_printdmamem(file, &prueba);
+/*
+	ioctl_printdmamem(file, &prueba);
     printf("DEFERENCED prueba FROM KERNEL %08x\n", prueba);
     printf("POINTER &prueba FROM KERNEL %p\n", &prueba);
 
-    prueba = 8;
+    prueba = 4096;
     ioctl_reldmamem(file);
     printf("DEFERENCED prueba FROM KERNEL %08x\n", prueba);
     printf("POINTER &prueba FROM KERNEL %p\n", &prueba);
-*/
+
     ioctl_reqdmamem(file,&prueba);
     printf("DEFERENCED prueba FROM KERNEL %08x\n", prueba);
     printf("POINTER &prueba FROM KERNEL %p\n", &prueba);
+    ptr_user = (u_int32_t *)(prueba+0x1000);
 
-	/*
+    printf("POINTER ptr_user FROM KERNEL %p\n", ptr_user);
+    printf("POINTER ADDR &ptr_user FROM KERNEL %p\n", &ptr_user);
+*/
+    ioctl_dmatestreverse(file, &ptr_user);
+    printf("POINTER ptr_user FROM KERNEL %p\n", ptr_user);
+    printf("POINTER ADDR &ptr_user FROM KERNEL %p\n", &ptr_user);
+printf("DEFERENCED *ptr_user FROM KERNEL %08x\n", *ptr_user);
+
+        /*
 	 *
 	 * THIS IS FOR PWM. ABOUT TO DELETE. NEED TO BACKUP, LIGHT BULB DIMMER CONTROLS
 	 *

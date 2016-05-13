@@ -23,6 +23,8 @@
 /*****			PWM REGISTER OFFSETS			*****/
 
 #define BLOCK_SIZE	4096
+#define DEV_WS281X  0
+#define DEV_APA102  1
 
 /*
  Maps the size of bytes of a structure into IO memory.

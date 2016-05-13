@@ -811,6 +811,10 @@ deps_/home/minnow/workspace/minnow-ws281x/ws281x_dma.o := \
     $(wildcard include/config/x86/smap.h) \
   arch/x86/include/asm/uaccess_64.h \
   /home/minnow/workspace/minnow-ws281x/ws281x_dma.h \
+  /home/minnow/workspace/minnow-ws281x/headers/pwm.h \
+  /home/minnow/workspace/minnow-ws281x/headers/dma.h \
+  /home/minnow/workspace/minnow-ws281x/headers/gpio.h \
+  /home/minnow/workspace/minnow-ws281x/headers/spi.h \
 
 /home/minnow/workspace/minnow-ws281x/ws281x_dma.o: $(deps_/home/minnow/workspace/minnow-ws281x/ws281x_dma.o)
 

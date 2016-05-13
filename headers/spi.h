@@ -4,7 +4,7 @@
 
 
 
-#define SPI_BAR 				0x90c18000
+#define SPI_BASE_ADDRESS		0x90c18000
 #define SPI_SSP_GENERAL_OFFSET	(0x400 / 4)
 
 
