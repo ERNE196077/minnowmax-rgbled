@@ -6,7 +6,7 @@
 
 
 #define MAJOR_NUM 110
-#define DEV_NAME "ws281x_dma"
+#define DEV_NAME "minnowleddev"
 
 /********  RGBLED FUNCTIONS   ********/
 #define IOCTL_RGBLED_SETLEDNUMBER       _IOw(MAJOR_NUM , 0 , __u16 )

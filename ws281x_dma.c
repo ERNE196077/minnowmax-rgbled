@@ -21,7 +21,7 @@
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("ernestrc");
-MODULE_DESCRIPTION("MinnowboardMAX APA102/WS281X module.")
+MODULE_DESCRIPTION("MinnowboardMAX APA102/WS281X module.");
 MODULE_SUPPORTED_DEVICE("MinnowboardMAX");
 
 
@@ -40,7 +40,7 @@ static struct class *cl;    // Global variable for the device class
                                         ((sizeof(dma_channel_t) * ((3 * lednum) + 2))  / 4096)+1)*4096 : \
                                         ((sizeof(dma_channel_t) * ((3 * lednum) + 2))  / 4096)*4096 )
 
-#define APA102_DMADESCMEMORY(lednum)    ( (sizeof(dma_channel_t) * (lednum + 2)) % 4096) > 0 ? \
+#define APA102_DMADESCMEMORY(lednum)    ((sizeof(dma_channel_t) * (lednum + 2)) % 4096) > 0 ? \
                                         (((sizeof(dma_channel_t) * (lednum + 2)) / 4096)+1)*4096 : \
                                         ((sizeof(dma_channel_t) * (lednum + 2)) / 4096)*4096 )
 
@@ -57,6 +57,7 @@ typedef struct rgbled_devices {
 
 static          rgbled_devices 	*devices;
 static          __u16           lednumber;
+static          __u16           dma_desc_counter;
 static          __u8	        dma_ch_number;
 static          __u8            rgbled_type;
 static          __u32           dma_desc_mem;
@@ -164,7 +165,125 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
             dma_desc_mem = APA102_DMADESCMEMORY(lednumber);
         devices->dma_descriptors = kmalloc(dma_desc_mem, GFP_KERNEL | __GFP_DMA);
 
+        /************ SETTING GPIO ************/
 
+        GPIO_CFG_FUNCTION(devices->gpio_pin_spi_mosi->__cfg__,1);
+        if(DEV_APA102)
+            GPIO_CFG_FUNCTION(devices->gpio_pin_spi_clk->__cfg__,1);
+
+        /************ SETTING SPI ************/
+        devices->ssp_control_block->__sscr0__ =
+            SPI_SSP_SSCR0_MOD_NORMALSSPMODE |
+            SPI_SSP_SSCR0_ACS_CLOCKBYAUDIOCLOCK |
+            SPI_SSP_SSCR0_TIM_NOINTERRUPTFIFOUNDERRUN |
+            SPI_SSP_SSCR0_RIM_NOINTERRUPTFIFOOVERRUN |
+            SPI_SSP_SSCR0_NCS_CLOCKBYECS |
+            SPI_SSP_SSCR0_EDSS_ONEPREPENDTODSS |
+            SPI_SSP_SSCR0_SCR_SERIALCLOCKRATE(20) |
+            SPI_SSP_SSCR0_SSE_SSPDISABLE |
+            SPI_SSP_SSCR0_ECS_EXTERNALCLOCKFROMGPIO |
+            SPI_SSP_SSCR0_FRF_TEXASINSTRUMENTS |
+            SPI_SSP_SSCR0_DSS_DATASIZESELECT(0x7) ;
+
+        devices->ssp_control_block->__sscr1__ =
+            SPI_SSP_SSCR1_TTELP_TXDTRISTATEONCLOCKEDGE |
+            SPI_SSP_SSCR1_TTE_TXDNOTTRISTATED |
+            SPI_SSP_SSCR1_EBCEI_NOINTERRUPTONBITCOUNTERR |
+            SPI_SSP_SSCR1_SCFR_SLAVECLKFREERUNNING |
+            SPI_SSP_SSCR1_ECRA_NOREQCLOCKFROMOTHERSSP |
+            SPI_SSP_SSCR1_ECRB_NOREQCLOCKFROMOTHERSSP |
+            SPI_SSP_SSCR1_SCLKDIR_MASTERMODECLOCK |
+            SPI_SSP_SSCR1_SFRMDIR_MASTERMODEFRAME |
+            SPI_SSP_SSCR1_RWOT_TRANSMITANDRECEIVE |
+            SPI_SSP_SSCR1_TRAIL_CPUHANDLETRAILINGBYTE |     // NEED TO CHANGE
+            SPI_SSP_SSCR1_TSRE_DMATRANSMITREQDISABLE |      // NEED TO CHANGE
+            SPI_SSP_SSCR1_RSRE_DMARECEIVEREQDISABLE |       // NEED TO CHANGE
+            SPI_SSP_SSCR1_TINTE_NOINTERRUPTONTIMEOUT |
+            SPI_SSP_SSCR1_PINTE_NOTRAILINGBYTEINTERRUPT |
+            SPI_SSP_SSCR1_IFS_FRAMEPOLARITYBYTHEFORMAT |
+            SPI_SSP_SSCR1_RFT_RECEIVEFIFOTRIGTHRESHOLD(0x0) |
+            SPI_SSP_SSCR1_TFT_TRANSMITFIFOTRIGTHRESHOLD(0x0) |
+            SPI_SSP_SSCR1_TIE_TRANSFIFOLEVELINTERRDISA |    // POSSIBLY CHANGE
+            SPI_SSP_SSCR1_RIE_RECEIFIFOLEVELINTERRDISA ;    // POSSIBLY CHANGE
+
+        //ssp_control->__ssdr__ = 0xACACACAC ;
+
+        devices->ssp_control_block->__ssacd__ =
+            SPI_SSP_SSACD_ACPS_AUDIOCLK_32_842MHZ |
+            SPI_SSP_SSACD_SCDB_SYSCLKNODIVIDED |
+            SPI_SSP_SSACD_ACDS_AUDIOCLKDIVIDER(2) ;
+
+        devices->ssp_control_block->__sitf__ &= ~0xFFFF ;
+        
+        devices->ssp_control_block->__sitf__ |=
+            SPI_SSP_SITF_SETTRANSLOWWATERMARKSPI(0x0) |
+            SPI_SSP_SITF_SETTRANSHIGHWATERMARKSPI(0xFF) ;
+        
+        devices->ssp_general_block->__prv_clock_params__ =
+            SPI_SSP_PRVCLKPARAMS_CLOCKUPDATE |
+            SPI_SSP_PRVCLKPARAMS_N_DIVISOR(0xFF) |
+            SPI_SSP_PRVCLKPARAMS_M_DIVIDEND(0x3) |
+            SPI_SSP_PRVCLKPARAMS_ENABLECLOCK ;
+
+        /************ SETTING DMA ************/
+        dma_desc_counter = 0;
+        devices->dma_cfg->__dmacfgre_l__ = 0x1;
+
+        devices->dma_ch->__sar_l__ = 0x0;
+
+        devices->dma_ch->__dar_l__ = SPI_BAR+0x10;
+
+        devices->dma_ch->__ctl_l__ =
+            DMA_CTL_LO_LLPSRCEN_SRCLLPCHAINNINGENABLE |
+            DMA_CTL_LO_LLPDSTEN_DSTLLPCHAINNINGDISABLE |
+            DMA_CTL_LO_SMS_SRCMASTERLAYER1 |
+            DMA_CTL_LO_DMS_DSTMASTERLAYER1 |
+            DMA_CTL_LO_TTFC_FLOWCONTROLBYANYDEVICE |
+            DMA_CTL_LO_DSTSCATTEREN_DESTSCATTERDISABLE |
+            DMA_CTL_LO_SRCGATHEREN_SOURCEGATHERDISABLE |
+            DMA_CTL_LO_SRCMSIZE_SRCBURSTITEMNUM(7) |
+            DMA_CTL_LO_DESTMSIZE_DSTBURSTITEMNUM(7) |
+            DMA_CTL_LO_SINC_SOURCEADDRNOCHANGE |
+            DMA_CTL_LO_DINC_DESTADDRNOCHANGE |
+            DMA_CTL_LO_SRCTRWIDTH_SRCTRANSFEROF32BITS |
+            DMA_CTL_LO_DSTTRWIDTH_DSTTRANSFEROF32BITS |
+            DMA_CTL_LO_INTEN_INTERRUPTSENABLED ;
+    
+        devices->dma_ch->__llp_l__ = DMA_LLP_LO_ADDRESSOFNEXTLLP((intptr_t)addr2);
+        
+        devices->dma_ch->__rsv_0x14__ = (intptr_t)(addr2 >> 29);
+
+        devices->dma_ch->__ctl_h__ =
+            DMA_CTL_HI_DONE_DONEBITZERO |
+            DMA_CTL_HI_BLOCKTS_DMAFLOWBLOCKSIZE(1) ;
+
+        devices->dma_ch->__cfg_l__ =
+            DMA_CFG_LO_RELOADDST_NORELOADDSTAFTERTRANSFER |
+            DMA_CFG_LO_RELOADSRC_NORELOADSRCAFTERTRANSFER |
+            DMA_CFG_LO_MAXABRST_NOLIMITBURSTTRANSFER |
+            DMA_CFG_LO_SRCHSPOL_SRCHANDSHAKEACTIVEHIGH |
+            DMA_CFG_LO_DSTHSPOL_DSTHANDSHAKEACTIVEHIGH |
+            DMA_CFG_LO_LOCKB_BUSNOTLOCKED |
+            DMA_CFG_LO_LOCKCH_CHANNELNOTLOCKED |
+            DMA_CFG_LO_LOCKBL_BUSLOCKEDOVERDMATRANSFER |
+            DMA_CFG_LO_LOCKCHL_CHLOCKEDOVERDMATRANSFER |
+            DMA_CFG_LO_HSSELSRC_SOURCESWHANDSHAKING |               // TO BE CHANGED PROBABLY
+            DMA_CFG_LO_HSSELDST_DESTSWHANDSHAKING |
+            DMA_CFG_LO_FIFOEMPTY_SETVALUEZERO |
+            DMA_CFG_LO_CHSUSP_NOSUSREACTIVATEDMAACTIVITY |
+            DMA_CFG_LO_CHPRIOR_HIGHESTPRIORITY ;
+
+        devices->dma_ch->__cfg_h__ =
+            DMA_CFG_HI_DESTPER_DSTHWHANDSHAKEIFACE(0x0) |
+            DMA_CFG_HI_SRCPER_SRCHWHANDSHAKEIFACE(0x0) |
+            DMA_CFG_HI_SSUPDEN_DISABLESRCSTATUSUPDATE |
+            DMA_CFG_HI_DSUPDEN_DISABLEDSTSTATUSUPDATE |
+            DMA_CFG_HI_FIFOMODE_SPACEDATAEQTOTRANSWDITH |
+            DMA_CFG_HI_FCMODE_SRCTRANSREQWHENTHEYOCURR ;
+
+        devices->dma_ch->__sgr_l__ = DMA_SGR_LO_SGI_SRCGATHERINCDECMULTIPLE(64);
+
+        devices->dma_ch->__dsr_l__ = DMA_DSR_LO_DSI_DESTSCATTERINCDECMULTIPLE(32);
 
         break;
 
@@ -213,16 +332,16 @@ int __init init_module(){
 
 
 
-  if (alloc_chrdev_region(&first, 0, 1, "ws281x_dma") < 0)
+  if (alloc_chrdev_region(&first, 0, 1, "minnowleddev") < 0)
   {
     return -1;
   }
-    if ((cl = class_create(THIS_MODULE, "ws281x_dma")) == NULL)
+    if ((cl = class_create(THIS_MODULE, "minnowleddev")) == NULL)
   {
     unregister_chrdev_region(first, 1);
     return -1;
   }
-    if (device_create(cl, NULL, first, NULL, "ws281x_dma") == NULL)
+    if (device_create(cl, NULL, first, NULL, "minnowleddev") == NULL)
   {
     class_destroy(cl);
     unregister_chrdev_region(first, 1);
@@ -251,6 +370,6 @@ kfree(devices);
 device_destroy(cl, first);
 class_destroy(cl);
 unregister_chrdev_region(first, 1);
-printk(KERN_INFO"#########################DIJE##############################\n");
+printk(KERN_INFO"######################### GOODBYE ##############################\n");
 
 }
