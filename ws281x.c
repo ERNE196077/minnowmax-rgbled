@@ -17,7 +17,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/mman.h>
-#include <sys/types.h>
+#include <asm/types.h>
+#include <stdint.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -65,8 +66,8 @@ static u_int32_t ws281x_convert_virtual	(const volatile void *addr) {
 		return (u_int32_t)~0UL;
 	}
 
-	u_int32_t offset = ((intptr_t) addr /  BLOCK_SIZE) * 8 ;			// Formule to get the offset inside the pagemap.
-	u_int32_t reminder = (intptr_t)addr % BLOCK_SIZE;					// Reminder of the virtual address, will be added to the physical addres to point the memory.
+	u_int32_t offset = ((intptr_t) addr /  BLOCK_SIZE_T) * 8 ;			// Formule to get the offset inside the pagemap.
+	u_int32_t reminder = (intptr_t)addr % BLOCK_SIZE_T;					// Reminder of the virtual address, will be added to the physical addres to point the memory.
 
 
 	if (lseek(file_descriptor, offset, SEEK_SET) != offset) {
@@ -279,7 +280,7 @@ int ws281x_dma_setup(ws281x_t *ws281x) {
 
 	dma->__sar_l__ = ws281x_convert_virtual(&ws281x->devices->fifo_data2[0]);
 
-	dma->__dar_l__ = SPI_BAR+0x10;//(u_int32_t)0x90825000;
+	dma->__dar_l__ = SPI_BASE_ADDRESS+0x10;//(u_int32_t)0x90825000;
 
 	dma->__ctl_l__ =
 			DMA_CTL_LO_LLPSRCEN_SRCLLPCHAINNINGENABLE |
@@ -337,7 +338,7 @@ int ws281x_dma_setup(ws281x_t *ws281x) {
 
 	dma2->__sar_l__ = ws281x_convert_virtual(&ws281x->devices->fifo_data2[1]);
 
-	dma2->__dar_l__ = SPI_BAR+0x10;//(u_int32_t)0x90825000;
+	dma2->__dar_l__ = SPI_BASE_ADDRESS+0x10;//(u_int32_t)0x90825000;
 
 	dma2->__ctl_l__ =
 			DMA_CTL_LO_LLPSRCEN_SRCLLPCHAINNINGENABLE |
@@ -394,7 +395,7 @@ int ws281x_dma_setup(ws281x_t *ws281x) {
 
 		dma3->__sar_l__ = ws281x_convert_virtual(&ws281x->devices->fifo_data2[2]);
 
-		dma3->__dar_l__ = SPI_BAR+0x10;//(u_int32_t)0x90825000;
+		dma3->__dar_l__ = SPI_BASE_ADDRESS+0x10;//(u_int32_t)0x90825000;
 
 		dma3->__ctl_l__ =
 				DMA_CTL_LO_LLPSRCEN_SRCLLPCHAINNINGENABLE |
@@ -614,41 +615,57 @@ int ws281x_spi_getreceived (ws281x_t *ws281x){
 	return 0;
 }
 
-int ioctl_printdmamem(int file_desc, u_int32_t *dma_reg){
-    ioctl(file_desc, IOCTL_PRINTDMAMEM, dma_reg);
-    printf("DEFERENCED *dma_reg FROM KERNEL %08x\n", *dma_reg);
-    printf("POINTER dma_reg FROM KERNEL %p\n", dma_reg);
+
+int rgbled_setlednumber(int file_desc, u_int16_t *led_number){
+    ioctl(file_desc, IOCTL_RGBLED_SETLEDNUMBER, led_number);
+
+    return 0;
+}
+
+int rgbled_setdmachannel(int file_desc, u_int8_t *dma_ch_num){
+    ioctl(file_desc, IOCTL_RGBLED_SETDMACHANNEL, dma_ch_num);
+
+    return 0;
+}
+
+int rgbled_setrgbledtype(int file_desc, u_int8_t *led_type){
+    ioctl(file_desc, IOCTL_RGBLED_SETRGBLEDTYPE, led_type);
+
+    return 0;
+}
+
+int rgbled_configure(int file_desc){
+    ioctl(file_desc, IOCTL_RGBLED_CONFIGURE);
+
+    return 0;
+}
+
+int rgbled_dmaadditem(int file_desc,u_int32_t *addr){
+    ioctl(file_desc, IOCTL_DMA_ADDITEM, addr);
+
+    return 0;
+}
+
+int rgbled_dmaprintitems(int file_desc){
+    ioctl(file_desc, IOCTL_DMA_PRINTITEMS);
+
+    return 0;
+}
+
+int rgbled_render(int file_desc){
+    ioctl(file_desc, IOCTL_RGBLED_RENDER);
 
     return 0;
 }
 
 
-int ioctl_reldmamem(int file_desc){
-    ioctl(file_desc, IOCTL_RELDMAMEM);
-    return 0;
-}
-
-int ioctl_reqdmamem(int file_desc, u_int32_t *dma_reg){
-    ioctl(file_desc, IOCTL_REQDMAMEM, dma_reg);
-    return 0;
-}
-
-int ioctl_dmatest(int file_desc, u_int32_t **dma_reg){
-    ioctl(file_desc, IOCTL_TESTDMA, dma_reg);
-    return 0;
-}
-
-int ioctl_dmatestreverse(int file_desc, u_int32_t **dma_reg){
-    ioctl(file_desc, IOCTL_TESTDMAREVERSE, dma_reg);
-    return 0;
-}
 
 int ws281x_init (ws281x_t *ws281x) {
 	/*
 	 *
 	 * THIS IS FOR PWM. ABOUT TO DELETE.
 	 *
-	 */
+
 	u_int8_t gpio_pin_number = ws281x->gpio_pin_number;
 	if ((gpio_pin_number != 22) && (gpio_pin_number != 24)) {
 		perror("GPIO PIN SPECIFIED IS NOT SUPPORTED.");
@@ -667,19 +684,19 @@ int ws281x_init (ws281x_t *ws281x) {
 	devices = ws281x->devices;
 
 	volatile u_int32_t *gpio_base;
-	if (!(gpio_base = (volatile u_int32_t *) MAP_DEVICE(GPIO_SCORE_BASE_ADDR, BLOCK_SIZE))) {
+	if (!(gpio_base = (volatile u_int32_t *) MAP_DEVICE(GPIO_SCORE_BASE_ADDR, BLOCK_SIZE_T))) {
 		perror("GPIO BLOCK MAPPING FAILED!");
 		return -1;
 	}
 
 	volatile u_int32_t *dma_base;
-	if (!(dma_base = (volatile u_int32_t *) MAP_DEVICE(DMA_BASE_ADDR, BLOCK_SIZE))) {
+	if (!(dma_base = (volatile u_int32_t *) MAP_DEVICE(DMA_BASE_ADDR, BLOCK_SIZE_T))) {
 		perror("DMA BLOCK MAPPING FAILED!");
 		return -1;
 	}
 
 	volatile u_int32_t *spi_base;
-	if (!(spi_base = (volatile u_int32_t *) MAP_DEVICE(SPI_BAR,	BLOCK_SIZE))) {
+	if (!(spi_base = (volatile u_int32_t *) MAP_DEVICE(SPI_BASE_ADDRESS,	BLOCK_SIZE_T))) {
 		perror("SPI BLOCK MAPPING FAILED!");
 		return -1;
 	}
@@ -692,11 +709,11 @@ int ws281x_init (ws281x_t *ws281x) {
 	devices->ssp_control_block = (volatile ssp_control_t *) spi_base;
 	devices->ssp_general_block = (volatile ssp_general_t *) (spi_base + SPI_SSP_GENERAL_OFFSET);
 
-	/*
+
 	 *
 	 * THIS IS FOR PWM. ABOUT TO DELETE.
 	 *
-	 */
+
 	//PWM controllers registers are of u_int32_t size. Is not necessary to map an entire block for them.
 	devices->pwm_dev = (volatile pwm_t *) MAP_DEVICE(gpio_pin_number == 22 ? PWM0_BASE_ADDR : PWM1_BASE_ADDR,sizeof(pwm_t));
 
@@ -724,7 +741,7 @@ u_int32_t *ptr_user = &prueba;
 		printf("Can't open device file: %s\n", DEV_NAME);
 		exit(-1);
 	}
-/*
+
 	ioctl_printdmamem(file, &prueba);
     printf("DEFERENCED prueba FROM KERNEL %08x\n", prueba);
     printf("POINTER &prueba FROM KERNEL %p\n", &prueba);
@@ -742,13 +759,44 @@ u_int32_t *ptr_user = &prueba;
     printf("POINTER ptr_user FROM KERNEL %p\n", ptr_user);
     printf("POINTER ADDR &ptr_user FROM KERNEL %p\n", &ptr_user);
 */
-    ioctl_dmatestreverse(file, &ptr_user);
-    printf("POINTER ptr_user FROM KERNEL %p\n", ptr_user);
-    printf("POINTER ADDR &ptr_user FROM KERNEL %p\n", &ptr_user);
-printf("DEFERENCED *ptr_user FROM KERNEL %08x\n", *ptr_user);
 
-        /*
-	 *
+   int file = open("/dev/"DEV_NAME,0);
+	if (file < 0) {
+		printf("Can't open device file: %s\n", DEV_NAME);
+		exit(-1);
+	}
+
+
+u_int8_t dmach = 0;
+u_int8_t ledtype = 0;
+u_int16_t lednum = 3;
+u_int32_t list[3];
+list[0] = 0x00111111;
+list[1] = 0x11001111;
+list[2] = 0x11110011;
+u_int32_t l1, l2, l3;
+l1 = ws281x_convert_virtual(&list[0]);
+l2 = ws281x_convert_virtual(&list[1]);
+l3 = ws281x_convert_virtual(&list[2]);
+printf("&list[0] : %08x   %p\n",l1,&list[0]);
+printf("&list[1] : %08x   %p\n",l2,&list[1]);
+printf("&list[2] : %08x   %p\n",l3,&list[2]);
+
+    rgbled_setdmachannel(file,&dmach);
+    rgbled_setlednumber(file,&lednum);
+    rgbled_setrgbledtype(file,&ledtype);
+    rgbled_configure(file);
+
+      /*
+
+    rgbled_dmaadditem(file,&l1);
+    rgbled_dmaadditem(file,&l2);
+    rgbled_dmaadditem(file,&l3);
+    rgbled_dmaadditem(file,&l3);
+    rgbled_dmaprintitems(file);
+    rgbled_render(file);
+    rgbled_dmaprintitems(file);
+   *
 	 * THIS IS FOR PWM. ABOUT TO DELETE. NEED TO BACKUP, LIGHT BULB DIMMER CONTROLS
 	 *
 

@@ -782,6 +782,8 @@ deps_/home/minnow/workspace/minnow-ws281x/ws281x_dma.o := \
   include/uapi/linux/fcntl.h \
   arch/x86/include/uapi/asm/fcntl.h \
   include/uapi/asm-generic/fcntl.h \
+  include/linux/io.h \
+    $(wildcard include/config/have/arch/huge/vmap.h) \
   include/linux/device.h \
     $(wildcard include/config/debug/devres.h) \
     $(wildcard include/config/generic/msi/irq/domain.h) \
@@ -815,6 +817,7 @@ deps_/home/minnow/workspace/minnow-ws281x/ws281x_dma.o := \
   /home/minnow/workspace/minnow-ws281x/headers/dma.h \
   /home/minnow/workspace/minnow-ws281x/headers/gpio.h \
   /home/minnow/workspace/minnow-ws281x/headers/spi.h \
+  /home/minnow/workspace/minnow-ws281x/headers/general.h \
 
 /home/minnow/workspace/minnow-ws281x/ws281x_dma.o: $(deps_/home/minnow/workspace/minnow-ws281x/ws281x_dma.o)
 

@@ -43,13 +43,14 @@
 	<sys/types.h>
 	"headers/spi.h"
 
-1461695190 /home/minnow/workspace/minnow-ws281x/headers/spi.h
+1463105219 /home/minnow/workspace/minnow-ws281x/headers/spi.h
 
-1462903585 source:/home/minnow/workspace/minnow-ws281x/ws281x.c
+1463543010 source:/home/minnow/workspace/minnow-ws281x/ws281x.c
 	<stdlib.h>
 	<stdio.h>
 	<sys/mman.h>
-	<sys/types.h>
+	<asm/types.h>
+	<stdint.h>
 	<sys/stat.h>
 	<unistd.h>
 	<fcntl.h>
@@ -63,16 +64,10 @@
 	"headers/gpio.h"
 	"headers/spi.h"
 
-1462905251 /home/minnow/workspace/minnow-ws281x/ws281x_dma.h
+1463543515 /home/minnow/workspace/minnow-ws281x/ws281x_dma.h
 	<linux/ioctl.h>
 
-1457923513 /home/minnow/workspace/minnow-ws281x/headers/general.h
-	<stdio.h>
-	<sys/mman.h>
-	<sys/types.h>
-	<sys/stat.h>
-	<unistd.h>
-	<fcntl.h>
+1463451260 /home/minnow/workspace/minnow-ws281x/headers/general.h
 
 1459318093 /home/minnow/workspace/minnow-ws281x/headers/gpio.h
 

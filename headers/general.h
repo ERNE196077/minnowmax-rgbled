@@ -13,18 +13,11 @@
  *      Author: minnow
  */
 
-#include <stdio.h>
-#include <sys/mman.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <fcntl.h>
 
-/*****			PWM REGISTER OFFSETS			*****/
-
-#define BLOCK_SIZE	4096
+#define BLOCK_SIZE_T	4096
 #define DEV_WS281X  0
 #define DEV_APA102  1
+
 
 /*
  Maps the size of bytes of a structure into IO memory.
@@ -34,7 +27,7 @@
 
  @returns 	Pointer to the mapped gpio structure.
 
- */
+
 void *MAP_DEVICE(u_int32_t address, u_int32_t size) {
 
 	int file;
@@ -56,7 +49,7 @@ void *MAP_DEVICE(u_int32_t address, u_int32_t size) {
 	return (void *) ((u_int8_t *) temp_map);
 }
 
-/*
+
  Unmaps the GPIO structure from the IO memory, it is necessary to mantain clean the system memory.
 
  @param		volatile void *		Mapped gpio structure to be unmapped.
@@ -64,7 +57,7 @@ void *MAP_DEVICE(u_int32_t address, u_int32_t size) {
 
  @returns 	n/a
 
- */
+
 
 void UNMAP_DEVICE(volatile void* map, u_int32_t size) {
 	int r = munmap((void *) map, size);
@@ -72,3 +65,4 @@ void UNMAP_DEVICE(volatile void* map, u_int32_t size) {
 		perror("Unmapping memory problem");
 }
 
+*/
