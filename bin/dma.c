@@ -4,7 +4,7 @@
  *
  * DMA Functionality
  * Library designed to control the flow of the DMA, is needed to create blocks
- * of dma configuration pages and concatenate them as a double linked list to
+ * of dma configuration pages and concatenate them as a double linked list to 
  * propagate the WS2812b functionality
  *
  *

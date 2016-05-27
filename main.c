@@ -19,12 +19,6 @@
 
 int main (){
 
-
-	//volatile u_int32_t *gpio_base = MAP_DEVICE(GPIO_SCORE_BASE_ADDRESS, GPIO_SCORE_BASE_SIZE);
-	//volatile pwm_t *pwm_base = MAP_DEVICE(PWM0_BASE_ADDR, sizeof(pwm_t));
-
-//	volatile gpio_t *gpio22 = GPIO_MAP(22,gpio_base)
-
 		led_t led_array[3] = {{255,0,0},{0,255,0},{0,0,255}};
 
 
@@ -45,31 +39,6 @@ int main (){
 
 	ws281x_init(&myws281x);
 
-		//printf("%08x\n\n", gpio_map->__gpio_22_val__);
-//	GPIO_CFG_FUNCTION(gpio22->__cfg__,1);
-//	GPIO_VAL_OUTPUT(gpio22->__val__);
-//	GPIO_VAL_SET(gpio22->__val__);
-/*	for(int i = 0 ; i < 255 ; i++){
-		pwm_base->__pwm_ctrl__ = PWM_ENABLE | PWM_SW_UPDATE | PWM_BASE_UNIT(3000) | PWM_ON_TIME_DIVISOR(i);
-		usleep(70000);
-	}
-	for(int i = 255 ; i > 0  ; i--){
-		pwm_base->__pwm_ctrl__ = PWM_ENABLE | PWM_SW_UPDATE | PWM_BASE_UNIT(3000) | PWM_ON_TIME_DIVISOR(i);
-		usleep(70000);
-	}
-
-*/
-			//printf("%08x\n", gpio22->__val__);
-			//printf("%08x\n", gpio22->__cfg__);
-			//printf("%08x\n", pwm_base->__pwm_ctrl__);
-				//PWM_CTRL_ON_DIVISOR(pwm_map->__pwm_ctrl__,20);
-	//PWM_CTRL_BASE_UNIT(pwm_map->__pwm_ctrl__,8);
-
-	//PWM_CTRL_SW_UPDATE(pwm_map->__pwm_ctrl__);
-	//PWM_CTRL_ENABLE(pwm_map->__pwm_ctrl__);
-
-			//UNMAP_DEVICE(gpio_base,GPIO_SCORE_BASE_SIZE);
-			//UNMAP_DEVICE(gpio_base,sizeof(pwm_t));
 
 	getchar();
 return 0;

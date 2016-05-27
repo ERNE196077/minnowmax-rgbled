@@ -11,16 +11,13 @@
  *      Author: minnow
  */
 
-//#include "headers/dma.h"
-//#include "headers/gpio.h"
-//#include "headers/pwm.h"
 
 
 /*****			WS281X DEFAULT VALUES			*****/
 
 #define WS281X_DEFAULT_GPIO_PIN			24		// PWM Capable pins: 22 & 24
-#define WS281X_DEFAULT_LED_NUMBER		1		
-#define WS281X_DEFAULT_DMA_CHANNEL		0		
+#define WS281X_DEFAULT_LED_NUMBER		1
+#define WS281X_DEFAULT_DMA_CHANNEL		0
 #define WS281X_PWM_REG_HIGH				0xC00848A0
 #define WS281X_PWM_REG_LOW				0xC0084850
 
@@ -42,7 +39,7 @@ typedef struct
 	u_int8_t				gpio_pin_number;
 	u_int8_t				dma_ch_number;
 	struct ws281x_devices 	*devices;
-	
+
 }ws281x_t;
 
 

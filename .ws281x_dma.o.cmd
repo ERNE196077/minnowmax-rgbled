@@ -6,9 +6,9 @@ deps_/home/minnow/workspace/minnow-ws281x/ws281x_dma.o := \
   include/linux/module.h \
     $(wildcard include/config/modules.h) \
     $(wildcard include/config/sysfs.h) \
-    $(wildcard include/config/modules/tree/lookup.h) \
     $(wildcard include/config/unused/symbols.h) \
     $(wildcard include/config/module/sig.h) \
+    $(wildcard include/config/modules/tree/lookup.h) \
     $(wildcard include/config/generic/bug.h) \
     $(wildcard include/config/kallsyms.h) \
     $(wildcard include/config/smp.h) \
@@ -102,6 +102,7 @@ deps_/home/minnow/workspace/minnow-ws281x/ws281x_dma.o := \
     $(wildcard include/config/vm86.h) \
   arch/x86/include/uapi/asm/processor-flags.h \
   arch/x86/include/asm/paravirt_types.h \
+    $(wildcard include/config/x86/local/apic.h) \
     $(wildcard include/config/pgtable/levels.h) \
     $(wildcard include/config/x86/pae.h) \
     $(wildcard include/config/queued/spinlocks.h) \
@@ -125,7 +126,6 @@ deps_/home/minnow/workspace/minnow-ws281x/ws281x_dma.o := \
   include/asm-generic/ptrace.h \
   arch/x86/include/asm/cpufeature.h \
     $(wildcard include/config/x86/feature/names.h) \
-    $(wildcard include/config/x86/fast/feature/tests.h) \
     $(wildcard include/config/x86/debug/static/cpu/has.h) \
   arch/x86/include/asm/required-features.h \
     $(wildcard include/config/x86/minimum/cpu/family.h) \
@@ -141,7 +141,6 @@ deps_/home/minnow/workspace/minnow-ws281x/ws281x_dma.o := \
     $(wildcard include/config/x86/ppro/fence.h) \
   arch/x86/include/asm/nops.h \
     $(wildcard include/config/mk7.h) \
-  include/asm-generic/barrier.h \
   include/asm-generic/bitops/find.h \
     $(wildcard include/config/generic/find/first/bit.h) \
   include/asm-generic/bitops/sched.h \
@@ -219,7 +218,6 @@ deps_/home/minnow/workspace/minnow-ws281x/ws281x_dma.o := \
   include/asm-generic/memory_model.h \
     $(wildcard include/config/discontigmem.h) \
     $(wildcard include/config/sparsemem/vmemmap.h) \
-  include/linux/pfn.h \
   include/asm-generic/getorder.h \
   arch/x86/include/asm/processor.h \
     $(wildcard include/config/m486.h) \
@@ -254,18 +252,6 @@ deps_/home/minnow/workspace/minnow-ws281x/ws281x_dma.o := \
   arch/x86/include/uapi/asm/ioctl.h \
   include/asm-generic/ioctl.h \
   include/uapi/asm-generic/ioctl.h \
-  arch/x86/include/asm/atomic.h \
-  arch/x86/include/asm/cmpxchg.h \
-  arch/x86/include/asm/cmpxchg_64.h \
-  arch/x86/include/asm/atomic64_64.h \
-  include/linux/tracepoint-defs.h \
-  include/linux/atomic.h \
-    $(wildcard include/config/generic/atomic64.h) \
-  include/asm-generic/atomic-long.h \
-  include/linux/static_key.h \
-  include/linux/jump_label.h \
-    $(wildcard include/config/jump/label.h) \
-  arch/x86/include/asm/jump_label.h \
   arch/x86/include/asm/paravirt.h \
   arch/x86/include/asm/special_insns.h \
   arch/x86/include/asm/fpu/types.h \
@@ -281,6 +267,13 @@ deps_/home/minnow/workspace/minnow-ws281x/ws281x_dma.o := \
     $(wildcard include/config/irqsoff/tracer.h) \
     $(wildcard include/config/trace/irqflags/support.h) \
   arch/x86/include/asm/irqflags.h \
+  include/linux/atomic.h \
+    $(wildcard include/config/generic/atomic64.h) \
+  arch/x86/include/asm/atomic.h \
+  arch/x86/include/asm/cmpxchg.h \
+  arch/x86/include/asm/cmpxchg_64.h \
+  arch/x86/include/asm/atomic64_64.h \
+  include/asm-generic/atomic-long.h \
   include/linux/bottom_half.h \
   include/linux/spinlock_types.h \
   include/linux/lockdep.h \
@@ -288,6 +281,9 @@ deps_/home/minnow/workspace/minnow-ws281x/ws281x_dma.o := \
     $(wildcard include/config/lock/stat.h) \
   include/linux/rwlock_types.h \
   arch/x86/include/asm/spinlock.h \
+  include/linux/jump_label.h \
+    $(wildcard include/config/jump/label.h) \
+  arch/x86/include/asm/jump_label.h \
   arch/x86/include/asm/qspinlock.h \
   include/asm-generic/qspinlock.h \
   arch/x86/include/asm/qrwlock.h \
@@ -337,22 +333,20 @@ deps_/home/minnow/workspace/minnow-ws281x/ws281x_dma.o := \
     $(wildcard include/config/numa.h) \
     $(wildcard include/config/deferred/struct/page/init.h) \
     $(wildcard include/config/pm/sleep.h) \
-    $(wildcard include/config/memory/isolation.h) \
-    $(wildcard include/config/compaction.h) \
     $(wildcard include/config/cma.h) \
   include/linux/mmdebug.h \
     $(wildcard include/config/debug/vm.h) \
-    $(wildcard include/config/debug/vm/pgflags.h) \
   include/linux/mmzone.h \
     $(wildcard include/config/force/max/zoneorder.h) \
+    $(wildcard include/config/memory/isolation.h) \
     $(wildcard include/config/memcg.h) \
     $(wildcard include/config/zone/device.h) \
     $(wildcard include/config/memory/hotplug.h) \
+    $(wildcard include/config/compaction.h) \
     $(wildcard include/config/flat/node/mem/map.h) \
     $(wildcard include/config/page/extension.h) \
     $(wildcard include/config/no/bootmem.h) \
     $(wildcard include/config/numa/balancing.h) \
-    $(wildcard include/config/transparent/hugepage.h) \
     $(wildcard include/config/have/memory/present.h) \
     $(wildcard include/config/have/memoryless/nodes.h) \
     $(wildcard include/config/need/node/memmap/size.h) \
@@ -426,7 +420,6 @@ deps_/home/minnow/workspace/minnow-ws281x/ws281x_dma.o := \
   include/linux/workqueue.h \
     $(wildcard include/config/debug/objects/work.h) \
     $(wildcard include/config/freezer.h) \
-    $(wildcard include/config/wq/watchdog.h) \
   include/linux/timer.h \
     $(wildcard include/config/timer/stats.h) \
     $(wildcard include/config/debug/objects/timers.h) \
@@ -438,7 +431,6 @@ deps_/home/minnow/workspace/minnow-ws281x/ws281x_dma.o := \
   arch/x86/include/asm/mmzone.h \
   arch/x86/include/asm/mmzone_64.h \
   arch/x86/include/asm/smp.h \
-    $(wildcard include/config/x86/local/apic.h) \
     $(wildcard include/config/x86/io/apic.h) \
     $(wildcard include/config/x86/32/smp.h) \
     $(wildcard include/config/debug/nmi/selftest.h) \
@@ -475,6 +467,7 @@ deps_/home/minnow/workspace/minnow-ws281x/ws281x_dma.o := \
     $(wildcard include/config/pm/clk.h) \
     $(wildcard include/config/pm/generic/domains.h) \
   arch/x86/include/asm/fixmap.h \
+    $(wildcard include/config/paravirt/clock.h) \
     $(wildcard include/config/provide/ohci1394/dma/init.h) \
     $(wildcard include/config/pci/mmconfig.h) \
     $(wildcard include/config/x86/intel/mid.h) \
@@ -513,6 +506,12 @@ deps_/home/minnow/workspace/minnow-ws281x/ws281x_dma.o := \
   arch/x86/include/asm/xen/hypervisor.h \
   include/xen/features.h \
   include/xen/interface/features.h \
+  arch/x86/include/asm/pvclock.h \
+  include/linux/clocksource.h \
+    $(wildcard include/config/arch/clocksource/data.h) \
+    $(wildcard include/config/clocksource/watchdog.h) \
+    $(wildcard include/config/clksrc/probe.h) \
+  arch/x86/include/asm/clocksource.h \
   arch/x86/include/uapi/asm/vsyscall.h \
   include/asm-generic/fixmap.h \
   arch/x86/include/asm/idle.h \
@@ -530,6 +529,7 @@ deps_/home/minnow/workspace/minnow-ws281x/ws281x_dma.o := \
   include/linux/percpu.h \
     $(wildcard include/config/need/per/cpu/embed/first/chunk.h) \
     $(wildcard include/config/need/per/cpu/page/first/chunk.h) \
+  include/linux/pfn.h \
   include/linux/elf.h \
   arch/x86/include/asm/elf.h \
     $(wildcard include/config/x86/x32/abi.h) \
@@ -543,6 +543,7 @@ deps_/home/minnow/workspace/minnow-ws281x/ws281x_dma.o := \
     $(wildcard include/config/arch/enable/split/pmd/ptlock.h) \
     $(wildcard include/config/have/cmpxchg/double.h) \
     $(wildcard include/config/have/aligned/struct/page.h) \
+    $(wildcard include/config/transparent/hugepage.h) \
     $(wildcard include/config/userfaultfd.h) \
     $(wildcard include/config/aio.h) \
     $(wildcard include/config/mmu/notifier.h) \
@@ -596,163 +597,28 @@ deps_/home/minnow/workspace/minnow-ws281x/ws281x_dma.o := \
   include/linux/slab.h \
     $(wildcard include/config/debug/slab.h) \
     $(wildcard include/config/failslab.h) \
-    $(wildcard include/config/slob.h) \
     $(wildcard include/config/slab.h) \
     $(wildcard include/config/slub.h) \
+    $(wildcard include/config/slob.h) \
   include/linux/kmemleak.h \
     $(wildcard include/config/debug/kmemleak.h) \
   include/linux/kasan.h \
-  include/linux/sched.h \
-    $(wildcard include/config/sched/debug.h) \
-    $(wildcard include/config/lockup/detector.h) \
-    $(wildcard include/config/detect/hung/task.h) \
-    $(wildcard include/config/core/dump/default/elf/headers.h) \
-    $(wildcard include/config/virt/cpu/accounting/native.h) \
-    $(wildcard include/config/sched/autogroup.h) \
-    $(wildcard include/config/bsd/process/acct.h) \
-    $(wildcard include/config/taskstats.h) \
-    $(wildcard include/config/audit.h) \
-    $(wildcard include/config/inotify/user.h) \
-    $(wildcard include/config/fanotify.h) \
-    $(wildcard include/config/epoll.h) \
-    $(wildcard include/config/posix/mqueue.h) \
-    $(wildcard include/config/keys.h) \
-    $(wildcard include/config/perf/events.h) \
-    $(wildcard include/config/bpf/syscall.h) \
-    $(wildcard include/config/sched/info.h) \
-    $(wildcard include/config/task/delay/acct.h) \
-    $(wildcard include/config/schedstats.h) \
-    $(wildcard include/config/sched/mc.h) \
-    $(wildcard include/config/fair/group/sched.h) \
-    $(wildcard include/config/rt/group/sched.h) \
-    $(wildcard include/config/cgroup/sched.h) \
-    $(wildcard include/config/blk/dev/io/trace.h) \
-    $(wildcard include/config/compat/brk.h) \
-    $(wildcard include/config/virt/cpu/accounting/gen.h) \
-    $(wildcard include/config/sysvipc.h) \
-    $(wildcard include/config/auditsyscall.h) \
-    $(wildcard include/config/rt/mutexes.h) \
-    $(wildcard include/config/ubsan.h) \
-    $(wildcard include/config/block.h) \
-    $(wildcard include/config/task/xacct.h) \
-    $(wildcard include/config/cpusets.h) \
-    $(wildcard include/config/cgroups.h) \
-    $(wildcard include/config/futex.h) \
-    $(wildcard include/config/arch/want/batched/unmap/tlb/flush.h) \
-    $(wildcard include/config/fault/injection.h) \
-    $(wildcard include/config/latencytop.h) \
-    $(wildcard include/config/function/graph/tracer.h) \
-    $(wildcard include/config/bcache.h) \
-    $(wildcard include/config/arch/wants/dynamic/task/struct.h) \
-    $(wildcard include/config/have/unstable/sched/clock.h) \
-    $(wildcard include/config/irq/time/accounting.h) \
-    $(wildcard include/config/stack/growsup.h) \
-    $(wildcard include/config/have/copy/thread/tls.h) \
-  include/uapi/linux/sched.h \
-  include/linux/sched/prio.h \
-  include/linux/capability.h \
-  include/uapi/linux/capability.h \
-  include/linux/plist.h \
-    $(wildcard include/config/debug/pi/list.h) \
-  include/linux/cputime.h \
-  arch/x86/include/generated/asm/cputime.h \
-  include/asm-generic/cputime.h \
-    $(wildcard include/config/virt/cpu/accounting.h) \
-  include/asm-generic/cputime_jiffies.h \
-  include/linux/sem.h \
-  include/uapi/linux/sem.h \
-  include/linux/ipc.h \
-  include/uapi/linux/ipc.h \
-  arch/x86/include/uapi/asm/ipcbuf.h \
-  include/uapi/asm-generic/ipcbuf.h \
-  arch/x86/include/uapi/asm/sembuf.h \
-  include/linux/shm.h \
-  include/uapi/linux/shm.h \
-  arch/x86/include/uapi/asm/shmbuf.h \
-  include/uapi/asm-generic/shmbuf.h \
-  arch/x86/include/asm/shmparam.h \
-  include/linux/signal.h \
-    $(wildcard include/config/old/sigaction.h) \
-  include/uapi/linux/signal.h \
-  arch/x86/include/asm/signal.h \
-  arch/x86/include/uapi/asm/signal.h \
-  include/uapi/asm-generic/signal-defs.h \
-  arch/x86/include/uapi/asm/siginfo.h \
-  include/asm-generic/siginfo.h \
-  include/uapi/asm-generic/siginfo.h \
-  include/linux/pid.h \
-  include/linux/proportions.h \
-  include/linux/percpu_counter.h \
-  include/linux/seccomp.h \
-    $(wildcard include/config/seccomp.h) \
-    $(wildcard include/config/have/arch/seccomp/filter.h) \
-    $(wildcard include/config/seccomp/filter.h) \
-    $(wildcard include/config/checkpoint/restore.h) \
-  include/uapi/linux/seccomp.h \
-  arch/x86/include/asm/seccomp.h \
-  arch/x86/include/asm/unistd.h \
-  arch/x86/include/uapi/asm/unistd.h \
-  arch/x86/include/generated/uapi/asm/unistd_64.h \
-  arch/x86/include/generated/asm/unistd_64_x32.h \
-  arch/x86/include/asm/ia32_unistd.h \
-  arch/x86/include/generated/asm/unistd_32_ia32.h \
-  include/asm-generic/seccomp.h \
-  include/uapi/linux/unistd.h \
-  include/linux/rculist.h \
-  include/linux/rtmutex.h \
-    $(wildcard include/config/debug/rt/mutexes.h) \
-  include/linux/resource.h \
-  include/uapi/linux/resource.h \
-  arch/x86/include/uapi/asm/resource.h \
-  include/asm-generic/resource.h \
-  include/uapi/asm-generic/resource.h \
-  include/linux/hrtimer.h \
-    $(wildcard include/config/high/res/timers.h) \
-    $(wildcard include/config/time/low/res.h) \
-    $(wildcard include/config/timerfd.h) \
-  include/linux/timerqueue.h \
-  include/linux/task_io_accounting.h \
-    $(wildcard include/config/task/io/accounting.h) \
-  include/linux/latencytop.h \
-  include/linux/cred.h \
-    $(wildcard include/config/debug/credentials.h) \
-    $(wildcard include/config/security.h) \
-  include/linux/key.h \
-  include/linux/assoc_array.h \
-    $(wildcard include/config/associative/array.h) \
-  include/linux/selinux.h \
-    $(wildcard include/config/security/selinux.h) \
-  include/uapi/linux/magic.h \
-  include/linux/cgroup-defs.h \
-    $(wildcard include/config/sock/cgroup/data.h) \
-  include/uapi/linux/limits.h \
-  include/linux/percpu-refcount.h \
-  include/linux/percpu-rwsem.h \
-  include/linux/rcu_sync.h \
-  include/linux/cgroup_subsys.h \
-    $(wildcard include/config/cgroup/cpuacct.h) \
-    $(wildcard include/config/blk/cgroup.h) \
-    $(wildcard include/config/cgroup/device.h) \
-    $(wildcard include/config/cgroup/freezer.h) \
-    $(wildcard include/config/cgroup/net/classid.h) \
-    $(wildcard include/config/cgroup/perf.h) \
-    $(wildcard include/config/cgroup/net/prio.h) \
-    $(wildcard include/config/cgroup/hugetlb.h) \
-    $(wildcard include/config/cgroup/pids.h) \
-    $(wildcard include/config/cgroup/debug.h) \
   include/linux/fs.h \
     $(wildcard include/config/fs/posix/acl.h) \
+    $(wildcard include/config/security.h) \
     $(wildcard include/config/cgroup/writeback.h) \
     $(wildcard include/config/ima.h) \
     $(wildcard include/config/fsnotify.h) \
+    $(wildcard include/config/epoll.h) \
     $(wildcard include/config/file/locking.h) \
     $(wildcard include/config/quota.h) \
     $(wildcard include/config/fs/dax.h) \
-    $(wildcard include/config/mandatory/file/locking.h) \
+    $(wildcard include/config/block.h) \
     $(wildcard include/config/migration.h) \
   include/linux/kdev_t.h \
   include/uapi/linux/kdev_t.h \
   include/linux/dcache.h \
+  include/linux/rculist.h \
   include/linux/rculist_bl.h \
   include/linux/list_bl.h \
   include/linux/bit_spinlock.h \
@@ -760,17 +626,25 @@ deps_/home/minnow/workspace/minnow-ws281x/ws281x_dma.o := \
     $(wildcard include/config/arch/use/cmpxchg/lockref.h) \
   include/linux/path.h \
   include/linux/list_lru.h \
+    $(wildcard include/config/memcg/kmem.h) \
   include/linux/shrinker.h \
   include/linux/radix-tree.h \
+  include/linux/pid.h \
+  include/linux/capability.h \
+  include/uapi/linux/capability.h \
   include/linux/semaphore.h \
   include/uapi/linux/fiemap.h \
   include/linux/migrate_mode.h \
+  include/linux/percpu-rwsem.h \
+  include/linux/rcu_sync.h \
   include/linux/blk_types.h \
+    $(wildcard include/config/blk/cgroup.h) \
     $(wildcard include/config/blk/dev/integrity.h) \
-  include/linux/delayed_call.h \
   include/uapi/linux/fs.h \
+  include/uapi/linux/limits.h \
   include/linux/quota.h \
     $(wildcard include/config/quota/netlink/interface.h) \
+  include/linux/percpu_counter.h \
   include/uapi/linux/dqblk_xfs.h \
   include/linux/dqblk_v1.h \
   include/linux/dqblk_v2.h \
@@ -803,7 +677,6 @@ deps_/home/minnow/workspace/minnow-ws281x/ws281x_dma.o := \
     $(wildcard include/config/x86/dev/dma/ops.h) \
     $(wildcard include/config/intel/iommu.h) \
     $(wildcard include/config/amd/iommu.h) \
-    $(wildcard include/config/pci/domains.h) \
   include/linux/pm_wakeup.h \
   include/linux/cdev.h \
   arch/x86/include/asm/uaccess.h \

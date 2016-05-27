@@ -4,22 +4,17 @@
 	<ActiveTarget name="Debug" />
 	<File name="ws281x.c" open="1" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="4" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="28124" topLine="620" />
+			<Cursor1 position="2355" topLine="18" />
 		</Cursor>
 	</File>
-	<File name="pwm.c" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="headers/dma.h" open="1" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="4" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="0" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="headers/dma.h" open="1" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="11961" topLine="0" />
+			<Cursor1 position="14644" topLine="138" />
 		</Cursor>
 	</File>
 	<File name="ws281x_dma.c" open="1" top="1" tabpos="7" split="0" active="1" splitpos="0" zoom_1="3" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="1896" topLine="3" />
+			<Cursor1 position="13303" topLine="282" />
 		</Cursor>
 	</File>
 	<File name="headers/gpio.h" open="1" top="0" tabpos="9" split="0" active="1" splitpos="0" zoom_1="3" zoom_2="0">
@@ -37,9 +32,9 @@
 			<Cursor1 position="404" topLine="0" />
 		</Cursor>
 	</File>
-	<File name="headers/spi.h" open="1" top="0" tabpos="10" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="pwm.c" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="77" topLine="0" />
+			<Cursor1 position="0" topLine="0" />
 		</Cursor>
 	</File>
 	<File name="spi.c" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
@@ -50,6 +45,11 @@
 	<File name="main.c" open="1" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="1" zoom_2="0">
 		<Cursor>
 			<Cursor1 position="1745" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="headers/spi.h" open="1" top="0" tabpos="10" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="77" topLine="0" />
 		</Cursor>
 	</File>
 	<File name="Makefile" open="1" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">

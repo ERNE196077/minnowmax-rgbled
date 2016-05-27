@@ -6,9 +6,9 @@
 	<stdlib.h>
 	"headers/dma.h"
 
-1462122652 /home/minnow/workspace/minnow-ws281x/headers/dma.h
+1464320243 /home/minnow/workspace/minnow-ws281x/headers/dma.h
 
-1462081545 source:/home/minnow/workspace/minnow-ws281x/main.c
+1464321267 source:/home/minnow/workspace/minnow-ws281x/main.c
 	<stdio.h>
 	<sys/mman.h>
 	<sys/types.h>
@@ -20,7 +20,7 @@
 	<sys/time.h>
 	"headers/ws281x.h"
 
-1462081517 /home/minnow/workspace/minnow-ws281x/headers/ws281x.h
+1464321242 /home/minnow/workspace/minnow-ws281x/headers/ws281x.h
 
 1446659088 source:/home/minnow/workspace/minnow-ws281x/pwm.c
 	<stdlib.h>
@@ -45,7 +45,7 @@
 
 1463105219 /home/minnow/workspace/minnow-ws281x/headers/spi.h
 
-1463543010 source:/home/minnow/workspace/minnow-ws281x/ws281x.c
+1464322030 source:/home/minnow/workspace/minnow-ws281x/ws281x.c
 	<stdlib.h>
 	<stdio.h>
 	<sys/mman.h>
@@ -57,14 +57,10 @@
 	<string.h>
 	<sys/ioctl.h>
 	"ws281x_dma.h"
-	"headers/ws281x.h"
 	"headers/general.h"
-	"headers/pwm.h"
-	"headers/dma.h"
-	"headers/gpio.h"
-	"headers/spi.h"
+	"headers/ws281x.h"
 
-1463543515 /home/minnow/workspace/minnow-ws281x/ws281x_dma.h
+1463977643 /home/minnow/workspace/minnow-ws281x/ws281x_dma.h
 	<linux/ioctl.h>
 
 1463451260 /home/minnow/workspace/minnow-ws281x/headers/general.h

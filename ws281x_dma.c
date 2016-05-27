@@ -11,6 +11,8 @@
 #include <linux/cdev.h>
 #include <linux/kdev_t.h>
 #include <asm/uaccess.h>
+#include <linux/pci.h>
+
 #include "ws281x_dma.h"
 #include "headers/pwm.h"
 #include "headers/dma.h"
@@ -36,36 +38,26 @@ static struct class *cl;    // Global variable for the device class
 
 /********* RGBLED VARIABLES  ************/
 
-#define WS281X_DMADESCMEMORY(lednum)    ((sizeof(dma_channel_t) * ((3 * lednum) + 2))  % 4096) > 0 ? (((sizeof(dma_channel_t) * ((3 * lednum) + 2))  / 4096)+1)*4096 : ((sizeof(dma_channel_t) * ((3 * lednum) + 2))  / 4096)*4096
+#define WS281X_DMADESCMEMORY(lednum)    ((sizeof(dma_lli_t) * ((3 * lednum) + 2))  % 4096) > 0 ? (((sizeof(dma_lli_t) * ((3 * lednum) + 2))  / 4096)+1)*4096 : ((sizeof(dma_lli_t) * ((3 * lednum) + 2))  / 4096)*4096
 
-#define APA102_DMADESCMEMORY(lednum)    ((sizeof(dma_channel_t) * (lednum + 2)) % 4096) > 0 ? (((sizeof(dma_channel_t) * (lednum + 2)) / 4096)+1)*4096 : ((sizeof(dma_channel_t) * (lednum + 2)) / 4096)*4096
+#define APA102_DMADESCMEMORY(lednum)    ((sizeof(dma_lli_t) * (lednum + 2)) % 4096) > 0 ? (((sizeof(dma_lli_t) * (lednum + 2)) / 4096)+1)*4096 : ((sizeof(dma_lli_t) * (lednum + 2)) / 4096)*4096
 
 
 typedef struct devices_t {
     volatile pwm_t          *pwm_dev;
     volatile dma_channel_t  *dma_ch;
-    volatile dma_channel_t  *dma_descriptors;
+    volatile dma_lli_t      *dma_descriptors;
     volatile dma_cfg_t      *dma_cfg;
     volatile gpio_t         *gpio_pin_spi_mosi;
     volatile gpio_t         *gpio_pin_spi_clk;
     volatile ssp_control_t  *ssp_control_block;
     volatile ssp_general_t  *ssp_general_block;
+
+    static pci_pool         *dma_mem_pool;
+    struct pci_dev          *pdev;
+    static __u32            dma_bar,dma_bar_size;
 } rgbled_devices_t;
 
-typedef struct address {
-unsigned segment,offset;
-}address;
-
-
-address get_pointer_address(void *p){
-address ret;
-int i asm("i");
-asm ("mov %eax,%cs");
-        asm("mov i,%eax");
-ret.segment = i;
-ret.offset = (unsigned)p;
-return ret;
-}
 
 
 
@@ -81,10 +73,9 @@ static          __u32           tmp_addr;
 volatile        __u32           *gpio_base;
 volatile        __u32           *spi_base;
 volatile        __u32           *dma_base;
-volatile        dma_channel_t   *tmp_desc =  NULL;
-volatile        dma_channel_t   *tmp_desc_prv = NULL;
-static __u32 *test;
-static address x;
+volatile        dma_lli_t       *tmp_desc =  NULL;
+volatile        dma_lli_t       *tmp_desc_prv = NULL;
+
 
 
 
@@ -174,12 +165,10 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
         else
             dma_desc_mem = APA102_DMADESCMEMORY(lednumber);
         devices.dma_descriptors = kmalloc(dma_desc_mem, GFP_KERNEL | __GFP_DMA);
-        test = kmalloc(dma_desc_mem, GFP_KERNEL | __GFP_DMA);
         printk(KERN_ALERT"DMA descriptors addr: 0x%p",devices.dma_descriptors);
-        printk(KERN_ALERT"DMA descriptors addr: 0x%p",test);
-        x = get_pointer_address(test);
-        printk(KERN_ALERT"the address of the pointer is %u:%u", x.segment, x.offset);
-        kfree(test);
+
+        //test_addr = virt_to_phys(devices.dma_descriptors);
+        //printk(KERN_ALERT"the  physc address of the pointer is %llx", test_addr);
 
         /************ SETTING GPIO ************/
 
@@ -285,9 +274,6 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
 
     case IOCTL_RGBLED_DECONFIGURE:
         kfree((void *)devices.dma_descriptors);
-        iounmap(gpio_base);
-        iounmap(dma_base);
-        iounmap(spi_base);
 
         devices.dma_cfg->__chenreg_l__ = (0x1 << (8 + dma_ch_number));
         devices.dma_cfg->__reqdstreg_l__ = (0x1 << (8 + dma_ch_number));
@@ -295,6 +281,10 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
 
         devices.dma_cfg->__sglrqdstreg_l__ = (0x1 << (8 + dma_ch_number));
         devices.dma_cfg->__sglrqsrcreg_l__ = (0x1 << (8 + dma_ch_number));
+
+        iounmap(gpio_base);
+        iounmap(dma_base);
+        iounmap(spi_base);
 
         break;
 
@@ -312,17 +302,20 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
     case IOCTL_DMA_ADDITEM:
         get_user(tmp_addr, (__u32 *)ioctl_params);
 
-        tmp_desc = ((volatile dma_channel_t *)(devices.dma_descriptors))+dma_desc_counter;
-printk(KERN_ALERT"ADDR RECEIVED: 0x%08x counter: %i  temp_desc: %p \n",tmp_addr,dma_desc_counter,tmp_desc);
+        tmp_desc = ((volatile dma_lli_t *)(devices.dma_descriptors))+dma_desc_counter;
+        printk(KERN_ALERT"ADDR RECEIVED: 0x%08x counter: %i  temp_desc: %p \n",tmp_addr,dma_desc_counter,tmp_desc);
+        printk(KERN_ALERT"virt_:to_bus: 0x%llx \n",virt_to_bus(tmp_desc));
+
         if ( dma_desc_counter == 0 ){
             devices.dma_ch->__sar_l__ = tmp_addr;
-            devices.dma_ch->__llp_l__ = DMA_LLP_LO_ADDRESSOFNEXTLLP((unsigned long)tmp_desc);
+            devices.dma_ch->__llp_l__ = DMA_LLP_LO_ADDRESSOFNEXTLLP((dma_addr_t)virt_to_bus(tmp_desc) );
         }
         else{
-            tmp_desc_prv = ((volatile dma_channel_t *)(devices.dma_descriptors))+(dma_desc_counter-1);
+            tmp_desc_prv = ((volatile dma_lli_t *)(devices.dma_descriptors))+(dma_desc_counter-1);
             tmp_desc_prv->__sar_l__ = tmp_addr;
-            tmp_desc_prv->__llp_l__ = DMA_LLP_LO_ADDRESSOFNEXTLLP((unsigned long)tmp_desc);
+            tmp_desc_prv->__llp_l__ = DMA_LLP_LO_ADDRESSOFNEXTLLP((dma_addr_t)virt_to_bus(tmp_desc));
             printk(KERN_ALERT"temp_desc_prv: %p \n",tmp_desc_prv);
+            printk(KERN_ALERT"virt_to_bus temp_desc_prv: %llx \n",virt_to_bus(tmp_desc_prv));
         }
 
             tmp_desc->__sar_l__ = 0x0;
@@ -346,28 +339,6 @@ printk(KERN_ALERT"ADDR RECEIVED: 0x%08x counter: %i  temp_desc: %p \n",tmp_addr,
             tmp_desc->__ctl_h__ =
                 DMA_CTL_HI_DONE_DONEBITZERO |
                 DMA_CTL_HI_BLOCKTS_DMAFLOWBLOCKSIZE(1) ;
-            tmp_desc->__cfg_l__ =
-                DMA_CFG_LO_RELOADDST_NORELOADDSTAFTERTRANSFER |
-                DMA_CFG_LO_RELOADSRC_NORELOADSRCAFTERTRANSFER |
-                DMA_CFG_LO_MAXABRST_NOLIMITBURSTTRANSFER |
-                DMA_CFG_LO_SRCHSPOL_SRCHANDSHAKEACTIVEHIGH |
-                DMA_CFG_LO_DSTHSPOL_DSTHANDSHAKEACTIVEHIGH |
-                DMA_CFG_LO_LOCKB_BUSNOTLOCKED |
-                DMA_CFG_LO_LOCKCH_CHANNELNOTLOCKED |
-                DMA_CFG_LO_LOCKBL_BUSLOCKEDOVERDMATRANSFER |
-                DMA_CFG_LO_LOCKCHL_CHLOCKEDOVERDMATRANSFER |
-                DMA_CFG_LO_HSSELSRC_SOURCESWHANDSHAKING |               // TO BE CHANGED PROBABLY
-                DMA_CFG_LO_HSSELDST_DESTSWHANDSHAKING |
-                DMA_CFG_LO_FIFOEMPTY_SETVALUEZERO |
-                DMA_CFG_LO_CHSUSP_NOSUSREACTIVATEDMAACTIVITY |
-                DMA_CFG_LO_CHPRIOR_HIGHESTPRIORITY ;
-            tmp_desc->__cfg_h__ =
-                DMA_CFG_HI_DESTPER_DSTHWHANDSHAKEIFACE(0x0) |
-                DMA_CFG_HI_SRCPER_SRCHWHANDSHAKEIFACE(0x0) |
-                DMA_CFG_HI_SSUPDEN_DISABLESRCSTATUSUPDATE |
-                DMA_CFG_HI_DSUPDEN_DISABLEDSTSTATUSUPDATE |
-                DMA_CFG_HI_FIFOMODE_SPACEDATAEQTOTRANSWDITH |
-                DMA_CFG_HI_FCMODE_SRCTRANSREQWHENTHEYOCURR ;
 
             dma_desc_counter++;
 
@@ -376,31 +347,36 @@ printk(KERN_ALERT"ADDR RECEIVED: 0x%08x counter: %i  temp_desc: %p \n",tmp_addr,
     case IOCTL_DMA_PRINTITEMS:
         printk(KERN_ALERT"DMA desc mem address: %p\n\n",devices.dma_descriptors);
         printk(KERN_ALERT"DMA mem size : %08x\n\n",dma_desc_mem);
-      //  printk(KERN_ALERT"DMA ch size : %08x\n\n",sizeof(*devices.dma_ch));
+        printk(KERN_ALERT"DMA ch size : %lx\n\n",sizeof(*devices.dma_ch));
         dma_desc_printer = 0;
         while (  dma_desc_printer <= dma_desc_counter ){
 
             if ( dma_desc_printer == 0 ){
-                tmp_desc =  devices.dma_ch;
+                printk(KERN_INFO"*****\tDMA Decriptor # %d  %p\t*****\n", dma_desc_printer, devices.dma_ch);
+                printk(KERN_INFO"__sar_l__\t\t%08x\n", devices.dma_ch->__sar_l__);
+                printk(KERN_INFO"__dar_l__\t\t%08x\n", devices.dma_ch->__dar_l__);
+                printk(KERN_INFO"__llp_l__\t\t%08x\n", devices.dma_ch->__llp_l__);
+                printk(KERN_INFO"__ctl_l__\t\t%08x\n", devices.dma_ch->__ctl_l__);
+                printk(KERN_INFO"__ctl_h__\t\t%08x\n", devices.dma_ch->__ctl_h__);
+                printk(KERN_INFO"__sstat_l__\t\t%08x\n", devices.dma_ch->__ssta_l__);
+                printk(KERN_INFO"__dstat_l__\t\t%08x\n", devices.dma_ch->__dsta_l__);
+                printk(KERN_INFO"__sstatar_l__\t\t%08x\n", devices.dma_ch->__sstatar_l__);
+                printk(KERN_INFO"__dstatar_l__\t\t%08x\n", devices.dma_ch->__dstatar_l__);
+                printk(KERN_INFO"__cfg_l__\t\t%08x\n", devices.dma_ch->__cfg_l__);
+                printk(KERN_INFO"__cfg_h__\t\t%08x\n", devices.dma_ch->__cfg_h__);
+                printk(KERN_INFO"__srg_l__\t\t%08x\n", devices.dma_ch->__sgr_l__);
+                printk(KERN_INFO"__dsr_l__\t\t%08x\n\n", devices.dma_ch->__dsr_l__);
             }
             else{
-                tmp_desc = ((volatile dma_channel_t *)(devices.dma_descriptors))+(dma_desc_printer-1);
-            }
+                tmp_desc = ((volatile dma_lli_t *)(devices.dma_descriptors))+(dma_desc_printer-1);
+                printk(KERN_INFO"*****\tDMA Decriptor # %d  %p\t*****\n", dma_desc_printer, tmp_desc);
+                printk(KERN_INFO"__sar_l__\t\t%08llx\n", tmp_desc->__sar_l__);
+                printk(KERN_INFO"__dar_l__\t\t%08llx\n", tmp_desc->__dar_l__);
+                printk(KERN_INFO"__llp_l__\t\t%08llx\n", tmp_desc->__llp_l__);
+                printk(KERN_INFO"__ctl_l__\t\t%08x\n", tmp_desc->__ctl_l__);
+                printk(KERN_INFO"__ctl_h__\t\t%08x\n", tmp_desc->__ctl_h__);
 
-            printk(KERN_INFO"*****\tDMA Decriptor # %d  %p\t*****\n", dma_desc_printer, tmp_desc);
-            printk(KERN_INFO"__sar_l__\t\t%08x\n", tmp_desc->__sar_l__);
-            printk(KERN_INFO"__dar_l__\t\t%08x\n", tmp_desc->__dar_l__);
-            printk(KERN_INFO"__llp_l__\t\t%08x\n", tmp_desc->__llp_l__);
-            printk(KERN_INFO"__ctl_l__\t\t%08x\n", tmp_desc->__ctl_l__);
-            printk(KERN_INFO"__ctl_h__\t\t%08x\n", tmp_desc->__ctl_h__);
-            printk(KERN_INFO"__sstat_l__\t\t%08x\n", tmp_desc->__ssta_l__);
-            printk(KERN_INFO"__dstat_l__\t\t%08x\n", tmp_desc->__dsta_l__);
-            printk(KERN_INFO"__sstatar_l__\t\t%08x\n", tmp_desc->__sstatar_l__);
-            printk(KERN_INFO"__dstatar_l__\t\t%08x\n", tmp_desc->__dstatar_l__);
-            printk(KERN_INFO"__cfg_l__\t\t%08x\n", tmp_desc->__cfg_l__);
-            printk(KERN_INFO"__cfg_h__\t\t%08x\n", tmp_desc->__cfg_h__);
-            printk(KERN_INFO"__srg_l__\t\t%08x\n", tmp_desc->__sgr_l__);
-            printk(KERN_INFO"__dsr_l__\t\t%08x\n\n", tmp_desc->__dsr_l__);
+            }
 
             dma_desc_printer++;
         }
@@ -410,6 +386,55 @@ printk(KERN_ALERT"ADDR RECEIVED: 0x%08x counter: %i  temp_desc: %p \n",tmp_addr,
     return 0;
 }
 
+/**************************************************************************
+***************************************************************************
+***************************************************************************
+*****************     PCI DRIVER STRUCTURES          **********************
+***************************************************************************
+***************************************************************************
+***************************************************************************/
+
+static int pci_rgbled_probe (struct pci_dev *dev, const struct pci_device_id *id){
+
+    if( pci_enable_device(pdev) < 0 ){
+        return -1;
+    }
+
+    if (pci_request_region (pdev, 0, "rgbled_driver") == NULL){
+        dev_err(&pdev­>dev, "I/O resource 0x%x @ 0x%lx busy\n",
+                NE_IO_EXTENT, ioaddr);
+        return ­-EBUSY;
+    }
+
+    dma_bar = pci_resource_start (pdev, 0);
+    printk(KERN_INFO"DMA BASE ADDRESS REGISTER : 0x%lx \n",dma_bar);
+    dma_bar_size = pci_resource_len (pdev, 0);
+    printk(KERN_INFO"DMA BASE ADDRESS REGISTER SIZE : 0x%lx \n",dma_bar_size);
+}
+
+
+
+
+
+/**** SUPPORTED DEVICES  ****/
+
+static struct pci_device_id pci_supp_list[] = {
+    { PCI_DEVICE(0x8086,0x0F06)},
+    {0,},
+};
+
+/**** EXPORT SUPPORTED DEVS TO USER SPACE  ****/
+
+MODULE_DEVICE_TABLE(pci, pci_supp_list);
+
+/**** REGISTERING PCI DRIVER ****/
+
+static struct pci_driver pdrv = {
+    .name       = "rgbled_driver",
+    .id_table   = pci_supp_list,
+    .remove     = pci_rgbled_remove,
+    .probe      = pci_rgbled_prove,
+};
 
 /**************************************************************************
 ***************************************************************************
@@ -432,29 +457,34 @@ int __init init_module(){
     printk(KERN_INFO"############################## WELCOME RGBLED ##############################\n");
 
 
-  if (alloc_chrdev_region(&first, 0, 1, "minnowleddev") < 0)
-  {
-    return -1;
-  }
-    if ((cl = class_create(THIS_MODULE, "minnowleddev")) == NULL)
-  {
-    unregister_chrdev_region(first, 1);
-    return -1;
-  }
-    if (device_create(cl, NULL, first, NULL, "minnowleddev") == NULL)
-  {
-    class_destroy(cl);
-    unregister_chrdev_region(first, 1);
-    return -1;
-  }
+    if (alloc_chrdev_region(&first, 0, 1, "minnowleddev") < 0){
+        return -1;
+    }
+
+    if ((cl = class_create(THIS_MODULE, "minnowleddev")) == NULL){
+        unregister_chrdev_region(first, 1);
+        return -1;
+    }
+
+    if (device_create(cl, NULL, first, NULL, "minnowleddev") == NULL){
+        class_destroy(cl);
+        unregister_chrdev_region(first, 1);
+        return -1;
+    }
+
     cdev_init(&c_dev, &fop);
-    if (cdev_add(&c_dev, first, 1) == -1)
-  {
-    device_destroy(cl, first);
-    class_destroy(cl);
-    unregister_chrdev_region(first, 1);
-    return -1;
-  }
+
+    if (cdev_add(&c_dev, first, 1) == -1){
+        device_destroy(cl, first);
+        class_destroy(cl);
+        unregister_chrdev_region(first, 1);
+        return -1;
+    }
+
+    if (pci_register_driver(&pdrv) < 0){
+        return -1;
+    }
+
   return 0;
 
 

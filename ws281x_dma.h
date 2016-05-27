@@ -17,7 +17,7 @@
 #define IOCTL_RGBLED_RENDER             _IO(MAJOR_NUM , 5 )
 
 /********  DMA FUNCTIONS   ********/
-#define IOCTL_DMA_ADDITEM               _IOW(MAJOR_NUM , 6 , __u32 * )
+#define IOCTL_DMA_ADDITEM               _IOW(MAJOR_NUM , 6 , __u32 )
 #define IOCTL_DMA_PRINTITEMS            _IO(MAJOR_NUM , 7 )
 
 
