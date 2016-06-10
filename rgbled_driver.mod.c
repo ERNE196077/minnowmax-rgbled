@@ -20,20 +20,12 @@ __attribute__((section("__versions"))) = {
 	{ 0x34d1b86, __VMLINUX_SYMBOL_STR(module_layout) },
 	{ 0x27991d2a, __VMLINUX_SYMBOL_STR(pci_unregister_driver) },
 	{ 0x753a3218, __VMLINUX_SYMBOL_STR(__pci_register_driver) },
-	{ 0x411f8084, __VMLINUX_SYMBOL_STR(device_destroy) },
-	{ 0x3adc1818, __VMLINUX_SYMBOL_STR(cdev_add) },
-	{ 0x7cdb7e8e, __VMLINUX_SYMBOL_STR(cdev_init) },
-	{ 0x75bbf4c6, __VMLINUX_SYMBOL_STR(class_destroy) },
-	{ 0x99be80b3, __VMLINUX_SYMBOL_STR(device_create) },
-	{ 0x7485e15e, __VMLINUX_SYMBOL_STR(unregister_chrdev_region) },
-	{ 0x8ae39450, __VMLINUX_SYMBOL_STR(__class_create) },
-	{ 0x29537c9e, __VMLINUX_SYMBOL_STR(alloc_chrdev_region) },
 	{ 0xd5f15861, __VMLINUX_SYMBOL_STR(try_module_get) },
 	{ 0xa1f7b21e, __VMLINUX_SYMBOL_STR(dma_ops) },
-	{ 0x3a8c628e, __VMLINUX_SYMBOL_STR(dma_supported) },
 	{ 0xa09ecd2, __VMLINUX_SYMBOL_STR(pci_set_master) },
 	{ 0xae799a4c, __VMLINUX_SYMBOL_STR(pci_dev_get) },
-	{ 0xd07ab45, __VMLINUX_SYMBOL_STR(pci_request_region) },
+	{ 0x3a8c628e, __VMLINUX_SYMBOL_STR(dma_supported) },
+	{ 0x842d6a16, __VMLINUX_SYMBOL_STR(pci_request_regions) },
 	{ 0x9341d2ea, __VMLINUX_SYMBOL_STR(pci_enable_device) },
 	{ 0xa84d8157, __VMLINUX_SYMBOL_STR(pci_disable_device) },
 	{ 0xeb8f6012, __VMLINUX_SYMBOL_STR(pci_release_regions) },
@@ -54,6 +46,4 @@ __used
 __attribute__((section(".modinfo"))) =
 "depends=";
 
-MODULE_ALIAS("pci:v00008086d00000827sv*sd*bc*sc*i*");
-MODULE_ALIAS("pci:v00008086d00000830sv*sd*bc*sc*i*");
 MODULE_ALIAS("pci:v00008086d00000F06sv*sd*bc*sc*i*");

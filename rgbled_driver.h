@@ -5,8 +5,8 @@
 #include <linux/ioctl.h>
 
 
-#define MAJOR_NUM 110
-#define DEV_NAME "minnowleddev"
+#define MAJOR_NUM 121
+#define DEV_NAME "rgbled_device"
 
 /********  RGBLED FUNCTIONS   ********/
 #define IOCTL_RGBLED_SETLEDNUMBER       _IOW(MAJOR_NUM , 0 , __u16 )
@@ -23,3 +23,5 @@
 
 
 struct devices_t ;
+
+

@@ -12,9 +12,11 @@
 #include <linux/kdev_t.h>
 #include <asm/uaccess.h>
 #include <linux/pci.h>
+#include <linux/pci_regs.h>
+//#include <linux/pci-dma-compat.h>
 
-#include "ws281x_dma.h"
-#include "headers/pwm.h"
+#include "rgbled_driver.h"
+//#include "headers/pwm.h"
 #include "headers/dma.h"
 #include "headers/gpio.h"
 #include "headers/spi.h"
@@ -43,26 +45,23 @@ static struct class *cl;    // Global variable for the device class
 #define APA102_DMADESCMEMORY(lednum)    ((sizeof(dma_lli_t) * (lednum + 2)) % 4096) > 0 ? (((sizeof(dma_lli_t) * (lednum + 2)) / 4096)+1)*4096 : ((sizeof(dma_lli_t) * (lednum + 2)) / 4096)*4096
 
 
-typedef struct devices_t {
-    volatile pwm_t          *pwm_dev;
+struct devices_t {
+    struct pci_dev          *pdev;
     volatile dma_channel_t  *dma_ch;
-    volatile dma_lli_t      *dma_descriptors;
+    dma_lli_t      *dma_descriptors;
     volatile dma_cfg_t      *dma_cfg;
     volatile gpio_t         *gpio_pin_spi_mosi;
     volatile gpio_t         *gpio_pin_spi_clk;
     volatile ssp_control_t  *ssp_control_block;
     volatile ssp_general_t  *ssp_general_block;
 
-    static pci_pool         *dma_mem_pool;
-    struct pci_dev          *pdev;
-    static __u32            dma_bar,dma_bar_size;
-} rgbled_devices_t;
+};
 
 
 
 
 
-static          rgbled_devices_t devices;
+struct         devices_t devices;
 static          __u16           lednumber;
 static          __u16           dma_desc_counter;
 static          __u32           dma_desc_printer;
@@ -75,8 +74,10 @@ volatile        __u32           *spi_base;
 volatile        __u32           *dma_base;
 volatile        dma_lli_t       *tmp_desc =  NULL;
 volatile        dma_lli_t       *tmp_desc_prv = NULL;
-
-
+static __u32            dma_bar;
+static __u32            dma_bar_size;
+static dma_addr_t       dma_desc_addr;
+static    int err;
 
 
 
@@ -160,15 +161,15 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
         devices.dma_ch = (volatile dma_channel_t *)(dma_base + dma_channels[dma_ch_number]);
         devices.dma_cfg = (volatile dma_cfg_t *)(dma_base + DMA_DMACCFG_OFF);
 
+
+        /************ SETTING DMA MEMORY ************/
+
         if(rgbled_type == DEV_WS281X)
             dma_desc_mem = WS281X_DMADESCMEMORY(lednumber);
         else
             dma_desc_mem = APA102_DMADESCMEMORY(lednumber);
-        devices.dma_descriptors = kmalloc(dma_desc_mem, GFP_KERNEL | __GFP_DMA);
-        printk(KERN_ALERT"DMA descriptors addr: 0x%p",devices.dma_descriptors);
 
-        //test_addr = virt_to_phys(devices.dma_descriptors);
-        //printk(KERN_ALERT"the  physc address of the pointer is %llx", test_addr);
+
 
         /************ SETTING GPIO ************/
 
@@ -273,7 +274,6 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
         break;
 
     case IOCTL_RGBLED_DECONFIGURE:
-        kfree((void *)devices.dma_descriptors);
 
         devices.dma_cfg->__chenreg_l__ = (0x1 << (8 + dma_ch_number));
         devices.dma_cfg->__reqdstreg_l__ = (0x1 << (8 + dma_ch_number));
@@ -285,6 +285,7 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
         iounmap(gpio_base);
         iounmap(dma_base);
         iounmap(spi_base);
+
 
         break;
 
@@ -389,28 +390,65 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
 /**************************************************************************
 ***************************************************************************
 ***************************************************************************
-*****************     PCI DRIVER STRUCTURES          **********************
+*****************     PCI STUFF          **********************
 ***************************************************************************
 ***************************************************************************
 ***************************************************************************/
 
-static int pci_rgbled_probe (struct pci_dev *dev, const struct pci_device_id *id){
+static int pci_rgbled_probe (struct pci_dev *pdev, const struct pci_device_id *id){
 
-    if( pci_enable_device(pdev) < 0 ){
-        return -1;
-    }
 
-    if (pci_request_region (pdev, 0, "rgbled_driver") == NULL){
-        dev_err(&pdev­>dev, "I/O resource 0x%x @ 0x%lx busy\n",
-                NE_IO_EXTENT, ioaddr);
-        return ­-EBUSY;
-    }
 
-    dma_bar = pci_resource_start (pdev, 0);
-    printk(KERN_INFO"DMA BASE ADDRESS REGISTER : 0x%lx \n",dma_bar);
-    dma_bar_size = pci_resource_len (pdev, 0);
-    printk(KERN_INFO"DMA BASE ADDRESS REGISTER SIZE : 0x%lx \n",dma_bar_size);
+    err = pci_enable_device(pdev);
+    if (err)
+        goto err_enable_device;
+
+    err = pci_request_regions(pdev, "rgbled_driver");
+    if (err)
+        goto err_request_regions;
+
+    err = pci_set_dma_mask(pdev, DMA_BIT_MASK(29));
+    if (err)
+        goto err_set_dma_mask;
+
+    err = pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(29));
+    if (err)
+        goto err_set_dma_mask;
+
+    devices.pdev = pci_dev_get(pdev);
+
+    dma_bar = pci_resource_start (pdev, 0); //Get DMA BAR
+    dma_bar_size = pci_resource_len (pdev, 0);  //Get DMA BAR size
+
+    pci_set_master(pdev);    //Enable device as DMA.
+
+
+
+
+    return 0;
+
+    err_set_dma_mask:
+        pci_release_regions(pdev);
+        pci_disable_device(pdev);
+    err_request_regions:
+    err_enable_device:
+
+        return err;
 }
+
+
+static void pci_rgbled_remove (struct pci_dev *pdev){
+    //kfree((void *)devices.dma_descriptors);
+    //iounmap(gpio_base);
+    //iounmap(dma_base);
+    //iounmap(spi_base);
+
+    pci_dev_put(pdev);
+    pci_release_regions(pdev);
+    pci_disable_device(pdev);
+
+}
+
 
 
 
@@ -419,7 +457,10 @@ static int pci_rgbled_probe (struct pci_dev *dev, const struct pci_device_id *id
 /**** SUPPORTED DEVICES  ****/
 
 static struct pci_device_id pci_supp_list[] = {
-    { PCI_DEVICE(0x8086,0x0F06)},
+ //   { PCI_VDEVICE(INTEL, 0x0827)},
+ //   { PCI_VDEVICE(INTEL, 0x0830)},
+    { PCI_VDEVICE(INTEL, 0x0f06)},
+  //  { PCI_DEVICE(0x8086, 0x0f06)},
     {0,},
 };
 
@@ -433,7 +474,7 @@ static struct pci_driver pdrv = {
     .name       = "rgbled_driver",
     .id_table   = pci_supp_list,
     .remove     = pci_rgbled_remove,
-    .probe      = pci_rgbled_prove,
+    .probe      = pci_rgbled_probe,
 };
 
 /**************************************************************************
@@ -456,17 +497,17 @@ struct file_operations fop = {
 int __init init_module(){
     printk(KERN_INFO"############################## WELCOME RGBLED ##############################\n");
 
-
-    if (alloc_chrdev_region(&first, 0, 1, "minnowleddev") < 0){
+/*
+    if (alloc_chrdev_region(&first, 0, 1, "rgbled_device") < 0){
         return -1;
     }
 
-    if ((cl = class_create(THIS_MODULE, "minnowleddev")) == NULL){
+    if ((cl = class_create(THIS_MODULE, "rgbled_device")) == NULL){
         unregister_chrdev_region(first, 1);
         return -1;
     }
 
-    if (device_create(cl, NULL, first, NULL, "minnowleddev") == NULL){
+    if (device_create(cl, NULL, first, NULL, "rgbled_device") == NULL){
         class_destroy(cl);
         unregister_chrdev_region(first, 1);
         return -1;
@@ -480,12 +521,17 @@ int __init init_module(){
         unregister_chrdev_region(first, 1);
         return -1;
     }
+*/
 
-    if (pci_register_driver(&pdrv) < 0){
-        return -1;
-    }
+        if(!pci_register_driver(&pdrv)){
+            printk(KERN_INFO"FAIL %d\n",err);
+            return -1;
+        }
 
-  return 0;
+
+        return 0;
+
+
 
 
 
@@ -494,14 +540,17 @@ int __init init_module(){
 
 
 void __exit cleanup_module(){
-kfree((void *)devices.dma_descriptors);
-iounmap(gpio_base);
-iounmap(dma_base);
-iounmap(spi_base);
+    pci_unregister_driver(&pdrv);
+ /*   iounmap(gpio_base);
+    iounmap(dma_base);
+    iounmap(spi_base);
 
-device_destroy(cl, first);
-class_destroy(cl);
-unregister_chrdev_region(first, 1);
-printk(KERN_INFO"######################### GOODBYE ##############################\n");
+
+    device_destroy(cl, first);
+    class_destroy(cl);
+    unregister_chrdev_region(first, 1);
+
+*/
+    printk(KERN_INFO"######################### GOODBYE ##############################\n");
 
 }

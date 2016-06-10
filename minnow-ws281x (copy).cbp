@@ -35,6 +35,10 @@
 		<Unit filename="Makefile">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
+		<Unit filename="dma.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="headers/dma.h" />
 		<Unit filename="headers/general.h" />
 		<Unit filename="headers/gpio.h" />
 		<Unit filename="headers/pwm.h" />
@@ -53,6 +57,10 @@
 		</Unit>
 		<Unit filename="ws281x.c">
 			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ws281x_dma.c">
+			<Option compilerVar="CC" />
+			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Extensions>
 			<code_completion />

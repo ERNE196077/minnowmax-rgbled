@@ -15,7 +15,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/mman.h>
-#include <asm/types.h>
+#include <linux/types.h>
 #include <stdint.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -140,25 +140,24 @@ l3 = ws281x_convert_virtual(&list[2]);
 printf("&list[0] : %08x   %p\n",l1,&list[0]);
 printf("&list[1] : %08x   %p\n",l2,&list[1]);
 printf("&list[2] : %08x   %p\n",l3,&list[2]);
-    rgbled_deconfigure(file);
+    //rgbled_deconfigure(file);
 
     rgbled_setdmachannel(file,&dmach);
     rgbled_setlednumber(file,&lednum);
     rgbled_setrgbledtype(file,&ledtype);
 
     rgbled_configure(file);
-    rgbled_dmaprintitems(file);
-
-
-    rgbled_dmaadditem(file,&l1);
-    rgbled_dmaadditem(file,&l2);
+    //rgbled_dmaprintitems(file);
+    //rgbled_dmaadditem(file,&l1);
+    //rgbled_dmaadditem(file,&l2);
     //rgbled_dmaadditem(file,&l3);
-//    rgbled_dmaadditem(file,&l3);
-    rgbled_dmaprintitems(file);
+    //rgbled_dmaadditem(file,&l3);
+    //rgbled_dmaprintitems(file);
 
-    rgbled_render(file);
-    usleep(10000);
-    rgbled_dmaprintitems(file);
+    //rgbled_render(file);
+    //usleep(10000);
+    //rgbled_dmaprintitems(file);
+    rgbled_deconfigure(file);
 
 /*
 	 * THIS IS FOR PWM. ABOUT TO DELETE. NEED TO BACKUP, LIGHT BULB DIMMER CONTROLS
