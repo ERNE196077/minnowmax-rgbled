@@ -104,9 +104,6 @@ u_int32_t gpio_pins[] = {
 };
 
 /*****			GPIO MACROS			*****/
-//#define GPIO_MAP_1(base)					base##+GPIO_OFFSET_PIN##
-//#define GPIO_MAP_2(number)					number##));
-//#define GPIO_MAP(number,base_pointer)	 	((volatile gpio_t *)((base_pointer + gpio_pins[ ##number ])));
 #define GPIO_VAL_INPUT(val_reg)				val_reg |= (0X1 << 1);
 #define GPIO_VAL_OUTPUT(val_reg)			val_reg &= ~(0X1 << 1);
 #define GPIO_VAL_SET(val_reg)				val_reg |= 0x1;
@@ -116,13 +113,15 @@ u_int32_t gpio_pins[] = {
 
 
 /*****			GPIO STRUCTURES			*****/
-
-
-typedef struct{
+typedef struct gpio_t{
 	u_int32_t __cfg__;
 	u_int32_t __resv__;
 	u_int32_t __val__;
 	
 }__attribute__ ((packed)) gpio_t;
 
-
+typedef struct{
+    volatile __u32	*gpio_base;
+	volatile gpio_t *gpio_pin_spi_mosi;
+    volatile gpio_t *gpio_pin_spi_clk;
+} gpio_dev_t;

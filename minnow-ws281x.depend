@@ -8,7 +8,7 @@
 
 1464320243 /home/minnow/workspace/minnow-ws281x/headers/dma.h
 
-1464321267 source:/home/minnow/workspace/minnow-ws281x/main.c
+1467252515 source:/home/minnow/workspace/minnow-ws281x/main.c
 	<stdio.h>
 	<sys/mman.h>
 	<sys/types.h>
@@ -20,9 +20,9 @@
 	<sys/time.h>
 	"headers/ws281x.h"
 
-1464321242 /home/minnow/workspace/minnow-ws281x/headers/ws281x.h
+1467252529 /home/minnow/workspace/minnow-ws281x/headers/ws281x.h
 
-1446659088 source:/home/minnow/workspace/minnow-ws281x/pwm.c
+1465767983 source:/home/minnow/workspace/minnow-ws281x/pwm.c
 	<stdlib.h>
 	<stdio.h>
 	<sys/mman.h>
@@ -34,36 +34,39 @@
 	<linux/pci.h>
 	"headers/pwm.h"
 
-1459273017 /home/minnow/workspace/minnow-ws281x/headers/pwm.h
+1465767983 /home/minnow/workspace/minnow-ws281x/headers/pwm.h
 
-1461700836 source:/home/minnow/workspace/minnow-ws281x/spi.c
+1465767983 source:/home/minnow/workspace/minnow-ws281x/spi.c
 	<stdlib.h>
 	<stdio.h>
 	<sys/mman.h>
 	<sys/types.h>
 	"headers/spi.h"
 
-1463105219 /home/minnow/workspace/minnow-ws281x/headers/spi.h
+1465767983 /home/minnow/workspace/minnow-ws281x/headers/spi.h
 
-1464322030 source:/home/minnow/workspace/minnow-ws281x/ws281x.c
+1469675424 source:/home/minnow/workspace/minnow-ws281x/ws281x.c
 	<stdlib.h>
 	<stdio.h>
 	<sys/mman.h>
-	<asm/types.h>
+	<linux/types.h>
 	<stdint.h>
 	<sys/stat.h>
 	<unistd.h>
 	<fcntl.h>
 	<string.h>
 	<sys/ioctl.h>
-	"ws281x_dma.h"
+	"rgbled_driver.h"
 	"headers/general.h"
 	"headers/ws281x.h"
 
 1463977643 /home/minnow/workspace/minnow-ws281x/ws281x_dma.h
 	<linux/ioctl.h>
 
-1463451260 /home/minnow/workspace/minnow-ws281x/headers/general.h
+1467252555 /home/minnow/workspace/minnow-ws281x/headers/general.h
 
 1459318093 /home/minnow/workspace/minnow-ws281x/headers/gpio.h
+
+1469675118 /home/minnow/workspace/minnow-ws281x/rgbled_driver.h
+	<linux/ioctl.h>
 

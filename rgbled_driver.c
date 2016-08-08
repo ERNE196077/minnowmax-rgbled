@@ -1,4 +1,4 @@
-
+    
 
 #include <linux/module.h>
 #include <linux/kernel.h>
@@ -11,26 +11,18 @@
 #include <linux/cdev.h>
 #include <linux/kdev_t.h>
 #include <asm/uaccess.h>
-#include <linux/pci.h>
 #include <linux/pci_regs.h>
-//#include <linux/pci-dma-compat.h>
-
+#include <linux/slab.h>
+#include <linux/delay.h>
 #include "rgbled_driver.h"
-//#include "headers/pwm.h"
-#include "headers/dma.h"
-#include "headers/gpio.h"
-#include "headers/spi.h"
-#include "headers/general.h"
+#include "headers/rgbled.h"
+
 
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("ernestrc");
 MODULE_DESCRIPTION("MinnowboardMAX APA102/WS281X module.");
 MODULE_SUPPORTED_DEVICE("MinnowboardMAX");
-
-
-
-
 
 /********* DEVICE VARIABLES  ************/
 static int open = 0 ;
@@ -41,45 +33,21 @@ static struct class *cl;    // Global variable for the device class
 /********* RGBLED VARIABLES  ************/
 
 #define WS281X_DMADESCMEMORY(lednum)    ((sizeof(dma_lli_t) * ((3 * lednum) + 2))  % 4096) > 0 ? (((sizeof(dma_lli_t) * ((3 * lednum) + 2))  / 4096)+1)*4096 : ((sizeof(dma_lli_t) * ((3 * lednum) + 2))  / 4096)*4096
-
 #define APA102_DMADESCMEMORY(lednum)    ((sizeof(dma_lli_t) * (lednum + 2)) % 4096) > 0 ? (((sizeof(dma_lli_t) * (lednum + 2)) / 4096)+1)*4096 : ((sizeof(dma_lli_t) * (lednum + 2)) / 4096)*4096
 
-
-struct devices_t {
-    struct pci_dev          *pdev;
-    volatile dma_channel_t  *dma_ch;
-    dma_lli_t      *dma_descriptors;
-    volatile dma_cfg_t      *dma_cfg;
-    volatile gpio_t         *gpio_pin_spi_mosi;
-    volatile gpio_t         *gpio_pin_spi_clk;
-    volatile ssp_control_t  *ssp_control_block;
-    volatile ssp_general_t  *ssp_general_block;
-
-};
-
-
-
-
-
-struct         devices_t devices;
-static          __u16           lednumber;
-static          __u16           dma_desc_counter;
-static          __u32           dma_desc_printer;
-static          __u8	        dma_ch_number;
-static          __u8            rgbled_type;
-static          __u32           dma_desc_mem;
-static          __u32           tmp_addr;
-volatile        __u32           *gpio_base;
-volatile        __u32           *spi_base;
-volatile        __u32           *dma_base;
-volatile        dma_lli_t       *tmp_desc =  NULL;
-volatile        dma_lli_t       *tmp_desc_prv = NULL;
-static __u32            dma_bar;
-static __u32            dma_bar_size;
-static dma_addr_t       dma_desc_addr;
-static    int err;
-
-
+devices_t    devices;
+static      __u16           dma_desc_counter;
+static      __u32           dma_desc_printer;
+static      __u32           tmp_addr;
+static      dma_addr_t      tmp_dma_addr_phys;
+volatile    dma_lli_t       *tmp_desc =  NULL;
+volatile    dma_lli_t       *tmp_desc_prv = NULL;
+static      __u32           test_var = 0xffFFffFF;
+static      __u32           test_array[2] = {0xFF00FF00, 0xFF00ff00};
+__u32 *fifo_data;
+/*  PCI VARIABLES   */
+static      int     err;
+static      __u8    ahb;        
 
 /**************************************************************************
 ***************************************************************************
@@ -121,64 +89,43 @@ static int device_release(struct inode *inode, struct file *file){
 static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned long ioctl_params){
     switch (ioctl_num){
     case IOCTL_RGBLED_SETLEDNUMBER:
-        get_user(lednumber, (__u16 *)ioctl_params );
+        get_user(devices.rgbled_numleds, (__u32 *)ioctl_params );
 
         break;
+
 
     case IOCTL_RGBLED_SETDMACHANNEL:
-        get_user(dma_ch_number, (__u8 *)ioctl_params);
+        get_user(devices.dma_dev.dma_ch_number, (__u8 *)ioctl_params);
 
         break;
+                
 
     case IOCTL_RGBLED_SETRGBLEDTYPE:
-        get_user(rgbled_type, (__u8 *)ioctl_params);
+        get_user(devices.rgbled_type, (__u8 *)ioctl_params);
 
         break;
 
     case IOCTL_RGBLED_CONFIGURE:
 
 
-        if (!(gpio_base = (volatile u_int32_t *) ioremap(GPIO_SCORE_BASE_ADDR, BLOCK_SIZE_T))) {
-            printk(KERN_ALERT"GPIO BLOCK MAPPING FAILED!");
-            return -1;
-        }
-
-        if (!(dma_base = (volatile u_int32_t *) ioremap(DMA_BASE_ADDR, BLOCK_SIZE_T))) {
-            printk(KERN_ALERT"DMA BLOCK MAPPING FAILED!");
-            return -1;
-        }
-
-        if (!(spi_base = (volatile u_int32_t *) ioremap(SPI_BASE_ADDRESS, BLOCK_SIZE_T))) {
-            printk(KERN_ALERT"SPI BLOCK MAPPING FAILED!");
-            return -1;
-        }
-
-
-        devices.gpio_pin_spi_clk = (volatile gpio_t *)(gpio_base + gpio_pins[11]);
-        devices.gpio_pin_spi_mosi = (volatile gpio_t *)(gpio_base + gpio_pins[9]);
-        devices.ssp_control_block = (volatile ssp_control_t *)spi_base;
-        devices.ssp_general_block = (volatile ssp_general_t *)(spi_base + SPI_SSP_GENERAL_OFFSET);
-        devices.dma_ch = (volatile dma_channel_t *)(dma_base + dma_channels[dma_ch_number]);
-        devices.dma_cfg = (volatile dma_cfg_t *)(dma_base + DMA_DMACCFG_OFF);
-
-
         /************ SETTING DMA MEMORY ************/
-
-        if(rgbled_type == DEV_WS281X)
-            dma_desc_mem = WS281X_DMADESCMEMORY(lednumber);
+        if(devices.rgbled_type == DEV_WS281X)
+            devices.dma_dev.dma_desc_mem = WS281X_DMADESCMEMORY(devices.rgbled_numleds);
         else
-            dma_desc_mem = APA102_DMADESCMEMORY(lednumber);
+            devices.dma_dev.dma_desc_mem = APA102_DMADESCMEMORY(devices.rgbled_numleds);
 
+        fifo_data = kmalloc(16, __GFP_DMA);
+        *fifo_data = 0x10101f10;
+        *(fifo_data + 1) = 0xffffffff;
 
-
+        printk (KERN_INFO"DMA fifo data : 0x%llx  -- PTR: %p \n",virt_to_phys(fifo_data), fifo_data);
+        printk (KERN_INFO"DMA array data : 0x%llx  -- PTR: %p \n",virt_to_phys(&test_array[0]), &test_array[0]);
+        printk (KERN_INFO"DMA u32 var data : 0x%llx  -- PTR: %p \n",virt_to_phys(&test_var), &test_var);
+        printk (KERN_INFO"DMA u32 sent by user : 0x%x  \n", devices.rgbled_numleds);      
         /************ SETTING GPIO ************/
-
-        GPIO_CFG_FUNCTION(devices.gpio_pin_spi_mosi->__cfg__,1);
-        if(rgbled_type == DEV_APA102)
-            GPIO_CFG_FUNCTION(devices.gpio_pin_spi_clk->__cfg__,1);
-
+        
         /************ SETTING SPI ************/
-        devices.ssp_control_block->__sscr0__ =
+        devices.spi_dev.ssp_control_block->__sscr0__ =
             SPI_SSP_SSCR0_MOD_NORMALSSPMODE |
             SPI_SSP_SSCR0_ACS_CLOCKBYAUDIOCLOCK |
             SPI_SSP_SSCR0_TIM_NOINTERRUPTFIFOUNDERRUN |
@@ -186,11 +133,12 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
             SPI_SSP_SSCR0_NCS_CLOCKBYECS |
             SPI_SSP_SSCR0_EDSS_ONEPREPENDTODSS |
             SPI_SSP_SSCR0_SCR_SERIALCLOCKRATE(20) |
-            SPI_SSP_SSCR0_SSE_SSPENABLE |
+            SPI_SSP_SSCR0_SSE_SSPDISABLE |
             SPI_SSP_SSCR0_ECS_EXTERNALCLOCKFROMGPIO |
             SPI_SSP_SSCR0_FRF_TEXASINSTRUMENTS |
-            SPI_SSP_SSCR0_DSS_DATASIZESELECT(0x7) ;
-        devices.ssp_control_block->__sscr1__ =
+            SPI_SSP_SSCR0_DSS_DATASIZESELECT(0xF) ; //0X7
+
+        devices.spi_dev.ssp_control_block->__sscr1__ =
             SPI_SSP_SSCR1_TTELP_TXDTRISTATEONCLOCKEDGE |
             SPI_SSP_SSCR1_TTE_TXDNOTTRISTATED |
             SPI_SSP_SSCR1_EBCEI_NOINTERRUPTONBITCOUNTERR |
@@ -206,49 +154,56 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
             SPI_SSP_SSCR1_TINTE_NOINTERRUPTONTIMEOUT |
             SPI_SSP_SSCR1_PINTE_NOTRAILINGBYTEINTERRUPT |
             SPI_SSP_SSCR1_IFS_FRAMEPOLARITYBYTHEFORMAT |
+            //SPI_SSP_SSCR1_STRF_RWFORRECEIVEFIFO |
+            //SPI_SSP_SSCR1_EFWR_ENABLEFIFOREADWRITE |
             SPI_SSP_SSCR1_RFT_RECEIVEFIFOTRIGTHRESHOLD(0x0) |
             SPI_SSP_SSCR1_TFT_TRANSMITFIFOTRIGTHRESHOLD(0x0) |
             SPI_SSP_SSCR1_TIE_TRANSFIFOLEVELINTERRDISA |    // POSSIBLY CHANGE
             SPI_SSP_SSCR1_RIE_RECEIFIFOLEVELINTERRDISA ;    // POSSIBLY CHANGE
-        devices.ssp_control_block->__ssacd__ =
+
+        devices.spi_dev.ssp_control_block->__ssacd__ =
             SPI_SSP_SSACD_ACPS_AUDIOCLK_32_842MHZ |
             SPI_SSP_SSACD_SCDB_SYSCLKNODIVIDED |
             SPI_SSP_SSACD_ACDS_AUDIOCLKDIVIDER(2) ;
-        devices.ssp_control_block->__sitf__ &= ~0xFFFF ;
-        devices.ssp_control_block->__sitf__ |=
+
+        devices.spi_dev.ssp_control_block->__sitf__ &= ~0xFFFF ;
+
+        devices.spi_dev.ssp_control_block->__sitf__ |=
             SPI_SSP_SITF_SETTRANSLOWWATERMARKSPI(0x0) |
             SPI_SSP_SITF_SETTRANSHIGHWATERMARKSPI(0xFF) ;
-       devices.ssp_general_block->__prv_clock_params__ =
+            
+       devices.spi_dev.ssp_general_block->__prv_clock_params__ =
             SPI_SSP_PRVCLKPARAMS_CLOCKUPDATE |
             SPI_SSP_PRVCLKPARAMS_N_DIVISOR(0xFF) |
             SPI_SSP_PRVCLKPARAMS_M_DIVIDEND(0x3) |
             SPI_SSP_PRVCLKPARAMS_ENABLECLOCK ;
-
+   
+        
         /************ SETTING DMA ************/
         dma_desc_counter = 0;
-        devices.dma_cfg->__dmacfgre_l__ = 0x1;
-        devices.dma_ch->__sar_l__ = 0x0;
-        devices.dma_ch->__dar_l__ = SPI_BASE_ADDRESS+0x10;
-        devices.dma_ch->__ctl_l__ =
+        devices.dma_dev.dma_cfg->__dmacfgre_l__ = 0x1;
+        devices.dma_dev.dma_ch->__sar_l__ = 0x0;
+        devices.dma_dev.dma_ch->__dar_l__ = SPI_BASE_ADDR+0x10;
+        devices.dma_dev.dma_ch->__llp_l__ = 0x1;
+        devices.dma_dev.dma_ch->__ctl_l__ =
             DMA_CTL_LO_LLPSRCEN_SRCLLPCHAINNINGENABLE |
             DMA_CTL_LO_LLPDSTEN_DSTLLPCHAINNINGDISABLE |
             DMA_CTL_LO_SMS_SRCMASTERLAYER1 |
             DMA_CTL_LO_DMS_DSTMASTERLAYER1 |
-            DMA_CTL_LO_TTFC_FLOWCONTROLBYANYDEVICE |
+            DMA_CTL_LO_TTFC_FLOWCONTROLBYDMA |
             DMA_CTL_LO_DSTSCATTEREN_DESTSCATTERDISABLE |
             DMA_CTL_LO_SRCGATHEREN_SOURCEGATHERDISABLE |
-            DMA_CTL_LO_SRCMSIZE_SRCBURSTITEMNUM(7) |
-            DMA_CTL_LO_DESTMSIZE_DSTBURSTITEMNUM(7) |
+            DMA_CTL_LO_SRCMSIZE_SRCBURSTITEMNUM(0x0) |
+            DMA_CTL_LO_DESTMSIZE_DSTBURSTITEMNUM(0x0) |
             DMA_CTL_LO_SINC_SOURCEADDRNOCHANGE |
             DMA_CTL_LO_DINC_DESTADDRNOCHANGE |
             DMA_CTL_LO_SRCTRWIDTH_SRCTRANSFEROF32BITS |
             DMA_CTL_LO_DSTTRWIDTH_DSTTRANSFEROF32BITS |
-            DMA_CTL_LO_INTEN_INTERRUPTSENABLED ;
-        devices.dma_ch->__llp_l__ = 0x0;
-        devices.dma_ch->__ctl_h__ =
+            DMA_CTL_LO_INTEN_INTERRUPTSDISABLED ;
+        devices.dma_dev.dma_ch->__ctl_h__ =
             DMA_CTL_HI_DONE_DONEBITZERO |
-            DMA_CTL_HI_BLOCKTS_DMAFLOWBLOCKSIZE(1) ;
-        devices.dma_ch->__cfg_l__ =
+            DMA_CTL_HI_BLOCKTS_DMAFLOWBLOCKSIZE(0x1) ;
+        devices.dma_dev.dma_ch->__cfg_l__ =
             DMA_CFG_LO_RELOADDST_NORELOADDSTAFTERTRANSFER |
             DMA_CFG_LO_RELOADSRC_NORELOADSRCAFTERTRANSFER |
             DMA_CFG_LO_MAXABRST_NOLIMITBURSTTRANSFER |
@@ -260,10 +215,9 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
             DMA_CFG_LO_LOCKCHL_CHLOCKEDOVERDMATRANSFER |
             DMA_CFG_LO_HSSELSRC_SOURCESWHANDSHAKING |               // TO BE CHANGED PROBABLY
             DMA_CFG_LO_HSSELDST_DESTSWHANDSHAKING |
-            DMA_CFG_LO_FIFOEMPTY_SETVALUEZERO |
             DMA_CFG_LO_CHSUSP_NOSUSREACTIVATEDMAACTIVITY |
             DMA_CFG_LO_CHPRIOR_HIGHESTPRIORITY ;
-        devices.dma_ch->__cfg_h__ =
+        devices.dma_dev.dma_ch->__cfg_h__ =
             DMA_CFG_HI_DESTPER_DSTHWHANDSHAKEIFACE(0x0) |
             DMA_CFG_HI_SRCPER_SRCHWHANDSHAKEIFACE(0x0) |
             DMA_CFG_HI_SSUPDEN_DISABLESRCSTATUSUPDATE |
@@ -271,109 +225,188 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
             DMA_CFG_HI_FIFOMODE_SPACEDATAEQTOTRANSWDITH |
             DMA_CFG_HI_FCMODE_SRCTRANSREQWHENTHEYOCURR ;
 
+
+            devices.dma_dev.dma_cfg->__dmacfgre_l__ = DMA_DMACFGREG_L_DMA_EN;
+/*
+    printk(KERN_ALERT"*****\tSPI REGISTERS\t*****\n\n");
+    printk(KERN_ALERT"Control Reg 0\t\t%08x\n",devices.spi_dev.ssp_control_block->__sscr0__ );
+    printk(KERN_ALERT"Control Reg 1\t\t%08x\n", devices.spi_dev.ssp_control_block->__sscr1__);
+    printk(KERN_ALERT"Status Reg\t\t%08x\n", devices.spi_dev.ssp_control_block->__sssr__);
+    printk(KERN_ALERT"Interrupt Reg\t\t%08x\n", devices.spi_dev.ssp_control_block->__ssitr__);
+    printk(KERN_ALERT"SSP Data Reg\t\t%08x\n", devices.spi_dev.ssp_control_block->__ssdr__);
+    printk(KERN_ALERT"Reserved 0\t\t%08x\n", devices.spi_dev.ssp_control_block->__rsv_0x014__[0]);
+    printk(KERN_ALERT"Reserved 1\t\t%08x\n", devices.spi_dev.ssp_control_block->__rsv_0x014__[1]);
+    printk(KERN_ALERT"Reserved 2\t\t%08x\n", devices.spi_dev.ssp_control_block->__rsv_0x014__[2]);
+    printk(KERN_ALERT"Reserved 3\t\t%08x\n", devices.spi_dev.ssp_control_block->__rsv_0x014__[3]);
+    printk(KERN_ALERT"Reserved 4\t\t%08x\n", devices.spi_dev.ssp_control_block->__rsv_0x014__[4]);
+    printk(KERN_ALERT"SSP Time Out\t\t%08x\n", devices.spi_dev.ssp_control_block->__ssto__);
+    printk(KERN_ALERT"Programmable Serial\t%08x\n", devices.spi_dev.ssp_control_block->__sspsp__);
+    printk(KERN_ALERT"TX Time Slot\t\t%08x\n", devices.spi_dev.ssp_control_block->__sstsa__);
+    printk(KERN_ALERT"RX Time Slot\t\t%08x\n", devices.spi_dev.ssp_control_block->__ssrsa__);
+    printk(KERN_ALERT"Time Slot Status\t%08x\n", devices.spi_dev.ssp_control_block->__sstss__);
+    printk(KERN_ALERT"Audio Clock Div\t\t%08x\n", devices.spi_dev.ssp_control_block->__ssacd__);
+    printk(KERN_ALERT"I2S Transmit FIFO\t%08x\n", devices.spi_dev.ssp_control_block->__itf__);
+    printk(KERN_ALERT"SPI Transmit FIFO\t%08x\n", devices.spi_dev.ssp_control_block->__sitf__);
+    printk(KERN_ALERT"SPI Receive FIFO\t%08x\n", devices.spi_dev.ssp_control_block->__sirf__);
+    printk(KERN_ALERT"Private Clock\t\t%08x\n", devices.spi_dev.ssp_general_block->__prv_clock_params__);
+    printk(KERN_ALERT"Software Reset\t\t%08x\n", devices.spi_dev.ssp_general_block->__resets__);
+    printk(KERN_ALERT"General Purpose\t\t%08x\n", devices.spi_dev.ssp_general_block->__general__);
+    printk(KERN_ALERT"SSP_REG\t\t\t%08x\n", devices.spi_dev.ssp_general_block->__ssp_reg__);
+    printk(KERN_ALERT"SPI_CS_CTRL_REG\t\t%08x\n", devices.spi_dev.ssp_general_block->__spi_cs_ctrl__);
+*/
+    
+
         break;
 
     case IOCTL_RGBLED_DECONFIGURE:
 
-        devices.dma_cfg->__chenreg_l__ = (0x1 << (8 + dma_ch_number));
-        devices.dma_cfg->__reqdstreg_l__ = (0x1 << (8 + dma_ch_number));
-        devices.dma_cfg->__reqsrcreg_l__ = (0x1 << (8 + dma_ch_number));
-
-        devices.dma_cfg->__sglrqdstreg_l__ = (0x1 << (8 + dma_ch_number));
-        devices.dma_cfg->__sglrqsrcreg_l__ = (0x1 << (8 + dma_ch_number));
-
-        iounmap(gpio_base);
-        iounmap(dma_base);
-        iounmap(spi_base);
-
-
+        devices.dma_dev.dma_cfg->__chenreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number));
+        
+        devices.dma_dev.dma_cfg->__reqdstreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number));
+        devices.dma_dev.dma_cfg->__reqsrcreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number));
+        
+    //    devices.dma_dev.dma_cfg->__sglrqdstreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number));
+     //   devices.dma_dev.dma_cfg->__sglrqsrcreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number));
+        
+        devices.spi_dev.ssp_control_block->__sscr0__ &= ~SPI_SSP_SSCR0_SSE_SSPENABLE;
+        devices.dma_dev.dma_cfg->__dmacfgre_l__ = 0;
+        dma_desc_counter = 0;
         break;
 
     case IOCTL_RGBLED_RENDER:
 
-        devices.dma_cfg->__chenreg_l__ = (0x1 << (8 + dma_ch_number)) | (0x1 << dma_ch_number);
-        devices.dma_cfg->__reqdstreg_l__ = (0x1 << (8 + dma_ch_number)) | (0x1 << dma_ch_number);
-        devices.dma_cfg->__reqsrcreg_l__ = (0x1 << (8 + dma_ch_number)) | (0x1 << dma_ch_number);
+    devices.spi_dev.ssp_control_block->__sscr0__ |= SPI_SSP_SSCR0_SSE_SSPENABLE;
 
-        devices.dma_cfg->__sglrqdstreg_l__ = (0x1 << (8 + dma_ch_number)) | (0x1 << dma_ch_number);
-        devices.dma_cfg->__sglrqsrcreg_l__ = (0x1 << (8 + dma_ch_number)) | (0x1 << dma_ch_number);
+        
+        devices.dma_dev.dma_cfg->__chenreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number)) | (0x1 << devices.dma_dev.dma_ch_number);
+        msleep(100);
+        devices.dma_dev.dma_cfg->__reqsrcreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number)) | (0x1 << devices.dma_dev.dma_ch_number);
+     //   devices.dma_dev.dma_cfg->__sglrqsrcreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number)) | (0x1 << devices.dma_dev.dma_ch_number);
+        msleep(100);
+
+        devices.dma_dev.dma_cfg->__reqdstreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number)) | (0x1 << devices.dma_dev.dma_ch_number);
+        
+      //  devices.dma_dev.dma_cfg->__sglrqdstreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number)) | (0x1 << devices.dma_dev.dma_ch_number);
+        
+        
+
+    /*
+    printk(KERN_INFO"PRINTING  :  %x\n",devices.spi_dev.ssp_control_block->__sssr__);
+    printk(KERN_INFO"PRINTING  :  %x\n",devices.spi_dev.ssp_control_block->__ssdr__);
+    */
 
         break;
+    case IOCTL_RGBLED_SETAHBLAYER:
+        get_user(ahb, (__u8 *)ioctl_params);
+    break;
 
     case IOCTL_DMA_ADDITEM:
         get_user(tmp_addr, (__u32 *)ioctl_params);
 
-        tmp_desc = ((volatile dma_lli_t *)(devices.dma_descriptors))+dma_desc_counter;
-        printk(KERN_ALERT"ADDR RECEIVED: 0x%08x counter: %i  temp_desc: %p \n",tmp_addr,dma_desc_counter,tmp_desc);
-        printk(KERN_ALERT"virt_:to_bus: 0x%llx \n",virt_to_bus(tmp_desc));
+        tmp_desc = ((volatile dma_lli_t *)(devices.dma_dev.dma_desc)) + dma_desc_counter;
+        tmp_dma_addr_phys = virt_to_bus(devices.dma_dev.dma_desc) + ((sizeof(dma_lli_t) * dma_desc_counter)); //devices.dma_dev.dma_desc_phys + (sizeof(dma_lli_t) * dma_desc_counter);
+
+        //printk(KERN_ALERT"ADDR RECEIVED: 0x%08x counter: %i  temp_desc: %p \n",tmp_addr,dma_desc_counter,tmp_desc);
+        //printk(KERN_ALERT"virt_:to_bus: 0x%llx \n",tmp_dma_addr_phys);
 
         if ( dma_desc_counter == 0 ){
-            devices.dma_ch->__sar_l__ = tmp_addr;
-            devices.dma_ch->__llp_l__ = DMA_LLP_LO_ADDRESSOFNEXTLLP((dma_addr_t)virt_to_bus(tmp_desc) );
-        }
-        else{
-            tmp_desc_prv = ((volatile dma_lli_t *)(devices.dma_descriptors))+(dma_desc_counter-1);
+            devices.dma_dev.dma_ch->__sar_l__ = tmp_addr; //tmp_addr;
+            devices.dma_dev.dma_ch->__dar_l__ = SPI_BASE_ADDR+0x10;
+            devices.dma_dev.dma_ch->__llp_l__ = DMA_LLP_LO_ADDRESSOFNEXTLLP(tmp_dma_addr_phys) | 0x0;
+         } 
+        else {
+            tmp_desc_prv = ((volatile dma_lli_t *)(devices.dma_dev.dma_desc)) + (dma_desc_counter - 1);
             tmp_desc_prv->__sar_l__ = tmp_addr;
-            tmp_desc_prv->__llp_l__ = DMA_LLP_LO_ADDRESSOFNEXTLLP((dma_addr_t)virt_to_bus(tmp_desc));
-            printk(KERN_ALERT"temp_desc_prv: %p \n",tmp_desc_prv);
-            printk(KERN_ALERT"virt_to_bus temp_desc_prv: %llx \n",virt_to_bus(tmp_desc_prv));
-        }
-
-            tmp_desc->__sar_l__ = 0x0;
-            tmp_desc->__dar_l__ = SPI_BASE_ADDRESS+0x10;
-            tmp_desc->__ctl_l__ =
+            tmp_desc_prv->__dar_l__ = SPI_BASE_ADDR+0x10;
+            tmp_desc_prv->__llp_l__ = DMA_LLP_LO_ADDRESSOFNEXTLLP(tmp_dma_addr_phys) |
+                                      DMA_LLP_LO_AHBLAYEROFNEXTLLP(0x0);
+            tmp_desc_prv->__ctl_l__ =
                 DMA_CTL_LO_LLPSRCEN_SRCLLPCHAINNINGENABLE |
                 DMA_CTL_LO_LLPDSTEN_DSTLLPCHAINNINGDISABLE |
                 DMA_CTL_LO_SMS_SRCMASTERLAYER1 |
                 DMA_CTL_LO_DMS_DSTMASTERLAYER1 |
-                DMA_CTL_LO_TTFC_FLOWCONTROLBYANYDEVICE |
+                DMA_CTL_LO_TTFC_FLOWCONTROLBYDMA |
                 DMA_CTL_LO_DSTSCATTEREN_DESTSCATTERDISABLE |
                 DMA_CTL_LO_SRCGATHEREN_SOURCEGATHERDISABLE |
-                DMA_CTL_LO_SRCMSIZE_SRCBURSTITEMNUM(7) |
-                DMA_CTL_LO_DESTMSIZE_DSTBURSTITEMNUM(7) |
+                DMA_CTL_LO_SRCMSIZE_SRCBURSTITEMNUM(0x0) |
+                DMA_CTL_LO_DESTMSIZE_DSTBURSTITEMNUM(0x0) |
                 DMA_CTL_LO_SINC_SOURCEADDRNOCHANGE |
                 DMA_CTL_LO_DINC_DESTADDRNOCHANGE |
                 DMA_CTL_LO_SRCTRWIDTH_SRCTRANSFEROF32BITS |
                 DMA_CTL_LO_DSTTRWIDTH_DSTTRANSFEROF32BITS |
-                DMA_CTL_LO_INTEN_INTERRUPTSENABLED ;
-            tmp_desc->__llp_l__ = DMA_LLP_LO_ADDRESSOFNEXTLLP(0x0);
+                DMA_CTL_LO_INTEN_INTERRUPTSDISABLED ;
+
+            tmp_desc_prv->__ctl_h__ =
+                DMA_CTL_HI_DONE_DONEBITZERO |
+                DMA_CTL_HI_BLOCKTS_DMAFLOWBLOCKSIZE(0x1) ;
+
+        }
+
+            tmp_desc->__sar_l__ = 0x0;
+            tmp_desc->__dar_l__ = 0x0;
+            tmp_desc->__llp_l__ = DMA_LLP_LO_ADDRESSOFNEXTLLP(0x0)|
+                                  DMA_LLP_LO_AHBLAYEROFNEXTLLP(0x0);
+            tmp_desc->__ctl_l__ =
+                DMA_CTL_LO_LLPSRCEN_SRCLLPCHAINNINGDISABLE |
+                DMA_CTL_LO_LLPDSTEN_DSTLLPCHAINNINGDISABLE |
+                DMA_CTL_LO_SMS_SRCMASTERLAYER1 |
+                DMA_CTL_LO_DMS_DSTMASTERLAYER1 |
+                DMA_CTL_LO_TTFC_FLOWCONTROLBYDMA |
+                DMA_CTL_LO_DSTSCATTEREN_DESTSCATTERDISABLE |
+                DMA_CTL_LO_SRCGATHEREN_SOURCEGATHERDISABLE |
+                DMA_CTL_LO_SRCMSIZE_SRCBURSTITEMNUM(0x0) |
+                DMA_CTL_LO_DESTMSIZE_DSTBURSTITEMNUM(0x0) |
+                DMA_CTL_LO_SINC_SOURCEADDRNOCHANGE |
+                DMA_CTL_LO_DINC_DESTADDRNOCHANGE |
+                DMA_CTL_LO_SRCTRWIDTH_SRCTRANSFEROF32BITS |
+                DMA_CTL_LO_DSTTRWIDTH_DSTTRANSFEROF32BITS |
+                DMA_CTL_LO_INTEN_INTERRUPTSDISABLED ;
             tmp_desc->__ctl_h__ =
                 DMA_CTL_HI_DONE_DONEBITZERO |
-                DMA_CTL_HI_BLOCKTS_DMAFLOWBLOCKSIZE(1) ;
+                DMA_CTL_HI_BLOCKTS_DMAFLOWBLOCKSIZE(0x1) ;
 
-            dma_desc_counter++;
+           dma_desc_counter++;
 
         break;
 
     case IOCTL_DMA_PRINTITEMS:
-        printk(KERN_ALERT"DMA desc mem address: %p\n\n",devices.dma_descriptors);
-        printk(KERN_ALERT"DMA mem size : %08x\n\n",dma_desc_mem);
-        printk(KERN_ALERT"DMA ch size : %lx\n\n",sizeof(*devices.dma_ch));
+        printk(KERN_ALERT"DMA desc mem address: %p\n\n",devices.dma_dev.dma_desc);
+        printk(KERN_ALERT"DMA mem size : %08x\n\n",devices.dma_dev.dma_desc_mem);
+        printk(KERN_ALERT"DMA ch size : %lx\n\n",sizeof(*devices.dma_dev.dma_ch));
+        printk(KERN_INFO"__chenreg_l__\t\t%08x\n", devices.dma_dev.dma_cfg->__chenreg_l__ );
+        printk(KERN_INFO"__dmacfgre_l__\t\t%08x\n", devices.dma_dev.dma_cfg->__dmacfgre_l__ );
+        printk(KERN_INFO"__reqdstreg_l__\t\t%08x\n", devices.dma_dev.dma_cfg->__reqdstreg_l__);
+        printk(KERN_INFO"__reqsrcreg_l__\t\t%08x\n", devices.dma_dev.dma_cfg->__reqsrcreg_l__);
+        printk(KERN_INFO"__sglrqdstreg_l__\t\t%08x\n", devices.dma_dev.dma_cfg->__sglrqdstreg_l__);
+        printk(KERN_INFO"__sglrqsrcreg_l__\t\t%08x\n", devices.dma_dev.dma_cfg->__sglrqsrcreg_l__);
+                        
+
         dma_desc_printer = 0;
+        
         while (  dma_desc_printer <= dma_desc_counter ){
 
             if ( dma_desc_printer == 0 ){
-                printk(KERN_INFO"*****\tDMA Decriptor # %d  %p\t*****\n", dma_desc_printer, devices.dma_ch);
-                printk(KERN_INFO"__sar_l__\t\t%08x\n", devices.dma_ch->__sar_l__);
-                printk(KERN_INFO"__dar_l__\t\t%08x\n", devices.dma_ch->__dar_l__);
-                printk(KERN_INFO"__llp_l__\t\t%08x\n", devices.dma_ch->__llp_l__);
-                printk(KERN_INFO"__ctl_l__\t\t%08x\n", devices.dma_ch->__ctl_l__);
-                printk(KERN_INFO"__ctl_h__\t\t%08x\n", devices.dma_ch->__ctl_h__);
-                printk(KERN_INFO"__sstat_l__\t\t%08x\n", devices.dma_ch->__ssta_l__);
-                printk(KERN_INFO"__dstat_l__\t\t%08x\n", devices.dma_ch->__dsta_l__);
-                printk(KERN_INFO"__sstatar_l__\t\t%08x\n", devices.dma_ch->__sstatar_l__);
-                printk(KERN_INFO"__dstatar_l__\t\t%08x\n", devices.dma_ch->__dstatar_l__);
-                printk(KERN_INFO"__cfg_l__\t\t%08x\n", devices.dma_ch->__cfg_l__);
-                printk(KERN_INFO"__cfg_h__\t\t%08x\n", devices.dma_ch->__cfg_h__);
-                printk(KERN_INFO"__srg_l__\t\t%08x\n", devices.dma_ch->__sgr_l__);
-                printk(KERN_INFO"__dsr_l__\t\t%08x\n\n", devices.dma_ch->__dsr_l__);
+                printk(KERN_INFO"*****\tDMA Decriptor # %d  %p\t*****\n", dma_desc_printer, devices.dma_dev.dma_ch);
+                printk(KERN_INFO"__sar_l__\t\t%08x\n", devices.dma_dev.dma_ch->__sar_l__);
+                printk(KERN_INFO"__dar_l__\t\t%08x\n", devices.dma_dev.dma_ch->__dar_l__);
+                printk(KERN_INFO"__llp_l__\t\t%08x :: 0x%08x\n", devices.dma_dev.dma_ch->__llp_l__,(devices.dma_dev.dma_ch->__llp_l__ >> 2));
+                printk(KERN_INFO"__ctl_l__\t\t%08x\n", devices.dma_dev.dma_ch->__ctl_l__);
+                printk(KERN_INFO"__ctl_h__\t\t%08x\n", devices.dma_dev.dma_ch->__ctl_h__);
+                printk(KERN_INFO"__sstat_l__\t\t%08x\n", devices.dma_dev.dma_ch->__ssta_l__);
+                printk(KERN_INFO"__dstat_l__\t\t%08x\n", devices.dma_dev.dma_ch->__dsta_l__);
+                printk(KERN_INFO"__sstatar_l__\t\t%08x\n", devices.dma_dev.dma_ch->__sstatar_l__);
+                printk(KERN_INFO"__dstatar_l__\t\t%08x\n", devices.dma_dev.dma_ch->__dstatar_l__);
+                printk(KERN_INFO"__cfg_l__\t\t%08x\n", devices.dma_dev.dma_ch->__cfg_l__);
+                printk(KERN_INFO"__cfg_h__\t\t%08x\n", devices.dma_dev.dma_ch->__cfg_h__);
+                printk(KERN_INFO"__srg_l__\t\t%08x\n", devices.dma_dev.dma_ch->__sgr_l__);
+                printk(KERN_INFO"__dsr_l__\t\t%08x\n\n", devices.dma_dev.dma_ch->__dsr_l__);
             }
             else{
-                tmp_desc = ((volatile dma_lli_t *)(devices.dma_descriptors))+(dma_desc_printer-1);
+                tmp_desc = ((volatile dma_lli_t *)(devices.dma_dev.dma_desc))+(dma_desc_printer-1);
                 printk(KERN_INFO"*****\tDMA Decriptor # %d  %p\t*****\n", dma_desc_printer, tmp_desc);
-                printk(KERN_INFO"__sar_l__\t\t%08llx\n", tmp_desc->__sar_l__);
-                printk(KERN_INFO"__dar_l__\t\t%08llx\n", tmp_desc->__dar_l__);
-                printk(KERN_INFO"__llp_l__\t\t%08llx\n", tmp_desc->__llp_l__);
+                printk(KERN_INFO"__sar_l__\t\t%08x\n", tmp_desc->__sar_l__);
+                printk(KERN_INFO"__dar_l__\t\t%08x\n", tmp_desc->__dar_l__);
+                printk(KERN_INFO"__llp_l__\t\t%08x :: 0x%08x\n", tmp_desc->__llp_l__, (tmp_desc->__llp_l__ >> 2));
                 printk(KERN_INFO"__ctl_l__\t\t%08x\n", tmp_desc->__ctl_l__);
                 printk(KERN_INFO"__ctl_h__\t\t%08x\n", tmp_desc->__ctl_h__);
 
@@ -390,15 +423,14 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
 /**************************************************************************
 ***************************************************************************
 ***************************************************************************
-*****************     PCI STUFF          **********************
+*****************     PCI STUFF          **********************************
 ***************************************************************************
 ***************************************************************************
 ***************************************************************************/
 
 static int pci_rgbled_probe (struct pci_dev *pdev, const struct pci_device_id *id){
 
-
-
+    /*  REGISTER PCI DEVICE  */
     err = pci_enable_device(pdev);
     if (err)
         goto err_enable_device;
@@ -416,17 +448,85 @@ static int pci_rgbled_probe (struct pci_dev *pdev, const struct pci_device_id *i
         goto err_set_dma_mask;
 
     devices.pdev = pci_dev_get(pdev);
+    devices.dma_dev.dma_bar = pci_resource_start (pdev, 0);         /*  GET DMA BASE ADDRESS REGISTER  */
+    devices.dma_dev.dma_bar_size = pci_resource_len (pdev, 0);      /*  GET DMA BASE ADDRESS REGISTER SIZE  */
+    pci_set_master(pdev);                           /*  ENABLE DEVICE AS DMA  */
 
-    dma_bar = pci_resource_start (pdev, 0); //Get DMA BAR
-    dma_bar_size = pci_resource_len (pdev, 0);  //Get DMA BAR size
+    /*  CREATE DMA MEMORY POOL FOR THE LLI's  */
+    devices.dma_dev.dma_pool = pci_pool_create( "rgbled_devices.dma_dev.dma_pool", pdev, 1024, 32, 0 );
+    devices.dma_dev.dma_desc = kmalloc(4096, __GFP_DMA); //pci_pool_alloc( devices.dma_dev.dma_pool, GFP_ATOMIC, &devices.dma_dev.dma_desc_phys);
+    if (devices.dma_dev.dma_desc == NULL){
+        err = -1;
+        goto err_pool_alloc;
+    }
 
-    pci_set_master(pdev);    //Enable device as DMA.
+    /*  MAP IO MEM FOR GPIO, DMA AND SPI   */
+    if (!(devices.gpio_dev.gpio_base = (volatile u_int32_t *) ioremap(GPIO_SCORE_BASE_ADDR, BLOCK_SIZE_T))) {
+        printk(KERN_ALERT"GPIO IOMEM MAPPING FAILED!");
+        err = -2;
+        goto err_iomap;
+    }
 
+    if (!(devices.dma_dev.dma_base = (volatile u_int32_t *) ioremap(DMA_BASE_ADDR, BLOCK_SIZE_T))) {
+        printk(KERN_ALERT"DMA IOMEM MAPPING FAILED!");
+        err = -2;
+        goto err_iomap;
+    }
 
+    if (!(devices.spi_dev.spi_base = (volatile u_int32_t *) ioremap(SPI_BASE_ADDR, BLOCK_SIZE_T))) {
+        printk(KERN_ALERT"SPI IOMEM MAPPING FAILED!");
+        err = -2;
+        goto err_iomap;
+    }
 
+    devices.gpio_dev.gpio_pin_spi_clk = (volatile gpio_t *)(devices.gpio_dev.gpio_base + gpio_pins[11]);
+    devices.gpio_dev.gpio_pin_spi_mosi = (volatile gpio_t *)(devices.gpio_dev.gpio_base + gpio_pins[9]);
+    devices.spi_dev.ssp_control_block = (volatile ssp_control_t *)devices.spi_dev.spi_base;
+    devices.spi_dev.ssp_general_block = (volatile ssp_general_t *)(devices.spi_dev.spi_base + SPI_SSP_GENERAL_OFFSET);
+    devices.dma_dev.dma_ch = (volatile dma_ch_t *)(devices.dma_dev.dma_base + dma_channels[devices.dma_dev.dma_ch_number]);
+    devices.dma_dev.dma_cfg = (volatile dma_cfg_t *)(devices.dma_dev.dma_base + DMA_DMACCFG_OFF);
 
+    GPIO_CFG_FUNCTION(devices.gpio_dev.gpio_pin_spi_mosi->__cfg__,1);
+        //if(devices.rgbled_type == DEV_APA102)
+            GPIO_CFG_FUNCTION(devices.gpio_dev.gpio_pin_spi_clk->__cfg__,1);
+/*
+printk(KERN_ALERT"*****\tSPI REGISTERS\t*****\n\n");
+    printk(KERN_ALERT"Control Reg 0\t\t%08x\n",devices.spi_dev.ssp_control_block->__sscr0__ );
+    printk(KERN_ALERT"Control Reg 1\t\t%08x\n", devices.spi_dev.ssp_control_block->__sscr1__);
+    printk(KERN_ALERT"Status Reg\t\t%08x\n", devices.spi_dev.ssp_control_block->__sssr__);
+    printk(KERN_ALERT"Interrupt Reg\t\t%08x\n", devices.spi_dev.ssp_control_block->__ssitr__);
+    printk(KERN_ALERT"SSP Data Reg\t\t%08x\n", devices.spi_dev.ssp_control_block->__ssdr__);
+    printk(KERN_ALERT"Reserved 0\t\t%08x\n", devices.spi_dev.ssp_control_block->__rsv_0x014__[0]);
+    printk(KERN_ALERT"Reserved 1\t\t%08x\n", devices.spi_dev.ssp_control_block->__rsv_0x014__[1]);
+    printk(KERN_ALERT"Reserved 2\t\t%08x\n", devices.spi_dev.ssp_control_block->__rsv_0x014__[2]);
+    printk(KERN_ALERT"Reserved 3\t\t%08x\n", devices.spi_dev.ssp_control_block->__rsv_0x014__[3]);
+    printk(KERN_ALERT"Reserved 4\t\t%08x\n", devices.spi_dev.ssp_control_block->__rsv_0x014__[4]);
+    printk(KERN_ALERT"SSP Time Out\t\t%08x\n", devices.spi_dev.ssp_control_block->__ssto__);
+    printk(KERN_ALERT"Programmable Serial\t%08x\n", devices.spi_dev.ssp_control_block->__sspsp__);
+    printk(KERN_ALERT"TX Time Slot\t\t%08x\n", devices.spi_dev.ssp_control_block->__sstsa__);
+    printk(KERN_ALERT"RX Time Slot\t\t%08x\n", devices.spi_dev.ssp_control_block->__ssrsa__);
+    printk(KERN_ALERT"Time Slot Status\t%08x\n", devices.spi_dev.ssp_control_block->__sstss__);
+    printk(KERN_ALERT"Audio Clock Div\t\t%08x\n", devices.spi_dev.ssp_control_block->__ssacd__);
+    printk(KERN_ALERT"I2S Transmit FIFO\t%08x\n", devices.spi_dev.ssp_control_block->__itf__);
+    printk(KERN_ALERT"SPI Transmit FIFO\t%08x\n", devices.spi_dev.ssp_control_block->__sitf__);
+    printk(KERN_ALERT"SPI Receive FIFO\t%08x\n", devices.spi_dev.ssp_control_block->__sirf__);
+    printk(KERN_ALERT"Private Clock\t\t%08x\n", devices.spi_dev.ssp_general_block->__prv_clock_params__);
+    printk(KERN_ALERT"Software Reset\t\t%08x\n", devices.spi_dev.ssp_general_block->__resets__);
+    printk(KERN_ALERT"General Purpose\t\t%08x\n", devices.spi_dev.ssp_general_block->__general__);
+    printk(KERN_ALERT"SSP_REG\t\t\t%08x\n", devices.spi_dev.ssp_general_block->__ssp_reg__);
+    printk(KERN_ALERT"SPI_CS_CTRL_REG\t\t%08x\n", devices.spi_dev.ssp_general_block->__spi_cs_ctrl__);
+
+*/
     return 0;
 
+    /*  ERROR HANDLER's  */
+    err_iomap:
+        iounmap(devices.gpio_dev.gpio_base);
+        iounmap(devices.dma_dev.dma_base);
+        iounmap(devices.spi_dev.spi_base);
+    err_pool_alloc:
+        //pci_pool_free(devices.dma_dev.dma_pool, devices.dma_dev.dma_desc, devices.dma_dev.dma_desc_phys);
+        pci_pool_destroy(devices.dma_dev.dma_pool);
     err_set_dma_mask:
         pci_release_regions(pdev);
         pci_disable_device(pdev);
@@ -438,11 +538,22 @@ static int pci_rgbled_probe (struct pci_dev *pdev, const struct pci_device_id *i
 
 
 static void pci_rgbled_remove (struct pci_dev *pdev){
-    //kfree((void *)devices.dma_descriptors);
-    //iounmap(gpio_base);
-    //iounmap(dma_base);
-    //iounmap(spi_base);
+    GPIO_CFG_FUNCTION(devices.gpio_dev.gpio_pin_spi_mosi->__cfg__,0);
+        //if(devices.rgbled_type == DEV_APA102)
+    GPIO_CFG_FUNCTION(devices.gpio_dev.gpio_pin_spi_clk->__cfg__,0);
 
+
+    /*  UNMAP IO MEMORY  */
+    iounmap(devices.gpio_dev.gpio_base);
+    iounmap(devices.dma_dev.dma_base);
+    iounmap(devices.spi_dev.spi_base);
+
+    /*  FREE DMA MEMORY POOL  */
+    kfree(devices.dma_dev.dma_desc);
+    //pci_pool_free(devices.dma_dev.dma_pool, devices.dma_dev.dma_desc, devices.dma_dev.dma_desc_phys);
+    pci_pool_destroy(devices.dma_dev.dma_pool);
+    
+    /*  UNREGISTER PCI DEVICE  */
     pci_dev_put(pdev);
     pci_release_regions(pdev);
     pci_disable_device(pdev);
@@ -450,26 +561,16 @@ static void pci_rgbled_remove (struct pci_dev *pdev){
 }
 
 
-
-
-
-
 /**** SUPPORTED DEVICES  ****/
-
 static struct pci_device_id pci_supp_list[] = {
- //   { PCI_VDEVICE(INTEL, 0x0827)},
- //   { PCI_VDEVICE(INTEL, 0x0830)},
     { PCI_VDEVICE(INTEL, 0x0f06)},
-  //  { PCI_DEVICE(0x8086, 0x0f06)},
     {0,},
 };
 
 /**** EXPORT SUPPORTED DEVS TO USER SPACE  ****/
-
 MODULE_DEVICE_TABLE(pci, pci_supp_list);
 
 /**** REGISTERING PCI DRIVER ****/
-
 static struct pci_driver pdrv = {
     .name       = "rgbled_driver",
     .id_table   = pci_supp_list,
@@ -497,7 +598,7 @@ struct file_operations fop = {
 int __init init_module(){
     printk(KERN_INFO"############################## WELCOME RGBLED ##############################\n");
 
-/*
+
     if (alloc_chrdev_region(&first, 0, 1, "rgbled_device") < 0){
         return -1;
     }
@@ -520,20 +621,36 @@ int __init init_module(){
         class_destroy(cl);
         unregister_chrdev_region(first, 1);
         return -1;
+
     }
-*/
 
-        if(!pci_register_driver(&pdrv)){
-            printk(KERN_INFO"FAIL %d\n",err);
-            return -1;
-        }
+    pci_register_driver(&pdrv);
+    
+    if(err){
+        printk(KERN_ALERT"ERROR INITIALIZING RGBLED PCI DEVICE: err: %d",err);
+        return -1;
+    }
 
+    if ( devices.dma_dev.dma_bar == 0){
+        printk (KERN_ALERT"RGBLED driver cannot take possession of DMA device. BAR = 0x%x \n",devices.dma_dev.dma_bar);    
+        printk (KERN_ALERT"Try unload/blacklist dw_dmac_pci driver before.");
+        return -1;
+    }else{
+        printk (KERN_ALERT"RGBLED driver loaded BAR at 0x%x \n",devices.dma_dev.dma_bar);    
+        printk (KERN_INFO"DMA descriptor handler: 0x%llx  -- PTR: %p \n",devices.dma_dev.dma_desc_phys,&devices.dma_dev.dma_desc_phys);
+        printk (KERN_INFO"DMA cpu virtual address: 0x%p \n",devices.dma_dev.dma_desc);
+        printk (KERN_INFO"SPI CTL BLK 1st reg: %x \n",devices.spi_dev.ssp_control_block->__sssr__);
+        printk (KERN_INFO"SPI GEN BLK 1st reg: %x \n",devices.spi_dev.ssp_general_block->__prv_clock_params__);
+        printk (KERN_INFO"DMA 1st reg: %x \n",devices.dma_dev.dma_ch->__ctl_l__);
+        printk (KERN_INFO"GPIO 1st reg: %x \n",devices.gpio_dev.gpio_pin_spi_mosi->__cfg__);
+        printk (KERN_INFO"test_ver p: %p  ::  virt_to_phys : %llx  ::  virt_to_bus : %llx \n",&test_var, virt_to_phys(&test_var), virt_to_bus(&test_var));
+    }
 
-        return 0;
+    
 
+    
 
-
-
+    return 0;
 
 }
 
@@ -541,16 +658,10 @@ int __init init_module(){
 
 void __exit cleanup_module(){
     pci_unregister_driver(&pdrv);
- /*   iounmap(gpio_base);
-    iounmap(dma_base);
-    iounmap(spi_base);
-
-
     device_destroy(cl, first);
     class_destroy(cl);
     unregister_chrdev_region(first, 1);
 
-*/
     printk(KERN_INFO"######################### GOODBYE ##############################\n");
 
 }

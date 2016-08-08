@@ -31,7 +31,7 @@ int main (){
 		.lednumber = 3 ,
 		.ledarray = (led_t *)led_array ,
 		.gpio_pin_number = 24 ,
-		.dma_ch_number = 0
+		.dma_ch_number = 1
 
 	};
 

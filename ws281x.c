@@ -22,52 +22,43 @@
 #include <fcntl.h>
 #include <string.h>
 #include <sys/ioctl.h>
-#include "ws281x_dma.h"
+#include "rgbled_driver.h"
 #include "headers/general.h"
 #include "headers/ws281x.h"
 
+#define PAGE_SHIFT 12
+#define PAGEMAP_LENGTH 8
 
 static u_int32_t ws281x_convert_virtual	(const volatile void *addr) {
-	char filename[40];
-	u_int64_t page_frame_buffer;
-	int file_descriptor;
 
-	sprintf(filename, "/proc/%d/pagemap", getpid());
+	FILE *pagemap = fopen("/proc/self/pagemap", "rb");
 
-	file_descriptor = open(filename, O_RDONLY);							// Open the pagemap of the process.
-	if (file_descriptor < 0) {
-		perror("Cannot open pagemap file.");
-		return (u_int32_t)~0UL;
-	}
+   // Seek to the page that the buffer is on
+   unsigned long offset = (unsigned long)addr / getpagesize() * PAGEMAP_LENGTH;
+   if(fseek(pagemap, (unsigned long)offset, SEEK_SET) != 0) {
+      fprintf(stderr, "Failed to seek pagemap to proper location\n");
+      exit(1);
+   }
+   u_int32_t reminder = (intptr_t)addr % BLOCK_SIZE_T;
 
-	u_int32_t offset = ((intptr_t) addr /  BLOCK_SIZE_T) * 8 ;			// Formule to get the offset inside the pagemap.
-	u_int32_t reminder = (intptr_t)addr % BLOCK_SIZE_T;					// Reminder of the virtual address, will be added to the physical addres to point the memory.
+   // The page frame number is in bits 0-54 so read the first 7 bytes and clear the 55th bit
+   unsigned long page_frame_number = 0;
+   fread(&page_frame_number, 1, PAGEMAP_LENGTH-1, pagemap);
+
+   page_frame_number &= 0x7FFFFFFFFFFFFF;
+   page_frame_number <<= 12;												// Need to move bits left 12 times to get the correct boundary.
+	page_frame_number += reminder;											// We add the reminder offset.
 
 
-	if (lseek(file_descriptor, offset, SEEK_SET) != offset) {
-		perror("Failed lseek of the current offset.");
-		close(file_descriptor);
-		return (u_int32_t)~0UL;
-	}
+   fclose(pagemap);
 
-	if (read(file_descriptor, &page_frame_buffer, sizeof(page_frame_buffer)) != sizeof(page_frame_buffer)) {
-		perror("addr_to_bus() read() failed");
-		close(file_descriptor);
-		return (u_int32_t)~0UL;
-	}
 
-	close(file_descriptor);
-	//printf("BEFORE STRIP:\t%" PRIx64 "\n", page_frame_buffer);
 
-	page_frame_buffer &= 0x7fffffffffffff; 									// We are only interested in the first 54 bits.
-	page_frame_buffer <<= 12;												// Need to move bits left 12 times to get the correct boundary.
-	page_frame_buffer += reminder;											// We add the reminder offset.
-	//printf("AFTER STRIP:\t%" PRIx64 "\n", page_frame_buffer);
-	return (u_int32_t) page_frame_buffer;
+	return (u_int32_t) page_frame_number;
 }
 
 
-int rgbled_setlednumber(int file_desc, u_int16_t *led_number){
+int rgbled_setlednumber(int file_desc, u_int32_t *led_number){
     ioctl(file_desc, IOCTL_RGBLED_SETLEDNUMBER, led_number);
 
     return 0;
@@ -75,6 +66,12 @@ int rgbled_setlednumber(int file_desc, u_int16_t *led_number){
 
 int rgbled_setdmachannel(int file_desc, u_int8_t *dma_ch_num){
     ioctl(file_desc, IOCTL_RGBLED_SETDMACHANNEL, dma_ch_num);
+
+    return 0;
+}
+
+int rgbled_setahblayer(int file_desc, u_int8_t *dma_ahb_layer){
+    ioctl(file_desc, IOCTL_RGBLED_SETAHBLAYER, dma_ahb_layer);
 
     return 0;
 }
@@ -125,12 +122,13 @@ int ws281x_init (ws281x_t *ws281x) {
 		exit(-1);
 	}
 
-
+u_int8_t ahbl = 3;
 u_int8_t dmach = 0;
 u_int8_t ledtype = 0;
 u_int16_t lednum = 3;
 u_int32_t list[3];
-list[0] = 0x00111111;
+u_int32_t tmp_var = 0xAf00ff00;
+list[0] = 0x100F1111;
 list[1] = 0x11001111;
 list[2] = 0x11110011;
 u_int32_t l1, l2, l3;
@@ -143,21 +141,33 @@ printf("&list[2] : %08x   %p\n",l3,&list[2]);
     //rgbled_deconfigure(file);
 
     rgbled_setdmachannel(file,&dmach);
-    rgbled_setlednumber(file,&lednum);
+    rgbled_setlednumber(file,&l1);
     rgbled_setrgbledtype(file,&ledtype);
 
+    rgbled_deconfigure(file);
+
+//   0
     rgbled_configure(file);
     //rgbled_dmaprintitems(file);
-    //rgbled_dmaadditem(file,&l1);
-    //rgbled_dmaadditem(file,&l2);
-    //rgbled_dmaadditem(file,&l3);
-    //rgbled_dmaadditem(file,&l3);
-    //rgbled_dmaprintitems(file);
+    usleep(10000);
+    rgbled_dmaadditem(file,&l1);
+    usleep(10000);
+    rgbled_dmaadditem(file,&l2);
+    usleep(10000);
+rgbled_dmaadditem(file,&l1);
+    usleep(10000);
+    rgbled_dmaadditem(file,&l2);
+    usleep(10000);
+rgbled_dmaadditem(file,&l1);
+    usleep(10000);
 
-    //rgbled_render(file);
-    //usleep(10000);
-    //rgbled_dmaprintitems(file);
-    rgbled_deconfigure(file);
+    rgbled_dmaprintitems(file);
+
+   rgbled_render(file);
+    usleep(100000);
+    rgbled_dmaprintitems(file);
+
+
 
 /*
 	 * THIS IS FOR PWM. ABOUT TO DELETE. NEED TO BACKUP, LIGHT BULB DIMMER CONTROLS

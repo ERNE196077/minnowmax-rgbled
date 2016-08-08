@@ -2,7 +2,7 @@
 #define DMA_H_
 #endif /* DMA_H_ */
 
-
+#include <linux/pci.h>
 
 /*****			DMA BASE REGISTERS			*****/
 
@@ -21,8 +21,16 @@
 #define		DMA_OFFSET_CH7			(0x268  / 4)
 #define     DMA_DMACCFG_OFF			(0x360 / 4)
 
-u_int32_t 	dma_channels[8] ;
-
+u_int32_t dma_channels[8] = {
+	DMA_OFFSET_CH0,
+	DMA_OFFSET_CH1,
+	DMA_OFFSET_CH2,
+	DMA_OFFSET_CH3,
+	DMA_OFFSET_CH4,
+	DMA_OFFSET_CH5,
+	DMA_OFFSET_CH6,
+	DMA_OFFSET_CH7
+};
 
 /*****			DMA MACROS			*****/
 
@@ -41,12 +49,11 @@ typedef struct{
 	#define DMA_LLP_LO_ADDRESSOFNEXTLLP(value)	(value << 2)				// Starting Address In Memory of next LLI if block chaining is enabled.
 	#define DMA_LLP_LO_AHBLAYEROFNEXTLLP(value)	(value)						// Identifies the AHB layer/interface where the memory device that stores the next linked list item resides.
 	u_int32_t __rsv_0x14__;						// Reserved
-
 	u_int32_t __ctl_l__;						// Control Register
-	#define DMA_CTL_LO_LLPSRCEN_SRCLLPCHAINNINGENABLE	(0 << 28)
-	#define DMA_CTL_LO_LLPSRCEN_SRCLLPCHAINNINGDISABLE	(1 << 28)					// Block chaining is enabled on the source side only if the LLP_SRC_EN field is high and LLPx.LOC is non-zero
-	#define DMA_CTL_LO_LLPDSTEN_DSTLLPCHAINNINGENABLE	(0 << 27)
-	#define DMA_CTL_LO_LLPDSTEN_DSTLLPCHAINNINGDISABLE	(1 << 27)					// Block chaining is enabled on the destination side only if the LLP_DST_EN field is high and LLPx.LOC is non-zero.
+	#define DMA_CTL_LO_LLPSRCEN_SRCLLPCHAINNINGENABLE	(0x1 << 28)
+	#define DMA_CTL_LO_LLPSRCEN_SRCLLPCHAINNINGDISABLE	(0x0 << 28)					// Block chaining is enabled on the source side only if the LLP_SRC_EN field is high and LLPx.LOC is non-zero
+	#define DMA_CTL_LO_LLPDSTEN_DSTLLPCHAINNINGENABLE	(0x1 << 27)
+	#define DMA_CTL_LO_LLPDSTEN_DSTLLPCHAINNINGDISABLE	(0x0 << 27)					// Block chaining is enabled on the destination side only if the LLP_DST_EN field is high and LLPx.LOC is non-zero.
 	#define DMA_CTL_LO_SMS_SRCMASTERLAYER1				(0x0 << 25)		// Identifies the Master Interface layer from which the	source device (peripheral or memory) is accessed.
 	#define DMA_CTL_LO_SMS_SRCMASTERLAYER2				(0x1 << 25)
 	#define DMA_CTL_LO_SMS_SRCMASTERLAYER3				(0x2 << 25)
@@ -83,7 +90,6 @@ typedef struct{
 	#define DMA_CTL_LO_DSTTRWIDTH_DSTTRANSFEROF64BITS	(0x3 << 1)
 	#define DMA_CTL_LO_INTEN_INTERRUPTSDISABLED			(0x0)					// If set, then all interrupt-generating sources are enabled.
 	#define DMA_CTL_LO_INTEN_INTERRUPTSENABLED			(0x1)
-
 	u_int32_t __ctl_h__;						// Control Register 2
 	#define DMA_CTL_HI_DONE_DONEBITZERO					(0 << 12)					// Software can poll the LLI CTLx.DONE bit to see when a block transfer is complete.
 	#define DMA_CTL_HI_DONE_DONEBITONE					(1 << 12)
@@ -128,7 +134,6 @@ typedef struct{
 	#define DMA_CFG_LO_CHPRIOR_LOWESTPRIORITY				(0x0 << 5)
 	#define DMA_CFG_LO_CHPRIOR_HIGHESTPRIORITY				(0x7 << 5)
 	#define	DMA_CFG_LO_CHPRIOR_SETPRIORITY(value)			(value << 5)				// Priority of 7 is the highest priority.
-
 	u_int32_t __cfg_h__;						// Configuration Register 2
 	#define	DMA_CFG_HI_DESTPER_DSTHWHANDSHAKEIFACE(value)	(value << 11)				// Assigns a hardware handshaking interface (0 - DMAH_NUM_HS_INT-1) to the destination of channel x if the CFGx.HS_SEL_DST field is 0; otherwise, this field is ignored.
 	#define DMA_CFG_HI_SRCPER_SRCHWHANDSHAKEIFACE(value)	(value << 7)				// Assigns a hardware handshaking interface (0 - DMAH_NUM_HS_INT-1) to the source of channel x if the CFGx.HS_SEL_SRC field is 0; otherwise, this field is ignored.
@@ -141,7 +146,6 @@ typedef struct{
 	#define DMA_CFG_HI_FIFOMODE_DATASPACEHALFOFFIFODSTSRC	(1 << 1)
 	#define DMA_CFG_HI_FCMODE_SRCTRANSREQWHENTHEYOCURR		(0)					// Determines when source transaction requests are serviced when the Destination Peripheral is the flow controller. 0 - Source transaction requests are serviced when they occur. Data pre-fetching is enabled; 1 - Source transaction requests are not serviced until a destination transaction request occurs.
 	#define DMA_CFG_HI_FCMODE_SRCTRANSREQUNTILDATAREQOCURR	(1)
-
 	u_int32_t __sgr_l__;						// Source Gather Register
 	#define DMA_SGR_LO_SGC_SRCGATHERCOUNTMASK				(0xFFF << 20)				// Source contiguous transfer count between successive gather boundaries.
 	#define DMA_SGR_LO_SGI_SRCGATHERINCDECMULTIPLE(value)	(value)						// Specifies the source address increment/decrement in multiples of CTLx.SRC_TR_WIDTH on a gather boundary when gather mode is enabled for the source transfer.
@@ -149,7 +153,7 @@ typedef struct{
 	u_int32_t __dsr_l__;						// Destination Scatter Register
 	#define DMA_DSR_LO_DSC_DESTSCATTERCOUNTMASK				(0xFFF << 20)				// Destination contiguous transfer count between successive scatter boundaries.
 	#define DMA_DSR_LO_DSI_DESTSCATTERINCDECMULTIPLE(value)	(value)				// Specifies the destination address increment/decrement in multiples of CTLx.DST_TR_WIDTH on a scatter boundary, when scatter mode is enabled for the destination transfer.
-}__attribute__ ((packed)) dma_channel_t;
+}__attribute__ ((packed)) dma_ch_t;
 
 
 typedef struct {
@@ -201,31 +205,26 @@ typedef struct {
 }__attribute__ ((packed)) dma_cfg_t;
 
 
-typedef struct dma_lli{
-	struct dma_lli *prev;
-	struct dma_lli *next;
-	void *address;
-}_dma_lli_t_;
-
 typedef struct{
-    dma_addr_t  __sar_l__;
-    dma_addr_t  __dar_l__;
-    dma_addr_t  __llp_l__;
+    __u32  		__sar_l__;
+    __u32	 	__dar_l__;
+    __u32  		__llp_l__;
     __u32       __ctl_l__;
     __u32       __ctl_h__;
 }__attribute__((packed))dma_lli_t;
 
 /*****			DMA 			*****/
-int print_dma_status (u_int32_t channel_reg);
-/*
-void 			INIT_DMA_LIST 		(_dma_lli_t_ *head);
-_dma_lli_t_		*ADD_DMA_ITEM		(_dma_lli_t_ *head);
-_dma_lli_t_ 	*NEXT_DMA_ITEM 		(_dma_lli_t_ *lli);
-_dma_lli_t_ 	*PREV_DMA_ITEM 		(_dma_lli_t_ *lli);
-void			PRINT_DMA_STATUS	(u_int8_t ch_num);
-
-void 	INIT_DMA_LIST 		(_dma_item_ *page);
-*/
-
+typedef struct{
+			 __u8	        dma_ch_number;
+			 __u32          dma_bar;
+			 __u32	        dma_bar_size;
+			 __u32          dma_desc_mem;
+	volatile __u32          *dma_base;
+	volatile dma_ch_t  		*dma_ch;
+    volatile dma_cfg_t      *dma_cfg;
+    struct   pci_pool       *dma_pool;
+    	     dma_lli_t      *dma_desc;
+             dma_addr_t     dma_desc_phys;
+} dma_dev_t;
 
 
