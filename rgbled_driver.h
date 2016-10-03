@@ -22,6 +22,7 @@
 #define IOCTL_DMA_PRINTITEMS            _IO(MAJOR_NUM , 7 )
 
 
+static void printdma (void);
 
 
 

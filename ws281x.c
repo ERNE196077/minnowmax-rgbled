@@ -23,6 +23,7 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include "rgbled_driver.h"
+#include "headers/rgbcielch.h"
 #include "headers/general.h"
 #include "headers/ws281x.h"
 
@@ -116,21 +117,49 @@ int rgbled_render(int file_desc){
 
 int ws281x_init (ws281x_t *ws281x) {
 
+/*
+if (ws281x->lednumber == 0 || ws281x->lednumber > 5000 )
+  return ERR_LEDNUMBER ;
+
+ws281x->ledarray = (led_t *) calloc (0, sizeof(led_t) * ws281x->lednumber );
+
+if (!ws281x->ledarray)
+  return ERR_MEMALLOC ;
+
+ws281x->ledarray->r = 0xff;
+ws281x->ledarray->g = 0x0f;
+ws281x->ledarray->b = 0xf0;
+u_int32_t list[3];
+
+
+printf("0x%02x%02x%02x%02x \n", ws281x->ledarray->d, ws281x->ledarray->r, ws281x->ledarray->g, ws281x->ledarray->b);
+printf("0x%08x \n",  *((u_int32_t *)(ws281x->ledarray)));
+printf("VIRTUAL : %p\n",ws281x->ledarray);
+printf("PHYSIC  : 0x%08x\n\n",ws281x_convert_virtual(ws281x->ledarray));
+
+printf("VIRTUAL : %p\n",&list);
+printf("PHYSIC  : 0x%08x\n",ws281x_convert_virtual(&list));
+
+
+*/
+
+
    int file = open("/dev/"DEV_NAME,0);
 	if (file < 0) {
 		printf("Can't open device file: %s\n", DEV_NAME);
 		exit(-1);
 	}
 
-u_int8_t ahbl = 3;
+u_int8_t ahbl = 4;
 u_int8_t dmach = 0;
 u_int8_t ledtype = 0;
 u_int16_t lednum = 3;
+
 u_int32_t list[3];
-u_int32_t tmp_var = 0xAf00ff00;
 list[0] = 0x100F1111;
 list[1] = 0x11001111;
 list[2] = 0x11110011;
+
 u_int32_t l1, l2, l3;
 l1 = ws281x_convert_virtual(&list[0]);
 l2 = ws281x_convert_virtual(&list[1]);
@@ -138,7 +167,6 @@ l3 = ws281x_convert_virtual(&list[2]);
 printf("&list[0] : %08x   %p\n",l1,&list[0]);
 printf("&list[1] : %08x   %p\n",l2,&list[1]);
 printf("&list[2] : %08x   %p\n",l3,&list[2]);
-    //rgbled_deconfigure(file);
 
     rgbled_setdmachannel(file,&dmach);
     rgbled_setlednumber(file,&l1);
@@ -146,74 +174,28 @@ printf("&list[2] : %08x   %p\n",l3,&list[2]);
 
     rgbled_deconfigure(file);
 
-//   0
+//    rgbled_setahblayer(file, &ahbl);
+
     rgbled_configure(file);
-    //rgbled_dmaprintitems(file);
     usleep(10000);
+
     rgbled_dmaadditem(file,&l1);
     usleep(10000);
     rgbled_dmaadditem(file,&l2);
-    usleep(10000);
-rgbled_dmaadditem(file,&l1);
-    usleep(10000);
-    rgbled_dmaadditem(file,&l2);
-    usleep(10000);
-rgbled_dmaadditem(file,&l1);
     usleep(10000);
 
     rgbled_dmaprintitems(file);
 
    rgbled_render(file);
-    usleep(100000);
-    rgbled_dmaprintitems(file);
+   //usleep(100000);
+   rgbled_dmaprintitems(file);
 
 
 
-/*
-	 * THIS IS FOR PWM. ABOUT TO DELETE. NEED TO BACKUP, LIGHT BULB DIMMER CONTROLS
-	 *
-
-	GPIO_CFG_FUNCTION(devices->gpio_pin->__cfg__,1)
-
-	while (1){
-	for (int i = 0x10 ; i < 0xff ; i++ ){
-		devices->pwm_dev->__pwmctrl__ = PWM_ENABLE | PWM_SW_UPDATE | PWM_ON_TIME_DIVISOR(i) | 	PWM_BASE_UNIT(0x0002);
-		usleep(10000);
-	}
-	for (int i = 0xff ; i > 0x10 ; i-- ){
-		devices->pwm_dev->__pwmctrl__ = PWM_ENABLE | PWM_SW_UPDATE | PWM_ON_TIME_DIVISOR(i) | PWM_BASE_UNIT(0x0002);
-		usleep(10000);
-	}
-	}
-	*/
-	//ws281x_spi_stop(ws281x);
-
-	//ws281x_dma_stop(ws281x);
-	//usleep(100);
-	//ws281x_print_registers(ws281x);
-	//ws281x_fifo_init(ws281x);
-
-	//ws281x_gpio_setup(ws281x);
-
-	//ws281x_spi_setup(ws281x);
-	//ws281x_print_registers(ws281x);
 
 
-	//ws281x_spi_setup(ws281x);
-	//ws281x_spi_start(ws281x);
-
-
-	//ws281x_dma_setup(ws281x);
-	//ws281x_print_registers(ws281x);
-
-	//ws281x_dma_start(ws281x);
-	//ws281x_spi_additems(ws281x);
-
-	//usleep(100);
-
-	//ws281x_print_registers(ws281x);
-
-
+char ch;
+ch = getchar();
 
 	return 0;
 }

@@ -22,8 +22,17 @@
 #define WS281X_PWM_REG_LOW				0xC0084850
 
 
+/*****			RGBLED ERROR CODES			*****/
+
+ #define ERR_LEDNUMBER		0x1		// 	INVALID NUMBER OF
+ #define ERR_MEMALLOC		0x2		//	MEMORY ALLOCATION FOR LED DATA NOT SUCCESSFUL
+ #define ERR_DMANOTAVAIL	0x3		//	THE CHOOSEN DMA CHANNEL IS IN USE.
+
+
+
  /*****			WS281X STRUCTURES			*****/
 typedef struct {
+    u_int8_t d;     //dumy variable for 32bit DMA transfer
 	u_int8_t r;
 	u_int8_t g;
 	u_int8_t b;
@@ -47,22 +56,6 @@ typedef struct
 
 
 
-int 				ws281x_init					(ws281x_t *ws281x);
-int 				ws281x_deinit				(ws281x_t *ws281x);
-//int 				ws281x_devices_map			(ws281x_devices_t *devices);
-//void 				ws281x_devices_unmap 		(ws281x_devices_t *devices);
-int 				ws281x_fifo_init			(ws281x_t *ws281x);
-void 				ws281x_fifo_deinit			(ws281x_t *ws281x);
-void				ws281x_print_fifo			(ws281x_t *ws281x);
-void 				ws281x_print_registers		(ws281x_t *ws281x);
-int					ws281x_dma_setup			(ws281x_t *ws281x);
-int					ws281x_dma_start			(ws281x_t *ws281x);
-int					ws281x_dma_stop				(ws281x_t *ws281x);
-int					ws281x_gpio_setup			(ws281x_t *ws281x);
-int					ws281x_spi_setup			(ws281x_t *ws281x);
-int 				ws281x_spi_start 			(ws281x_t *ws281x);
-int 				ws281x_spi_stop 			(ws281x_t *ws281x);
-int 				ws281x_spi_additems			(ws281x_t *ws281x);
-int 				ws281x_spi_getreceived		(ws281x_t *ws281x);
-//void				ws281x_dma_deint			(ws281x_devices_t *devices);
+int	ws281x_init	(ws281x_t  *ws281x);
+
 

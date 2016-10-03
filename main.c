@@ -19,17 +19,10 @@
 
 int main (){
 
-		led_t led_array[3] = {{255,0,0},{0,255,0},{0,0,255}};
-
-
-	printf ( "%d , %d , %d  \n",led_array[0].r, led_array[0].g, led_array[0].b);
-	printf ( "%d , %d , %d  \n",led_array[1].r, led_array[1].g, led_array[1].b);
-	printf ( "%d , %d , %d  \n",led_array[2].r, led_array[2].g, led_array[2].b);
-
 
 	ws281x_t myws281x = {
 		.lednumber = 3 ,
-		.ledarray = (led_t *)led_array ,
+		.ledarray = NULL ,
 		.gpio_pin_number = 24 ,
 		.dma_ch_number = 1
 

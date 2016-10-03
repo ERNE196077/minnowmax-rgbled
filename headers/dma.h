@@ -172,7 +172,8 @@ typedef struct {
 	u_int32_t __lstdstreg_l__;
 	u_int32_t __rsv_0x394__;
 	u_int32_t __dmacfgre_l__;					// DW_ahb_dmac Configuration Register
-	#define DMA_DMACFGREG_L_DMA_EN				(0x1)					// 0 - DW_ahb_dmac Disabled; 1 - DW_ahb_dmac Enabled
+	#define DMA_DMACFGREG_L_DMA_ENA				(0x1)					// 0 - DW_ahb_dmac Disabled; 1 - DW_ahb_dmac Enabled
+	#define DMA_DMACFGREG_L_DMA_DIS				(0x0)					// 0 - DW_ahb_dmac Disabled; 1 - DW_ahb_dmac Enabled
 	u_int32_t __resv_0x39c__;
 	u_int32_t __chenreg_l__;				// DW_ahb_dmac Channel Enable Register
 	#define DMA_DMACHENREG_L_CH_EN_WE(value)	(value<<8)		// This register enables the CH_EN to be written in the bit choosen
