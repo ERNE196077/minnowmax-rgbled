@@ -206,26 +206,16 @@ typedef struct {
 }__attribute__ ((packed)) dma_cfg_t;
 
 
-typedef struct{
-    __u32  		__sar_l__;
-    __u32	 	__dar_l__;
-    __u32  		__llp_l__;
-    __u32       __ctl_l__;
-    __u32       __ctl_h__;
-}__attribute__((packed))dma_lli_t;
-
 /*****			DMA 			*****/
 typedef struct{
 			 __u8	        dma_ch_number;
 			 __u32          dma_bar;
 			 __u32	        dma_bar_size;
-			 __u32          dma_desc_mem;
 	volatile __u32          *dma_base;
 	volatile dma_ch_t  		*dma_ch;
     volatile dma_cfg_t      *dma_cfg;
-    struct   pci_pool       *dma_pool;
-    	     dma_lli_t      *dma_desc;
-             dma_addr_t     dma_desc_phys;
+       		 __u32       	*dma_data_ptr;
+			 __u32          dma_data_size;
 } dma_dev_t;
 
 

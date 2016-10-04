@@ -1,5 +1,5 @@
 /*
- * ws281x.c
+ * rgbled.c
  *
  * WS281x Functionality
  * The basic functionality is to set the clock of the PWM as close as possible
@@ -23,9 +23,8 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include "rgbled_driver.h"
-#include "headers/rgbcielch.h"
 #include "headers/general.h"
-#include "headers/ws281x.h"
+#include "headers/rgbled.h"
 
 #define PAGE_SHIFT 12
 #define PAGEMAP_LENGTH 8
@@ -71,8 +70,8 @@ int rgbled_setdmachannel(int file_desc, u_int8_t *dma_ch_num){
     return 0;
 }
 
-int rgbled_setahblayer(int file_desc, u_int8_t *dma_ahb_layer){
-    ioctl(file_desc, IOCTL_RGBLED_SETAHBLAYER, dma_ahb_layer);
+int rgbled_getdataptr(int file_desc, u_int32_t **dma_data_ptr){
+    ioctl(file_desc, IOCTL_RGBLED_GETDATAADDR, dma_data_ptr);
 
     return 0;
 }
@@ -95,17 +94,6 @@ int rgbled_deconfigure(int file_desc){
     return 0;
 }
 
-int rgbled_dmaadditem(int file_desc,u_int32_t *addr){
-    ioctl(file_desc, IOCTL_DMA_ADDITEM, addr);
-
-    return 0;
-}
-
-int rgbled_dmaprintitems(int file_desc){
-    ioctl(file_desc, IOCTL_DMA_PRINTITEMS);
-
-    return 0;
-}
 
 int rgbled_render(int file_desc){
     ioctl(file_desc, IOCTL_RGBLED_RENDER);
@@ -150,10 +138,11 @@ printf("PHYSIC  : 0x%08x\n",ws281x_convert_virtual(&list));
 		exit(-1);
 	}
 
-u_int8_t ahbl = 4;
+u_int32_t *dma_data = NULL; 
 u_int8_t dmach = 0;
-u_int8_t ledtype = 0;
+u_int8_t ledtype = DEV_TYPE_WS281x;
 u_int16_t lednum = 3;
+u_int32_t *dataptr;
 
 u_int32_t list[3];
 list[0] = 0x100F1111;
@@ -172,7 +161,10 @@ printf("&list[2] : %08x   %p\n",l3,&list[2]);
     rgbled_setlednumber(file,&l1);
     rgbled_setrgbledtype(file,&ledtype);
 
-    rgbled_deconfigure(file);
+    //rgbled_getdataptr(file,&dataptr);
+
+    printf("Pointer %p  :: Value %08x \n",dataptr, *dataptr);
+   /* rgbled_deconfigure(file);
 
 //    rgbled_setahblayer(file, &ahbl);
 
@@ -190,7 +182,7 @@ printf("&list[2] : %08x   %p\n",l3,&list[2]);
    //usleep(100000);
    rgbled_dmaprintitems(file);
 
-
+*/
 
 
 

@@ -8,30 +8,14 @@
 #include <math.h>
 #include <sys/time.h>
 
-//#include "headers/general.h"
-//#include "headers/gpio.h"
-//#include "headers/pwm.h"
-#include "headers/ws281x.h"
-
-
-
+#include "headers/rgbled.h"
 
 
 int main (){
 
+	rgbled_conf_t ledsconfig = RGBLED_CONF_WS281X | RGBLED_CONF_DMACH(0) | RGBLED_CONF_LEDNUM(15) ;
 
-	ws281x_t myws281x = {
-		.lednumber = 3 ,
-		.ledarray = NULL ,
-		.gpio_pin_number = 24 ,
-		.dma_ch_number = 1
-
-	};
-
-
-
-	ws281x_init(&myws281x);
-
+	rgbled_init(&ledsconfig);
 
 	getchar();
 return 0;

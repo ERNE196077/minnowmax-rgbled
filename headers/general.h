@@ -1,6 +1,5 @@
 #ifndef GENERAL_H_
 #define GENERAL_H_
-#endif /* GENERAL_H_ */
 
 /*
  * general.h
@@ -66,3 +65,5 @@ void UNMAP_DEVICE(volatile void* map, u_int32_t size) {
 }
 
 */
+
+#endif /* GENERAL_H_ */
