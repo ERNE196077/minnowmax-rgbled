@@ -37,10 +37,10 @@ Print the status of the PWM interface.
 @returns	n/a
 
 */
-void	PRINT_PWM_STATUS	(u_int32_t pwm_reg){
-	u_int8_t 	pwm_enable_b, 
+void	PRINT_PWM_STATUS	(uint32_t pwm_reg){
+	uint8_t 	pwm_enable_b, 
 				pwm_on_time_divisor_b;
-	u_int16_t 	pwm_base_unit_b;
+	uint16_t 	pwm_base_unit_b;
 
 	pwm_enable_b = (pwm_reg >> 31 ) & 1 ;
 	if ( pwm_enable_b == 0 )

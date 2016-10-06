@@ -1,6 +1,6 @@
 #ifndef DMA_H_
 #define DMA_H_
-#endif /* DMA_H_ */
+
 
 #include <linux/pci.h>
 
@@ -21,7 +21,7 @@
 #define		DMA_OFFSET_CH7			(0x268  / 4)
 #define     DMA_DMACCFG_OFF			(0x360 / 4)
 
-u_int32_t dma_channels[8] = {
+uint32_t dma_channels[8] = {
 	DMA_OFFSET_CH0,
 	DMA_OFFSET_CH1,
 	DMA_OFFSET_CH2,
@@ -41,15 +41,15 @@ u_int32_t dma_channels[8] = {
 /*****			DMA STRUCTURES			*****/
 
 typedef struct{
-	u_int32_t __sar_l__;						// Source Address Register
-	u_int32_t __rsv_0x04__;						// Reserved
-	u_int32_t __dar_l__;						// Destination Address Register
-	u_int32_t __rsv_0x0c__;						// Reserved
-	u_int32_t __llp_l__;						// Linked List Pointer Register
+	uint32_t __sar_l__;						// Source Address Register
+	uint32_t __rsv_0x04__;						// Reserved
+	uint32_t __dar_l__;						// Destination Address Register
+	uint32_t __rsv_0x0c__;						// Reserved
+	uint32_t __llp_l__;						// Linked List Pointer Register
 	#define DMA_LLP_LO_ADDRESSOFNEXTLLP(value)	(value << 2)				// Starting Address In Memory of next LLI if block chaining is enabled.
 	#define DMA_LLP_LO_AHBLAYEROFNEXTLLP(value)	(value)						// Identifies the AHB layer/interface where the memory device that stores the next linked list item resides.
-	u_int32_t __rsv_0x14__;						// Reserved
-	u_int32_t __ctl_l__;						// Control Register
+	uint32_t __rsv_0x14__;						// Reserved
+	uint32_t __ctl_l__;						// Control Register
 	#define DMA_CTL_LO_LLPSRCEN_SRCLLPCHAINNINGENABLE	(0x1 << 28)
 	#define DMA_CTL_LO_LLPSRCEN_SRCLLPCHAINNINGDISABLE	(0x0 << 28)					// Block chaining is enabled on the source side only if the LLP_SRC_EN field is high and LLPx.LOC is non-zero
 	#define DMA_CTL_LO_LLPDSTEN_DSTLLPCHAINNINGENABLE	(0x1 << 27)
@@ -90,19 +90,19 @@ typedef struct{
 	#define DMA_CTL_LO_DSTTRWIDTH_DSTTRANSFEROF64BITS	(0x3 << 1)
 	#define DMA_CTL_LO_INTEN_INTERRUPTSDISABLED			(0x0)					// If set, then all interrupt-generating sources are enabled.
 	#define DMA_CTL_LO_INTEN_INTERRUPTSENABLED			(0x1)
-	u_int32_t __ctl_h__;						// Control Register 2
+	uint32_t __ctl_h__;						// Control Register 2
 	#define DMA_CTL_HI_DONE_DONEBITZERO					(0 << 12)					// Software can poll the LLI CTLx.DONE bit to see when a block transfer is complete.
 	#define DMA_CTL_HI_DONE_DONEBITONE					(1 << 12)
 	#define DMA_CTL_HI_BLOCKTS_DMAFLOWBLOCKSIZE(value)	(value)						//  When the DW_ahb_dmac is the flow controller, the user writes this field before the channel is enabled, to indicate the block size
-	u_int32_t __ssta_l__;						// Source Status Register
-	u_int32_t __rsv_0x24;						// Reserved
-	u_int32_t __dsta_l__;						// Destination Status Register
-	u_int32_t __rsv_0x2c;						// Reserved
-	u_int32_t __sstatar_l__;					// Source Status Address Register
-	u_int32_t __rsv_0x34__;						// Reserved
-	u_int32_t __dstatar_l__;					// Destination Status Address Register
-	u_int32_t __rsv_0x3c__;						// Reserved
-	u_int32_t __cfg_l__;						// Configuration Register
+	uint32_t __ssta_l__;						// Source Status Register
+	uint32_t __rsv_0x24;						// Reserved
+	uint32_t __dsta_l__;						// Destination Status Register
+	uint32_t __rsv_0x2c;						// Reserved
+	uint32_t __sstatar_l__;					// Source Status Address Register
+	uint32_t __rsv_0x34__;						// Reserved
+	uint32_t __dstatar_l__;					// Destination Status Address Register
+	uint32_t __rsv_0x3c__;						// Reserved
+	uint32_t __cfg_l__;						// Configuration Register
 	#define DMA_CFG_LO_RELOADDST_NORELOADDSTAFTERTRANSFER	(0 << 31)					// The DARx register can be automatically reloaded from its initial value at the end of every block for multi-block transfers.
 	#define DMA_CFG_LO_RELOADDST_RELOADDSTAFTERTRASNFER		(1 << 31)
 	#define DMA_CFG_LO_RELOADSRC_NORELOADSRCAFTERTRANSFER	(0 << 30)					// The SARx register can be automatically reloaded from its initial value at the end of every block for multi-block transfers.
@@ -134,7 +134,7 @@ typedef struct{
 	#define DMA_CFG_LO_CHPRIOR_LOWESTPRIORITY				(0x0 << 5)
 	#define DMA_CFG_LO_CHPRIOR_HIGHESTPRIORITY				(0x7 << 5)
 	#define	DMA_CFG_LO_CHPRIOR_SETPRIORITY(value)			(value << 5)				// Priority of 7 is the highest priority.
-	u_int32_t __cfg_h__;						// Configuration Register 2
+	uint32_t __cfg_h__;						// Configuration Register 2
 	#define	DMA_CFG_HI_DESTPER_DSTHWHANDSHAKEIFACE(value)	(value << 11)				// Assigns a hardware handshaking interface (0 - DMAH_NUM_HS_INT-1) to the destination of channel x if the CFGx.HS_SEL_DST field is 0; otherwise, this field is ignored.
 	#define DMA_CFG_HI_SRCPER_SRCHWHANDSHAKEIFACE(value)	(value << 7)				// Assigns a hardware handshaking interface (0 - DMAH_NUM_HS_INT-1) to the source of channel x if the CFGx.HS_SEL_SRC field is 0; otherwise, this field is ignored.
 	#define DMA_CFG_HI_SSUPDEN_DISABLESRCSTATUSUPDATE		(0 << 6)
@@ -146,40 +146,40 @@ typedef struct{
 	#define DMA_CFG_HI_FIFOMODE_DATASPACEHALFOFFIFODSTSRC	(1 << 1)
 	#define DMA_CFG_HI_FCMODE_SRCTRANSREQWHENTHEYOCURR		(0)					// Determines when source transaction requests are serviced when the Destination Peripheral is the flow controller. 0 - Source transaction requests are serviced when they occur. Data pre-fetching is enabled; 1 - Source transaction requests are not serviced until a destination transaction request occurs.
 	#define DMA_CFG_HI_FCMODE_SRCTRANSREQUNTILDATAREQOCURR	(1)
-	u_int32_t __sgr_l__;						// Source Gather Register
+	uint32_t __sgr_l__;						// Source Gather Register
 	#define DMA_SGR_LO_SGC_SRCGATHERCOUNTMASK				(0xFFF << 20)				// Source contiguous transfer count between successive gather boundaries.
 	#define DMA_SGR_LO_SGI_SRCGATHERINCDECMULTIPLE(value)	(value)						// Specifies the source address increment/decrement in multiples of CTLx.SRC_TR_WIDTH on a gather boundary when gather mode is enabled for the source transfer.
-	u_int32_t __rsv_0x4c__;						// Reserved
-	u_int32_t __dsr_l__;						// Destination Scatter Register
+	uint32_t __rsv_0x4c__;						// Reserved
+	uint32_t __dsr_l__;						// Destination Scatter Register
 	#define DMA_DSR_LO_DSC_DESTSCATTERCOUNTMASK				(0xFFF << 20)				// Destination contiguous transfer count between successive scatter boundaries.
 	#define DMA_DSR_LO_DSI_DESTSCATTERINCDECMULTIPLE(value)	(value)				// Specifies the destination address increment/decrement in multiples of CTLx.DST_TR_WIDTH on a scatter boundary, when scatter mode is enabled for the destination transfer.
 }__attribute__ ((packed)) dma_ch_t;
 
 
 typedef struct {
-	u_int32_t __statusint_l__;
-	u_int32_t __rsv_0x364__;
-	u_int32_t __reqsrcreg_l__;
-	u_int32_t __rsv_0x36c__;
-	u_int32_t __reqdstreg_l__;
-	u_int32_t __rsv_0x374__;
-	u_int32_t __sglrqsrcreg_l__;
-	u_int32_t __rsv_0x37c__;
-	u_int32_t __sglrqdstreg_l__;
-	u_int32_t __rsv_0x384__;
-	u_int32_t __lstsrcreg_l__;
-	u_int32_t __rsv_0x38c__;
-	u_int32_t __lstdstreg_l__;
-	u_int32_t __rsv_0x394__;
-	u_int32_t __dmacfgre_l__;					// DW_ahb_dmac Configuration Register
+	uint32_t __statusint_l__;
+	uint32_t __rsv_0x364__;
+	uint32_t __reqsrcreg_l__;
+	uint32_t __rsv_0x36c__;
+	uint32_t __reqdstreg_l__;
+	uint32_t __rsv_0x374__;
+	uint32_t __sglrqsrcreg_l__;
+	uint32_t __rsv_0x37c__;
+	uint32_t __sglrqdstreg_l__;
+	uint32_t __rsv_0x384__;
+	uint32_t __lstsrcreg_l__;
+	uint32_t __rsv_0x38c__;
+	uint32_t __lstdstreg_l__;
+	uint32_t __rsv_0x394__;
+	uint32_t __dmacfgre_l__;					// DW_ahb_dmac Configuration Register
 	#define DMA_DMACFGREG_L_DMA_ENA				(0x1)					// 0 - DW_ahb_dmac Disabled; 1 - DW_ahb_dmac Enabled
 	#define DMA_DMACFGREG_L_DMA_DIS				(0x0)					// 0 - DW_ahb_dmac Disabled; 1 - DW_ahb_dmac Enabled
-	u_int32_t __resv_0x39c__;
-	u_int32_t __chenreg_l__;				// DW_ahb_dmac Channel Enable Register
+	uint32_t __resv_0x39c__;
+	uint32_t __chenreg_l__;				// DW_ahb_dmac Channel Enable Register
 	#define DMA_DMACHENREG_L_CH_EN_WE(value)	(value<<8)		// This register enables the CH_EN to be written in the bit choosen
 	#define DMA_DMACHENREG_L_CH_EN(value)		(value)			// 0 - Disable the channel; 1 - Enable the channel
-	u_int32_t __rsv_0x3a4__[10];
-	u_int32_t __dmaparamsch7__;
+	uint32_t __rsv_0x3a4__[10];
+	uint32_t __dmaparamsch7__;
 	#define DMA_DMAPARAMSCH_FIFODEPTH			(0x7 << 28)
 	#define DMA_DMAPARAMSCH_SMS					(0x7 << 25)
 	#define DMA_DMAPARAMSCH_LMS					(0x7 << 22)
@@ -196,13 +196,13 @@ typedef struct {
 	#define DMA_DMAPARAMSCH_STATDST				(0x1 << 6)
 	#define DMA_DMAPARAMSCH_STW					(0x7 << 3)
 	#define DMA_DMAPARAMSCH_DTW					(0x7)
-	u_int32_t __dmaparamsch6__;
-	u_int32_t __dmaparamsch5__;
-	u_int32_t __dmaparamsch4__;
-	u_int32_t __dmaparamsch3__;
-	u_int32_t __dmaparamsch2__;
-	u_int32_t __dmaparamsch1__;
-	u_int32_t __dmaparamsch0__;
+	uint32_t __dmaparamsch6__;
+	uint32_t __dmaparamsch5__;
+	uint32_t __dmaparamsch4__;
+	uint32_t __dmaparamsch3__;
+	uint32_t __dmaparamsch2__;
+	uint32_t __dmaparamsch1__;
+	uint32_t __dmaparamsch0__;
 }__attribute__ ((packed)) dma_cfg_t;
 
 
@@ -219,3 +219,4 @@ typedef struct{
 } dma_dev_t;
 
 
+#endif /* DMA_H_ */

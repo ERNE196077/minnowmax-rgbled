@@ -35,23 +35,13 @@
 		<Unit filename="Makefile">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
-		<Unit filename="headers/general.h" />
-		<Unit filename="headers/gpio.h" />
-		<Unit filename="headers/pwm.h" />
 		<Unit filename="headers/py.py" />
-		<Unit filename="headers/spi.h" />
-		<Unit filename="headers/ws281x.h" />
+		<Unit filename="headers/rgbled.h" />
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="main.py" />
-		<Unit filename="pwm.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="spi.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="ws281x.c">
+		<Unit filename="rgbled.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Extensions>

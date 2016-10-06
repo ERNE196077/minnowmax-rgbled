@@ -1,6 +1,6 @@
 #ifndef SPI_H_
 #define SPI_H_
-#endif /* DMA_H_ */
+
 
 
 
@@ -9,7 +9,7 @@
 
 
 typedef struct{
-u_int32_t __sscr0__;
+uint32_t __sscr0__;
 #define SPI_SSP_SSCR0_MOD_NORMALSSPMODE				(0 << 31)
 #define SPI_SSP_SSCR0_MOD_NETWORKMODE				(1 << 31)
 #define SPI_SSP_SSCR0_ACS_CLOCKBYNCSANDECS			(0 << 30)
@@ -32,7 +32,7 @@ u_int32_t __sscr0__;
 #define SPI_SSP_SSCR0_FRF_NATIONALSEMICONDUCTOR		(2 << 4)
 #define SPI_SSP_SSCR0_FRF_PROGRAMMABLE				(3 << 4)
 #define SPI_SSP_SSCR0_DSS_DATASIZESELECT(value)		(value)			// 4 bits. If EDSS is 1, it appends one 1 at the value of these bits.
-u_int32_t __sscr1__;
+uint32_t __sscr1__;
 #define SPI_SSP_SSCR1_TTELP_TXDTRISTATEONCLOCKEDGE	(0 << 31)
 #define SPI_SSP_SSCR1_TTELP_TXDTRISTATEAFTERCLKEDGE	(1 << 31)
 #define SPI_SSP_SSCR1_TTE_TXDNOTTRISTATED			(0 << 30)
@@ -80,7 +80,7 @@ u_int32_t __sscr1__;
 #define SPI_SSP_SSCR1_RIE_RECEIFIFOLEVELINTERRDISA	(0)
 #define SPI_SSP_SSCR1_RIE_RECEIFIFOLEVELINTERRENA	(1)
 
-u_int32_t __sssr__;
+uint32_t __sssr__;
 #define SPI_SSP_SSSR_BCE_BITCOUNTERROR				(1 << 23)
 #define SPI_SSP_SSSR_CSS_CLOCKSYNCSTATUS			(1 << 22)
 #define SPI_SSP_SSSR_TUR_TRANSMITFIFOUNDERRUN		(1 << 21)
@@ -96,18 +96,18 @@ u_int32_t __sssr__;
 #define SPI_SSP_SSSR_RNE_RECEIVEFIFONOTEMPTY		(1 << 3)
 #define SPI_SSP_SSSR_TNF_TRANSMITFIFONOTFULL		(1 << 2)
 
-u_int32_t __ssitr__;	//ONLY FOR TESTING
+uint32_t __ssitr__;	//ONLY FOR TESTING
 
-u_int32_t __ssdr__;		// DATA REGISTER, USED TO READ WRITE DATA FROM/TO THE RECEIVE/TRANSMIT FIFO'S
+uint32_t __ssdr__;		// DATA REGISTER, USED TO READ WRITE DATA FROM/TO THE RECEIVE/TRANSMIT FIFO'S
 
-u_int32_t __rsv_0x014__[5]; // POSSIBLY ARE DATA REGISTERS
-u_int32_t __ssto__;
+uint32_t __rsv_0x014__[5]; // POSSIBLY ARE DATA REGISTERS
+uint32_t __ssto__;
 #define SPI_SSP_SSTO_INACTIVITYWITHINTHERECEIVEFIFO(value)	(value & 0xFFFFFF)
-u_int32_t __sspsp__;	// USED FOR SPI IN NETWORK MODE
-u_int32_t __sstsa__;	// USED FOR SPI IN NETWORK MODE
-u_int32_t __ssrsa__;	// USED FOR SPI IN NETWORK MODE
-u_int32_t __sstss__;	// USED FOR SPI IN NETWORK MODE
-u_int32_t __ssacd__;
+uint32_t __sspsp__;	// USED FOR SPI IN NETWORK MODE
+uint32_t __sstsa__;	// USED FOR SPI IN NETWORK MODE
+uint32_t __ssrsa__;	// USED FOR SPI IN NETWORK MODE
+uint32_t __sstss__;	// USED FOR SPI IN NETWORK MODE
+uint32_t __ssacd__;
 #define SPI_SSP_SSACD_ACPS_AUDIOCLK_5_622MHZ		(0 << 4)
 #define SPI_SSP_SSACD_ACPS_AUDIOCLK_11_345MHZ		(1 << 4)
 #define SPI_SSP_SSACD_ACPS_AUDIOCLK_12_235MHZ		(2 << 4)
@@ -117,32 +117,32 @@ u_int32_t __ssacd__;
 #define SPI_SSP_SSACD_SCDB_SYSCLKDIVIDEVBY4			(0 << 3)
 #define SPI_SSP_SSACD_SCDB_SYSCLKNODIVIDED			(1 << 3)
 #define SPI_SSP_SSACD_ACDS_AUDIOCLKDIVIDER(value)	(value)		// 1 - 5
-u_int32_t __itf__;		// INTEGRATED IN-CHIP SOUND INTERFACE
+uint32_t __itf__;		// INTEGRATED IN-CHIP SOUND INTERFACE
 #define SPI_SSP_ITF_READTRANSFIFOENTRIESI2S			(0x7FF << 20)
 #define SPI_SSP_ITF_SETTRANSLOWWATERMARKI2S(value)	((value & 0x3FF) << 10)
 #define SPI_SSP_ITF_SETTRANSHIGHWATERMARK12S(value)	(value & 0x3FF)
-u_int32_t __sitf__;
+uint32_t __sitf__;
 #define SPI_SSP_SITF_READTRANSFIFOENTRIESSPI		(0x1FF << 20)
 #define SPI_SSP_SITF_SETTRANSLOWWATERMARKSPI(value)	((value & 0xFF) << 10)
 #define SPI_SSP_SITF_SETTRANSHIGHWATERMARKSPI(value)	(value & 0xFF)
-u_int32_t __sirf__;
+uint32_t __sirf__;
 #define SPI_SSP_SIRF_READRECEIFIFOENTRIESSPI		(0x1FF << 20)
 #define SPI_SSP_SIRF_SETRECEILOWWATERMARKSPI(value)	((value & 0xFF) << 10)
 #define SPI_SSP_SIRF_SETRECEIHIGHWATERMARKSPI(value)	(value & 0xFF)
 }__attribute__((packed)) ssp_control_t;
 
 typedef struct{
-u_int32_t __prv_clock_params__;
+uint32_t __prv_clock_params__;
 #define SPI_SSP_PRVCLKPARAMS_CLOCKUPDATE			(1 << 31)
 #define SPI_SSP_PRVCLKPARAMS_N_DIVISOR(value)		((value & 0x7FFF) << 16)
 #define SPI_SSP_PRVCLKPARAMS_M_DIVIDEND(value)		((value & 0x7FFF) << 1)
 #define SPI_SSP_PRVCLKPARAMS_ENABLECLOCK			(1)
 #define SPI_SSP_PRVCLKPARAMS_DISABLECLOCK			(0)
-u_int32_t __resets__;
-u_int32_t __general__;
-u_int32_t __ssp_reg__;
-u_int32_t __rsv_0x410__[2];
-u_int32_t __spi_cs_ctrl__;
+uint32_t __resets__;
+uint32_t __general__;
+uint32_t __ssp_reg__;
+uint32_t __rsv_0x410__[2];
+uint32_t __spi_cs_ctrl__;
 }__attribute__((packed)) ssp_general_t;
 
 
@@ -154,3 +154,4 @@ typedef struct{
 
 
 
+#endif /* DMA_H_ */

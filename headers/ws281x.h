@@ -24,10 +24,10 @@
 
  /*****			WS281X STRUCTURES			*****/
 typedef struct {
-    u_int8_t d;     //dumy variable for 32bit DMA transfer
-	u_int8_t r;
-	u_int8_t g;
-	u_int8_t b;
+    uint8_t d;     //dumy variable for 32bit DMA transfer
+	uint8_t r;
+	uint8_t g;
+	uint8_t b;
 }led_t;
 
 
@@ -35,10 +35,10 @@ struct ws281x_devices;
 
 typedef struct
 {
-	u_int8_t				lednumber;
+	uint8_t				lednumber;
 	led_t					*ledarray;
-	u_int8_t				gpio_pin_number;
-	u_int8_t				dma_ch_number;
+	uint8_t				gpio_pin_number;
+	uint8_t				dma_ch_number;
 	struct ws281x_devices 	*devices;
 
 }ws281x_t;

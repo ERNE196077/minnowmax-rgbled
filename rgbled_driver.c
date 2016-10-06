@@ -14,7 +14,9 @@
 #include <linux/pci_regs.h>
 #include <linux/slab.h>
 #include <linux/delay.h>
+
 #include "rgbled_driver.h"
+#include "headers/rgbled_devices.h"
 
 
 
@@ -31,14 +33,10 @@ static struct class *cl;    // Global variable for the device class
 
 /********* RGBLED VARIABLES  ************/
 
-#define WS281X_DMADESCMEMORY(lednum)    (sizeof(__u32) * 3 * lednum )
-/*NEED TO MODIFY*/   
-#define APA102_DMADESCMEMORY(lednum)    (sizeof(__u32) * 3 * lednum )
-
 devices_t    devices;
 
 /*  PCI VARIABLES   */
-static      int     err;
+static int err;
 
 /**************************************************************************
 ***************************************************************************
@@ -79,33 +77,31 @@ static int device_release(struct inode *inode, struct file *file){
 
 static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned long ioctl_params){
     switch (ioctl_num){
-    case IOCTL_RGBLED_SETLEDNUMBER:
-        get_user(devices.rgbled_numleds, (__u32 *)ioctl_params );
-
+    case IOCTL_RGBLED_SETCONFIG:
+        get_user(devices.rgbled_config, (__u32 *)ioctl_params );
+        devices.dma_dev.dma_ch_number = RGBLED_CONF_GET_DMACH(devices.rgbled_config);
+        printk(KERN_ALERT"Type: %d  LedNum: %d  DMACh: %d\n\n",RGBLED_CONF_GET_LEDTYPE(devices.rgbled_config) >> 28, 
+                                                                RGBLED_CONF_GET_LEDNUM(devices.rgbled_config), 
+                                                                RGBLED_CONF_GET_DMACH(devices.rgbled_config) >> 24 );
         break;
 
-
-    case IOCTL_RGBLED_SETDMACHANNEL:
-        get_user(devices.dma_dev.dma_ch_number, (__u8 *)ioctl_params);
-
-        break;
-                
-
-    case IOCTL_RGBLED_SETRGBLEDTYPE:
-        get_user(devices.rgbled_type, (__u8 *)ioctl_params);
-
-        break;
 
     case IOCTL_RGBLED_CONFIGURE:
 
-
         /************ SETTING DMA MEMORY ************/
-        if(devices.rgbled_type == DEV_WS281X)
-            devices.dma_dev.dma_data_size = WS281X_DMADESCMEMORY(devices.rgbled_numleds);
-        else
-            devices.dma_dev.dma_data_size = APA102_DMADESCMEMORY(devices.rgbled_numleds);
+        devices.dma_dev.dma_data_size = (RGBLED_CONF_GET_LEDTYPE(devices.rgbled_config)) ? 
+                                        RGBLED_DATA_SIZE_APA102 (RGBLED_CONF_GET_LEDNUM(devices.rgbled_config)): 
+                                        RGBLED_DATA_SIZE_WS281X (RGBLED_CONF_GET_LEDNUM(devices.rgbled_config));
+        
+        /*  CREATE DMA MEMORY POOL FOR THE DATA  */
+        devices.dma_dev.dma_data_ptr = kmalloc(devices.dma_dev.dma_data_size, GFP_DMA);
 
         /************ SETTING GPIO ************/
+        GPIO_CFG_FUNCTION(devices.gpio_dev.gpio_pin_spi_mosi->__cfg__,1);
+        /* IF RGBLEDS ARE APA102 CONFIGURE CLOCK LINE */
+        if(RGBLED_CONF_GET_LEDTYPE(devices.rgbled_config))
+            GPIO_CFG_FUNCTION(devices.gpio_dev.gpio_pin_spi_clk->__cfg__,1);
+    
         
         /************ SETTING SPI ************/
         devices.spi_dev.ssp_control_block->__sscr0__ =
@@ -222,8 +218,12 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
         devices.dma_dev.dma_cfg->__sglrqsrcreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number));
         
         devices.spi_dev.ssp_control_block->__sscr0__ &= ~SPI_SSP_SSCR0_SSE_SSPENABLE;
-        devices.dma_dev.dma_cfg->__dmacfgre_l__ = 0;
-        
+
+        GPIO_CFG_FUNCTION(devices.gpio_dev.gpio_pin_spi_mosi->__cfg__,0);
+        /* IF RGBLEDS ARE APA102 DECONFIGURE CLOCK LINE */
+        if(RGBLED_CONF_GET_LEDTYPE(devices.rgbled_config))
+            GPIO_CFG_FUNCTION(devices.gpio_dev.gpio_pin_spi_clk->__cfg__,0);
+
         break;
 
     case IOCTL_RGBLED_RENDER:
@@ -242,12 +242,7 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
         devices.dma_dev.dma_cfg->__sglrqdstreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number)) | (0x1 << devices.dma_dev.dma_ch_number);
         
         break;
-    case IOCTL_RGBLED_GETDATAADDR:
-        put_user(devices.dma_dev.dma_data_ptr, (__u32 **)ioctl_params);
-
-     
-    break;
-
+    
     
     case IOCTL_DMA_PRINTITEMS:
         printk(KERN_ALERT"DMA data address: %p\n\n",devices.dma_dev.dma_data_ptr);
@@ -298,27 +293,21 @@ static int pci_rgbled_probe (struct pci_dev *pdev, const struct pci_device_id *i
     devices.dma_dev.dma_bar_size = pci_resource_len (pdev, 0);      /*  GET DMA BASE ADDRESS REGISTER SIZE  */
     pci_set_master(pdev);                           /*  ENABLE DEVICE AS DMA  */
 
-    /*  CREATE DMA MEMORY POOL FOR THE DATA  */
-    devices.dma_dev.dma_data_ptr = kmalloc(WS281X_DMADESCMEMORY(10),GFP_USER);
-    if (devices.dma_dev.dma_data_ptr == NULL){
-        err = -1;
-        goto err_kmalloc;
-    }
 
     /*  MAP IO MEM FOR GPIO, DMA AND SPI   */
-    if (!(devices.gpio_dev.gpio_base = (volatile u_int32_t *) ioremap(GPIO_SCORE_BASE_ADDR, BLOCK_SIZE_T))) {
+    if (!(devices.gpio_dev.gpio_base = (volatile uint32_t *) ioremap(GPIO_SCORE_BASE_ADDR, BLOCK_SIZE_T))) {
         printk(KERN_ALERT"GPIO IOMEM MAPPING FAILED!");
         err = -2;
         goto err_iomap;
     }
 
-    if (!(devices.dma_dev.dma_base = (volatile u_int32_t *) ioremap(DMA_BASE_ADDR, BLOCK_SIZE_T))) {
+    if (!(devices.dma_dev.dma_base = (volatile uint32_t *) ioremap(DMA_BASE_ADDR, BLOCK_SIZE_T))) {
         printk(KERN_ALERT"DMA IOMEM MAPPING FAILED!");
         err = -2;
         goto err_iomap;
     }
 
-    if (!(devices.spi_dev.spi_base = (volatile u_int32_t *) ioremap(SPI_BASE_ADDR, BLOCK_SIZE_T))) {
+    if (!(devices.spi_dev.spi_base = (volatile uint32_t *) ioremap(SPI_BASE_ADDR, BLOCK_SIZE_T))) {
         printk(KERN_ALERT"SPI IOMEM MAPPING FAILED!");
         err = -2;
         goto err_iomap;
@@ -331,9 +320,6 @@ static int pci_rgbled_probe (struct pci_dev *pdev, const struct pci_device_id *i
     devices.dma_dev.dma_ch = (volatile dma_ch_t *)(devices.dma_dev.dma_base + dma_channels[devices.dma_dev.dma_ch_number]);
     devices.dma_dev.dma_cfg = (volatile dma_cfg_t *)(devices.dma_dev.dma_base + DMA_DMACCFG_OFF);
 
-    GPIO_CFG_FUNCTION(devices.gpio_dev.gpio_pin_spi_mosi->__cfg__,1);
-        if(devices.rgbled_type == DEV_TYPE_APA102)
-    GPIO_CFG_FUNCTION(devices.gpio_dev.gpio_pin_spi_clk->__cfg__,1);
     return 0;
 
     /*  ERROR HANDLER's  */
@@ -341,8 +327,6 @@ static int pci_rgbled_probe (struct pci_dev *pdev, const struct pci_device_id *i
         iounmap(devices.gpio_dev.gpio_base);
         iounmap(devices.dma_dev.dma_base);
         iounmap(devices.spi_dev.spi_base);
-    err_kmalloc:
-        kfree(devices.dma_dev.dma_data_ptr);
     err_set_dma_mask:
         pci_release_regions(pdev);
         pci_disable_device(pdev);
@@ -354,11 +338,7 @@ static int pci_rgbled_probe (struct pci_dev *pdev, const struct pci_device_id *i
 
 
 static void pci_rgbled_remove (struct pci_dev *pdev){
-    GPIO_CFG_FUNCTION(devices.gpio_dev.gpio_pin_spi_mosi->__cfg__,0);
-        if(devices.rgbled_type == DEV_TYPE_APA102)
-    GPIO_CFG_FUNCTION(devices.gpio_dev.gpio_pin_spi_clk->__cfg__,0);
-
-
+    
     /*  UNMAP IO MEMORY  */
     iounmap(devices.gpio_dev.gpio_base);
     iounmap(devices.dma_dev.dma_base);
@@ -449,25 +429,11 @@ int __init init_module(){
         printk (KERN_ALERT"RGBLED driver cannot take possession of DMA device. BAR = 0x%x \n",devices.dma_dev.dma_bar);    
         printk (KERN_ALERT"Try unload/blacklist dw_dmac_pci driver before.");
         return -1;
-    }else{
-        *(devices.dma_dev.dma_data_ptr ) = 0xffAAffAA;
-        printk (KERN_ALERT"RGBLED driver loaded BAR at 0x%x \n",devices.dma_dev.dma_bar);    
-        printk (KERN_INFO"DMA data address: %p %08x \n",devices.dma_dev.dma_data_ptr, *(devices.dma_dev.dma_data_ptr));
-        printk (KERN_INFO"SPI CTL BLK 1st reg: %x \n",devices.spi_dev.ssp_control_block->__sssr__);
-        printk (KERN_INFO"SPI GEN BLK 1st reg: %x \n",devices.spi_dev.ssp_general_block->__prv_clock_params__);
-        printk (KERN_INFO"DMA 1st reg: %x   %p\n",devices.dma_dev.dma_ch->__ctl_l__, devices.dma_dev.dma_ch);
-        printk (KERN_INFO"GPIO 1st reg: %x \n",devices.gpio_dev.gpio_pin_spi_mosi->__cfg__);
     }
-
-    
-
-    
 
     return 0;
 
 }
-
-
 
 void __exit cleanup_module(){
     pci_unregister_driver(&pdrv);

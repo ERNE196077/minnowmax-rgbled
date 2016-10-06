@@ -2,39 +2,33 @@
 #define RGBLED_DRV_H_
 
 #include <linux/ioctl.h>
-#include "headers/gpio.h"
-#include "headers/dma.h"
-#include "headers/spi.h"
-#include "headers/general.h"
 
-
+#define BLOCK_SIZE_T 4096
 #define MAJOR_NUM 121
 #define DEV_NAME "rgbled_device"
 
-#define DEV_TYPE_WS281x 0
-#define DEV_TYPE_APA102 1
-
 /********  RGBLED FUNCTIONS   ********/
-#define IOCTL_RGBLED_SETLEDNUMBER       _IOW(MAJOR_NUM , 0 , __u32 )
-#define IOCTL_RGBLED_SETDMACHANNEL      _IOW(MAJOR_NUM , 1 , __u8 )
-#define IOCTL_RGBLED_SETRGBLEDTYPE      _IOW(MAJOR_NUM , 2 , __u8 )
-#define IOCTL_RGBLED_GETDATAADDR	    _IOR(MAJOR_NUM , 8 , __u32 *)
-#define IOCTL_RGBLED_CONFIGURE          _IO(MAJOR_NUM , 3 )
-#define IOCTL_RGBLED_DECONFIGURE        _IO(MAJOR_NUM , 4 )
-#define IOCTL_RGBLED_RENDER             _IO(MAJOR_NUM , 5 )
+#define IOCTL_RGBLED_SETCONFIG       	_IOW(MAJOR_NUM , 0 , __u32 )
+#define IOCTL_RGBLED_CONFIGURE          _IO(MAJOR_NUM , 1 )
+#define IOCTL_RGBLED_DECONFIGURE        _IO(MAJOR_NUM , 2 )
+#define IOCTL_RGBLED_RENDER             _IO(MAJOR_NUM , 3 )
 
 /********  DMA FUNCTIONS   ********/
-#define IOCTL_DMA_PRINTITEMS            _IO(MAJOR_NUM , 7 )
+#define IOCTL_DMA_PRINTITEMS            _IO(MAJOR_NUM , 4 )
+
+ /*****			RGBLEDS STRUCTURES			*****/
+
+/*		rgbled_conf_t ::  4 bit led type ; 4 bits DMA channel ; 24 bits led number 	*/
+typedef u_int32_t rgbled_conf_t;
+#define RGBLED_CONF_TYPEWS281X			0
+#define RGBLED_CONF_TYPEAPA102 			(1 << 28)
+#define RGBLED_CONF_DMACH(value)		(value << 24)
+#define	RGBLED_CONF_LEDNUM(value)		(value)
+#define RGBLED_CONF_GET_LEDNUM(value)	(value & 0xFFFFFF)
+#define RGBLED_CONF_GET_LEDTYPE(value)	(value & 0xF << 28)
+#define RGBLED_CONF_GET_DMACH(value)	(value & 0xF << 24)
 
 
-typedef struct{
-struct  pci_dev        	*pdev;
-		__u32           rgbled_numleds;
-		__u8            rgbled_type;
-		gpio_dev_t		gpio_dev;
-		dma_dev_t		dma_dev;
-		spi_dev_t		spi_dev;
-} devices_t;
 
 
 

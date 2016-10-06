@@ -45,7 +45,7 @@
 
 #ifndef GPIO_H_
 #define GPIO_H_
-#endif /* GPIO_H_ */
+
 
 
 /*****			GPIO BASE REGISTERS			*****/
@@ -77,7 +77,7 @@
 #define GPIO_OFFSET_PIN25			(0x1E0	/4)
 #define GPIO_OFFSET_PIN26			(0x670	/4)
 
-u_int32_t gpio_pins[] = {
+uint32_t gpio_pins[] = {
 		0x0,0x0,0x0,0x0,0x0,
 		GPIO_OFFSET_PIN5,
 		GPIO_OFFSET_PIN6,
@@ -114,9 +114,9 @@ u_int32_t gpio_pins[] = {
 
 /*****			GPIO STRUCTURES			*****/
 typedef struct gpio_t{
-	u_int32_t __cfg__;
-	u_int32_t __resv__;
-	u_int32_t __val__;
+	uint32_t __cfg__;
+	uint32_t __resv__;
+	uint32_t __val__;
 	
 }__attribute__ ((packed)) gpio_t;
 
@@ -125,3 +125,5 @@ typedef struct{
 	volatile gpio_t *gpio_pin_spi_mosi;
     volatile gpio_t *gpio_pin_spi_clk;
 } gpio_dev_t;
+
+#endif /* GPIO_H_ */

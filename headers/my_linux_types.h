@@ -6,12 +6,10 @@
 #else
 # include <stdint.h>
 typedef int32_t __s32;
-typedef u_int8_t __u8;
-typedef u_int16_t __u16;
-typedef u_int64_t __u64;
-typedef u_int32_t __u32;
-typedef u_int32_t kernel_ulong_t;
-
-#endif
+typedef uint8_t __u8;
+typedef uint16_t __u16;
+typedef uint64_t __u64;
+typedef uint32_t __u32;
+typedef uint32_t kernel_ulong_t;
 
 #endif

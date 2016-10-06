@@ -1,6 +1,5 @@
 #ifndef PWM_H_
 #define PWM_H_
-#endif /* GPIO_H_ */
 
 
 /*****			PWM BASE REGISTERS			*****/
@@ -23,7 +22,7 @@
 /*****			PWM STRUCTURES			*****/
 
 typedef struct {
-	u_int32_t __pwmctrl__;
+	uint32_t __pwmctrl__;
 	#define 	PWM_ENABLE							(1 << 31)			// Construct without this bit for Disable
 	#define 	PWM_SW_UPDATE						(1 << 30)			// Used to update the PWM settings. PWM module will apply the new settings at the end of the current cycle and reset this bit.
 	#define 	PWM_BASE_UNIT(value)				(value << 8)		// Min value = 0x0. Max value 0xFFFF (65535).
@@ -31,3 +30,5 @@ typedef struct {
 
 }__attribute__ ((packed)) pwm_t;
 
+
+#endif /* PWM_H_ */

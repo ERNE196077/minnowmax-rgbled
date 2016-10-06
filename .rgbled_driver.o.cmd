@@ -825,6 +825,7 @@ deps_/home/minnow/workspace/minnow-ws281x/rgbled_driver.o := \
   arch/x86/include/asm/delay.h \
   include/asm-generic/delay.h \
   /home/minnow/workspace/minnow-ws281x/rgbled_driver.h \
+  /home/minnow/workspace/minnow-ws281x/headers/rgbled_devices.h \
   /home/minnow/workspace/minnow-ws281x/headers/gpio.h \
   /home/minnow/workspace/minnow-ws281x/headers/dma.h \
   include/linux/pci.h \
@@ -917,7 +918,6 @@ deps_/home/minnow/workspace/minnow-ws281x/rgbled_driver.o := \
   include/linux/swiotlb.h \
   include/linux/dma-contiguous.h \
   /home/minnow/workspace/minnow-ws281x/headers/spi.h \
-  /home/minnow/workspace/minnow-ws281x/headers/general.h \
 
 /home/minnow/workspace/minnow-ws281x/rgbled_driver.o: $(deps_/home/minnow/workspace/minnow-ws281x/rgbled_driver.o)
 
