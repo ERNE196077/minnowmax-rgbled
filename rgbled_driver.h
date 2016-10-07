@@ -16,10 +16,10 @@
 /********  DMA FUNCTIONS   ********/
 #define IOCTL_DMA_PRINTITEMS            _IO(MAJOR_NUM , 4 )
 
- /*****			RGBLEDS STRUCTURES			*****/
+/*****			RGBLEDS STRUCTURES			*****/
 
 /*		rgbled_conf_t ::  4 bit led type ; 4 bits DMA channel ; 24 bits led number 	*/
-typedef u_int32_t rgbled_conf_t;
+typedef uint32_t rgbled_conf_t;
 #define RGBLED_CONF_TYPEWS281X			0
 #define RGBLED_CONF_TYPEAPA102 			(1 << 28)
 #define RGBLED_CONF_DMACH(value)		(value << 24)

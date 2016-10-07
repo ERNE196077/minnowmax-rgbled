@@ -1,0 +1,12 @@
+#include "headers/dma.h"
+
+uint32_t dma_channels[8] = {
+	DMA_OFFSET_CH0,
+	DMA_OFFSET_CH1,
+	DMA_OFFSET_CH2,
+	DMA_OFFSET_CH3,
+	DMA_OFFSET_CH4,
+	DMA_OFFSET_CH5,
+	DMA_OFFSET_CH6,
+	DMA_OFFSET_CH7
+};

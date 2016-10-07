@@ -21,20 +21,12 @@
 #define		DMA_OFFSET_CH7			(0x268  / 4)
 #define     DMA_DMACCFG_OFF			(0x360 / 4)
 
-uint32_t dma_channels[8] = {
-	DMA_OFFSET_CH0,
-	DMA_OFFSET_CH1,
-	DMA_OFFSET_CH2,
-	DMA_OFFSET_CH3,
-	DMA_OFFSET_CH4,
-	DMA_OFFSET_CH5,
-	DMA_OFFSET_CH6,
-	DMA_OFFSET_CH7
-};
+
 
 /*****			DMA MACROS			*****/
 
 #define DMA_CHANNEL_BASE(channel)			( channel * (0x58 / 4 ) )
+
 
 
 
@@ -214,7 +206,9 @@ typedef struct{
 	volatile __u32          *dma_base;
 	volatile dma_ch_t  		*dma_ch;
     volatile dma_cfg_t      *dma_cfg;
+    struct   pci_pool       *dma_pool;
        		 __u32       	*dma_data_ptr;
+             dma_addr_t     dma_data_phys;
 			 __u32          dma_data_size;
 } dma_dev_t;
 

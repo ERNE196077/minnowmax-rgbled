@@ -34,6 +34,7 @@ static struct class *cl;    // Global variable for the device class
 /********* RGBLED VARIABLES  ************/
 
 devices_t    devices;
+__u32 i ;   
 
 /*  PCI VARIABLES   */
 static int err;
@@ -80,6 +81,7 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
     case IOCTL_RGBLED_SETCONFIG:
         get_user(devices.rgbled_config, (__u32 *)ioctl_params );
         devices.dma_dev.dma_ch_number = RGBLED_CONF_GET_DMACH(devices.rgbled_config);
+        
         printk(KERN_ALERT"Type: %d  LedNum: %d  DMACh: %d\n\n",RGBLED_CONF_GET_LEDTYPE(devices.rgbled_config) >> 28, 
                                                                 RGBLED_CONF_GET_LEDNUM(devices.rgbled_config), 
                                                                 RGBLED_CONF_GET_DMACH(devices.rgbled_config) >> 24 );
@@ -93,8 +95,16 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
                                         RGBLED_DATA_SIZE_APA102 (RGBLED_CONF_GET_LEDNUM(devices.rgbled_config)): 
                                         RGBLED_DATA_SIZE_WS281X (RGBLED_CONF_GET_LEDNUM(devices.rgbled_config));
         
+        
+        for(i = 0 ; i < 1024 ; i++)
+            *((__u8 *)devices.dma_dev.dma_data_ptr + i) = 0x00;    
+    
+
+
         /*  CREATE DMA MEMORY POOL FOR THE DATA  */
-        devices.dma_dev.dma_data_ptr = kmalloc(devices.dma_dev.dma_data_size, GFP_DMA);
+        //devices.dma_dev.dma_data_ptr = kmalloc(devices.dma_dev.dma_data_size, GFP_DMA);
+        rgbled_test(devices.dma_dev.dma_data_ptr);
+        printk(KERN_INFO"Data phys %llx \n", devices.dma_dev.dma_data_phys);
 
         /************ SETTING GPIO ************/
         GPIO_CFG_FUNCTION(devices.gpio_dev.gpio_pin_spi_mosi->__cfg__,1);
@@ -115,7 +125,7 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
             SPI_SSP_SSCR0_SSE_SSPDISABLE |
             SPI_SSP_SSCR0_ECS_EXTERNALCLOCKFROMGPIO |
             SPI_SSP_SSCR0_FRF_TEXASINSTRUMENTS |
-            SPI_SSP_SSCR0_DSS_DATASIZESELECT(0xF) ; //0X7
+            SPI_SSP_SSCR0_DSS_DATASIZESELECT(0x7) ; //0X7
 
         devices.spi_dev.ssp_control_block->__sscr1__ =
             SPI_SSP_SSCR1_TTELP_TXDTRISTATEONCLOCKEDGE |
@@ -160,11 +170,11 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
         
         /************ SETTING DMA ************/
         devices.dma_dev.dma_cfg->__dmacfgre_l__ = 0x1;
-        devices.dma_dev.dma_ch->__sar_l__ = 0x0;
+        devices.dma_dev.dma_ch->__sar_l__ = devices.dma_dev.dma_data_phys;
         devices.dma_dev.dma_ch->__dar_l__ = SPI_BASE_ADDR+0x10;
         devices.dma_dev.dma_ch->__llp_l__ = 0x0;
         devices.dma_dev.dma_ch->__ctl_l__ =
-            DMA_CTL_LO_LLPSRCEN_SRCLLPCHAINNINGENABLE |
+            DMA_CTL_LO_LLPSRCEN_SRCLLPCHAINNINGDISABLE |
             DMA_CTL_LO_LLPDSTEN_DSTLLPCHAINNINGDISABLE |
             DMA_CTL_LO_SMS_SRCMASTERLAYER1 |
             DMA_CTL_LO_DMS_DSTMASTERLAYER1 |
@@ -173,14 +183,14 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
             DMA_CTL_LO_SRCGATHEREN_SOURCEGATHERDISABLE |
             DMA_CTL_LO_SRCMSIZE_SRCBURSTITEMNUM(0x0) |
             DMA_CTL_LO_DESTMSIZE_DSTBURSTITEMNUM(0x0) |
-            DMA_CTL_LO_SINC_SOURCEADDRNOCHANGE |
+            DMA_CTL_LO_SINC_SOURCEADDRINCREMENT |
             DMA_CTL_LO_DINC_DESTADDRNOCHANGE |
             DMA_CTL_LO_SRCTRWIDTH_SRCTRANSFEROF32BITS |
             DMA_CTL_LO_DSTTRWIDTH_DSTTRANSFEROF32BITS |
             DMA_CTL_LO_INTEN_INTERRUPTSDISABLED ;
         devices.dma_dev.dma_ch->__ctl_h__ =
             DMA_CTL_HI_DONE_DONEBITZERO |
-            DMA_CTL_HI_BLOCKTS_DMAFLOWBLOCKSIZE(0x1) ;
+            DMA_CTL_HI_BLOCKTS_DMAFLOWBLOCKSIZE(0x9) ;
         devices.dma_dev.dma_ch->__cfg_l__ =
             DMA_CFG_LO_RELOADDST_NORELOADDSTAFTERTRANSFER |
             DMA_CFG_LO_RELOADSRC_NORELOADSRCAFTERTRANSFER |
@@ -228,7 +238,19 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
 
     case IOCTL_RGBLED_RENDER:
 
+        devices.dma_dev.dma_cfg->__reqdstreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number));
+        devices.dma_dev.dma_cfg->__reqsrcreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number));
+        
+        devices.dma_dev.dma_cfg->__sglrqdstreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number));
+        devices.dma_dev.dma_cfg->__sglrqsrcreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number));
+
+
         devices.spi_dev.ssp_control_block->__sscr0__ |= SPI_SSP_SSCR0_SSE_SSPENABLE;
+        devices.dma_dev.dma_ch->__ctl_h__ =
+            DMA_CTL_HI_DONE_DONEBITZERO |
+            DMA_CTL_HI_BLOCKTS_DMAFLOWBLOCKSIZE(0x9) ;
+            devices.dma_dev.dma_ch->__sar_l__ = devices.dma_dev.dma_data_phys;
+        
         
         devices.dma_dev.dma_cfg->__chenreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number)) | (0x1 << devices.dma_dev.dma_ch_number);
 
@@ -293,6 +315,13 @@ static int pci_rgbled_probe (struct pci_dev *pdev, const struct pci_device_id *i
     devices.dma_dev.dma_bar_size = pci_resource_len (pdev, 0);      /*  GET DMA BASE ADDRESS REGISTER SIZE  */
     pci_set_master(pdev);                           /*  ENABLE DEVICE AS DMA  */
 
+    /*  CREATE DMA MEMORY POOL FOR THE LLI's  */
+    devices.dma_dev.dma_pool = pci_pool_create( "rgbled_devices.dma_dev.dma_pool", pdev, 1024, 32, 0 );
+    devices.dma_dev.dma_data_ptr = pci_pool_alloc( devices.dma_dev.dma_pool, GFP_ATOMIC, &devices.dma_dev.dma_data_phys); 
+    if (devices.dma_dev.dma_data_ptr == NULL){
+        err = -1;
+        goto err_pool_alloc;
+    }
 
     /*  MAP IO MEM FOR GPIO, DMA AND SPI   */
     if (!(devices.gpio_dev.gpio_base = (volatile uint32_t *) ioremap(GPIO_SCORE_BASE_ADDR, BLOCK_SIZE_T))) {
@@ -327,6 +356,10 @@ static int pci_rgbled_probe (struct pci_dev *pdev, const struct pci_device_id *i
         iounmap(devices.gpio_dev.gpio_base);
         iounmap(devices.dma_dev.dma_base);
         iounmap(devices.spi_dev.spi_base);
+    err_pool_alloc:
+        pci_pool_free(devices.dma_dev.dma_pool, devices.dma_dev.dma_data_ptr, devices.dma_dev.dma_data_phys);
+        pci_pool_destroy(devices.dma_dev.dma_pool);
+    
     err_set_dma_mask:
         pci_release_regions(pdev);
         pci_disable_device(pdev);
@@ -344,9 +377,10 @@ static void pci_rgbled_remove (struct pci_dev *pdev){
     iounmap(devices.dma_dev.dma_base);
     iounmap(devices.spi_dev.spi_base);
 
-    /*  FREE DMA MEMORY POOL  */
-    kfree(devices.dma_dev.dma_data_ptr);
-    
+       /*  FREE DMA MEMORY POOL  */
+    pci_pool_free(devices.dma_dev.dma_pool, devices.dma_dev.dma_data_ptr, devices.dma_dev.dma_data_phys);
+    pci_pool_destroy(devices.dma_dev.dma_pool);
+ 
     /*  UNREGISTER PCI DEVICE  */
     pci_dev_put(pdev);
     pci_release_regions(pdev);

@@ -97,7 +97,12 @@ int rgbled_init (rgbled_conf_t *rgbled_conf) {
   }
 
   rgbled_setconfig(file, rgbled_conf);
+  rgbled_configure(file);
 
+  while (1){
+    rgbled_render(file);
+    usleep(10000);
+  }
    /* rgbled_deconfigure(file);
 
 //    rgbled_setahblayer(file, &ahbl);
