@@ -10,19 +10,27 @@
 
  /*****			RGBLEDS STRUCTURES			*****/
 typedef struct {
-    u_int32_t drgb;     //dumy variable for 32bit DMA transfer
-	#define LED_APA102_SET_RED(value)	(value << 16)
-	#define LED_APA102_SET_GREEN(value)	(value << 8)
-	#define LED_APA102_SET_BLUE(value)	(value)
-	#define LED_APA102_MASK_RED			0x00FF0000
-	#define LED_APA102_MASK_GREEN		0x0000FF00
-	#define LED_APA102_MASK_BLUE		0x000000FF
+    uint8_t d;    //dumy variable to fit 32bit.
+    uint8_t r;
+    uint8_t g;
+    uint8_t b;
 }__attribute__((packed)) led_apa102_t ;
 
 typedef struct {
-    u_int32_t r;
-	u_int32_t g;
-	u_int32_t b;
+    uint32_t r;
+	uint32_t g;
+	uint32_t b;
+	#define RGBLEDWS281X_LOW  				0x6
+	#define RGBLEDWS281X_HIGH				0x4
+	#define RGBLEDWS281X_RGBCONV(value) 	(value & 0x80 ? RGBLEDWS281X_HIGH : RGBLEDWS281X_LOW) << 21 | \
+											(value & 0x40 ? RGBLEDWS281X_HIGH : RGBLEDWS281X_LOW) << 18 | \
+											(value & 0x20 ? RGBLEDWS281X_HIGH : RGBLEDWS281X_LOW) << 15 | \
+											(value & 0x10 ? RGBLEDWS281X_HIGH : RGBLEDWS281X_LOW) << 12 | \
+											(value & 0x8 ? RGBLEDWS281X_HIGH : RGBLEDWS281X_LOW) << 9 | \
+											(value & 0x4 ? RGBLEDWS281X_HIGH : RGBLEDWS281X_LOW) << 6 | \
+											(value & 0x2 ? RGBLEDWS281X_HIGH : RGBLEDWS281X_LOW) << 3 | \
+											(value & 0x1 ? RGBLEDWS281X_HIGH : RGBLEDWS281X_LOW) 
+
 }__attribute__((packed)) led_ws281x_t ;
 
 typedef struct{
@@ -33,5 +41,7 @@ struct  pci_dev        	*pdev;
 		spi_dev_t		spi_dev;
 } devices_t;
 
+
+void rgbled_test(void *data);
 
 #endif
