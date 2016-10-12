@@ -5,7 +5,7 @@
 #include "dma.h"
 #include "spi.h"
 
-#define RGBLED_DATA_SIZE_WS281X(lednum)    (sizeof(led_ws281x_t) * lednum )
+#define RGBLED_DATA_SIZE_WS281X(lednum)    (sizeof(led_ws281x_t) * lednum + 2 )
 #define RGBLED_DATA_SIZE_APA102(lednum)    (sizeof(led_apa102_t) * lednum )
 
 
@@ -46,6 +46,6 @@ struct  pci_dev        	*pdev;
 } devices_t;
 
 
-void rgbled_test(__u32 *data);
+void rgbled_test(__u32 *data, __u32 test_var);
 
 #endif

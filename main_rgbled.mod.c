@@ -19,7 +19,6 @@ __used
 __attribute__((section("__versions"))) = {
 	{ 0xef1c5950, __VMLINUX_SYMBOL_STR(module_layout) },
 	{ 0x51c3c51e, __VMLINUX_SYMBOL_STR(cdev_init) },
-	{ 0xf9a482f9, __VMLINUX_SYMBOL_STR(msleep) },
 	{ 0xa179afa5, __VMLINUX_SYMBOL_STR(pci_disable_device) },
 	{ 0xbf656318, __VMLINUX_SYMBOL_STR(device_destroy) },
 	{ 0x6729d3df, __VMLINUX_SYMBOL_STR(__get_user_4) },

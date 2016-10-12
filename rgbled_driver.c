@@ -35,6 +35,7 @@ static struct class *cl;    // Global variable for the device class
 
 devices_t    devices;
 __u32 i ;   
+__u32 test_num = 0;
 
 /*  PCI VARIABLES   */
 static int err;
@@ -103,14 +104,17 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
 
         /*  CREATE DMA MEMORY POOL FOR THE DATA  */
         //devices.dma_dev.dma_data_ptr = kmalloc(devices.dma_dev.dma_data_size, GFP_DMA);
-        rgbled_test(devices.dma_dev.dma_data_ptr);
+        rgbled_test(devices.dma_dev.dma_data_ptr, test_num);
         printk(KERN_INFO"Data phys %llx \n", devices.dma_dev.dma_data_phys);
 
         /************ SETTING GPIO ************/
+        /* If SPI MOSI is already configured, leave it */
+        if(!(devices.gpio_dev.gpio_pin_spi_mosi->__cfg__ & 0x1))
         GPIO_CFG_FUNCTION(devices.gpio_dev.gpio_pin_spi_mosi->__cfg__,1);
         /* IF RGBLEDS ARE APA102 CONFIGURE CLOCK LINE */
         if(RGBLED_CONF_GET_LEDTYPE(devices.rgbled_config))
-            GPIO_CFG_FUNCTION(devices.gpio_dev.gpio_pin_spi_clk->__cfg__,1);
+            if(!(devices.gpio_dev.gpio_pin_spi_clk->__cfg__ & 0x1))    
+                GPIO_CFG_FUNCTION(devices.gpio_dev.gpio_pin_spi_clk->__cfg__,1);
     
         
         /************ SETTING SPI ************/
@@ -166,7 +170,9 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
             SPI_SSP_PRVCLKPARAMS_N_DIVISOR(0xFF) |
             SPI_SSP_PRVCLKPARAMS_M_DIVIDEND(0x3) |
             SPI_SSP_PRVCLKPARAMS_ENABLECLOCK ;
-   
+    
+        devices.spi_dev.ssp_control_block->__sscr0__ |= SPI_SSP_SSCR0_SSE_SSPENABLE;
+        
         
         /************ SETTING DMA ************/
         devices.dma_dev.dma_cfg->__dmacfgre_l__ = 0x1;
@@ -238,30 +244,32 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
 
     case IOCTL_RGBLED_RENDER:
 
-        devices.dma_dev.dma_cfg->__reqdstreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number));
-        devices.dma_dev.dma_cfg->__reqsrcreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number));
+        devices.spi_dev.ssp_control_block->__sscr0__ &= ~SPI_SSP_SSCR0_SSE_SSPENABLE;
+        test_num++;
+        rgbled_test(devices.dma_dev.dma_data_ptr, test_num);
         
-        devices.dma_dev.dma_cfg->__sglrqdstreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number));
-        devices.dma_dev.dma_cfg->__sglrqsrcreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number));
+        __clear_cache((char *)devices.dma_dev.dma_data_ptr,
+                        (char *)(devices.dma_dev.dma_data_ptr + 5 ));
 
 
-        devices.spi_dev.ssp_control_block->__sscr0__ |= SPI_SSP_SSCR0_SSE_SSPENABLE;
+
         devices.dma_dev.dma_ch->__ctl_h__ =
             DMA_CTL_HI_DONE_DONEBITZERO |
-            DMA_CTL_HI_BLOCKTS_DMAFLOWBLOCKSIZE(0x9) ;
+            DMA_CTL_HI_BLOCKTS_DMAFLOWBLOCKSIZE(12);
             devices.dma_dev.dma_ch->__sar_l__ = devices.dma_dev.dma_data_phys;
         
-        
-        devices.dma_dev.dma_cfg->__chenreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number)) | (0x1 << devices.dma_dev.dma_ch_number);
 
-        msleep(100);
+        devices.spi_dev.ssp_control_block->__sscr0__ |= SPI_SSP_SSCR0_SSE_SSPENABLE;    
+      
+        devices.dma_dev.dma_cfg->__chenreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number)) | (0x1 << devices.dma_dev.dma_ch_number);
+    
         devices.dma_dev.dma_cfg->__reqsrcreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number)) | (0x1 << devices.dma_dev.dma_ch_number);
-        devices.dma_dev.dma_cfg->__sglrqsrcreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number)) | (0x1 << devices.dma_dev.dma_ch_number);
-        msleep(100);
+        //devices.dma_dev.dma_cfg->__sglrqsrcreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number)) | (0x1 << devices.dma_dev.dma_ch_number);
+        //msleep(100);
 
         devices.dma_dev.dma_cfg->__reqdstreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number)) | (0x1 << devices.dma_dev.dma_ch_number);
         
-        devices.dma_dev.dma_cfg->__sglrqdstreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number)) | (0x1 << devices.dma_dev.dma_ch_number);
+        //devices.dma_dev.dma_cfg->__sglrqdstreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number)) | (0x1 << devices.dma_dev.dma_ch_number);
         
         break;
     
@@ -274,7 +282,15 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
         printk(KERN_INFO"__reqdstreg_l__\t\t%08x\n", devices.dma_dev.dma_cfg->__reqdstreg_l__);
         printk(KERN_INFO"__reqsrcreg_l__\t\t%08x\n", devices.dma_dev.dma_cfg->__reqsrcreg_l__);
         printk(KERN_INFO"__sglrqdstreg_l__\t\t%08x\n", devices.dma_dev.dma_cfg->__sglrqdstreg_l__);
-        printk(KERN_INFO"__sglrqsrcreg_l__\t\t%08x\n", devices.dma_dev.dma_cfg->__sglrqsrcreg_l__);
+        printk(KERN_INFO"__sglrqsrcreg_l__\t\t%08x\n\n", devices.dma_dev.dma_cfg->__sglrqsrcreg_l__);
+    
+        printk(KERN_INFO"__src_l__\t\t%08x\n", devices.dma_dev.dma_ch->__sar_l__ );
+        printk(KERN_INFO"__dst_l__\t\t%08x\n", devices.dma_dev.dma_ch->__dar_l__);
+        printk(KERN_INFO"__llp_l__\t\t%08x\n", devices.dma_dev.dma_ch->__llp_l__);
+        printk(KERN_INFO"__ctl_l__\t\t%08x\n", devices.dma_dev.dma_ch->__ctl_l__);
+        printk(KERN_INFO"__ctl_h__\t\t%08x\n", devices.dma_dev.dma_ch->__ctl_h__);
+        printk(KERN_INFO"__cfg_l__\t\t%08x\n", devices.dma_dev.dma_ch->__cfg_l__);
+        printk(KERN_INFO"__cfg_h__\t\t%08x\n\n", devices.dma_dev.dma_ch->__cfg_h__);
 
         /* AGREGAR MAS REGISTROS */
     break;

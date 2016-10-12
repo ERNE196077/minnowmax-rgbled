@@ -12,6 +12,5 @@ int main (){
 
 	rgbled_init(&ledsconfig);
 
-	getchar();
 return 0;
 }
