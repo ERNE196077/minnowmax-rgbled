@@ -255,7 +255,7 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
 
         devices.dma_dev.dma_ch->__ctl_h__ =
             DMA_CTL_HI_DONE_DONEBITZERO |
-            DMA_CTL_HI_BLOCKTS_DMAFLOWBLOCKSIZE(12);
+            DMA_CTL_HI_BLOCKTS_DMAFLOWBLOCKSIZE(452);
             devices.dma_dev.dma_ch->__sar_l__ = devices.dma_dev.dma_data_phys;
         
 
@@ -332,7 +332,7 @@ static int pci_rgbled_probe (struct pci_dev *pdev, const struct pci_device_id *i
     pci_set_master(pdev);                           /*  ENABLE DEVICE AS DMA  */
 
     /*  CREATE DMA MEMORY POOL FOR THE LLI's  */
-    devices.dma_dev.dma_pool = pci_pool_create( "rgbled_devices.dma_dev.dma_pool", pdev, 1024, 32, 0 );
+    devices.dma_dev.dma_pool = pci_pool_create( "rgbled_devices.dma_dev.dma_pool", pdev, 4096, 32, 0 );
     devices.dma_dev.dma_data_ptr = pci_pool_alloc( devices.dma_dev.dma_pool, GFP_ATOMIC, &devices.dma_dev.dma_data_phys); 
     if (devices.dma_dev.dma_data_ptr == NULL){
         err = -1;
