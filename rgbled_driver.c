@@ -38,7 +38,7 @@ __u32 i ;
 __u32 test_num = 0;
 
 /*  PCI VARIABLES   */
-static int err;
+static int err_dma, err_spi;
 
 /**************************************************************************
 ***************************************************************************
@@ -83,9 +83,10 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
         get_user(devices.rgbled_config, (__u32 *)ioctl_params );
         devices.dma_dev.dma_ch_number = RGBLED_CONF_GET_DMACH(devices.rgbled_config);
         
-        printk(KERN_ALERT"Type: %d  LedNum: %d  DMACh: %d\n\n",RGBLED_CONF_GET_LEDTYPE(devices.rgbled_config) >> 28, 
+        printk(KERN_ALERT"Type: %d  LedNum: %d  DMACh: %d  Anim: %d\n\n",RGBLED_CONF_GET_LEDTYPE(devices.rgbled_config) >> 28, 
                                                                 RGBLED_CONF_GET_LEDNUM(devices.rgbled_config), 
-                                                                RGBLED_CONF_GET_DMACH(devices.rgbled_config) >> 24 );
+                                                                RGBLED_CONF_GET_DMACH(devices.rgbled_config) >> 24 ,
+                                                                RGBLED_CONF_GET_ANIMATION(devices.rgbled_config) >> 16);
         break;
 
 
@@ -128,7 +129,7 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
             SPI_SSP_SSCR0_SCR_SERIALCLOCKRATE(20) |
             SPI_SSP_SSCR0_SSE_SSPDISABLE |
             SPI_SSP_SSCR0_ECS_EXTERNALCLOCKFROMGPIO |
-            SPI_SSP_SSCR0_FRF_TEXASINSTRUMENTS |
+            SPI_SSP_SSCR0_FRF_MOTOROLA |
             SPI_SSP_SSCR0_DSS_DATASIZESELECT(0x7) ; //0X7
 
         devices.spi_dev.ssp_control_block->__sscr1__ =
@@ -150,8 +151,8 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
             //SPI_SSP_SSCR1_STRF_RWFORRECEIVEFIFO |
             //SPI_SSP_SSCR1_EFWR_ENABLEFIFOREADWRITE |
             SPI_SSP_SSCR1_RFT_RECEIVEFIFOTRIGTHRESHOLD(0x0) |
-            SPI_SSP_SSCR1_TFT_TRANSMITFIFOTRIGTHRESHOLD(0x0) |
-            SPI_SSP_SSCR1_TIE_TRANSFIFOLEVELINTERRDISA |    // POSSIBLY CHANGE
+            SPI_SSP_SSCR1_TFT_TRANSMITFIFOTRIGTHRESHOLD(0xF) |
+            SPI_SSP_SSCR1_TIE_TRANSFIFOLEVELINTERRENA |    // POSSIBLY CHANGE
             SPI_SSP_SSCR1_RIE_RECEIFIFOLEVELINTERRDISA ;    // POSSIBLY CHANGE
 
         devices.spi_dev.ssp_control_block->__ssacd__ =
@@ -162,7 +163,7 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
         devices.spi_dev.ssp_control_block->__sitf__ &= ~0xFFFF ;
 
         devices.spi_dev.ssp_control_block->__sitf__ |=
-            SPI_SSP_SITF_SETTRANSLOWWATERMARKSPI(0x0) |
+            SPI_SSP_SITF_SETTRANSLOWWATERMARKSPI(0x0F)    |
             SPI_SSP_SITF_SETTRANSHIGHWATERMARKSPI(0xFF) ;
             
        devices.spi_dev.ssp_general_block->__prv_clock_params__ =
@@ -306,27 +307,75 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
 ***************************************************************************
 ***************************************************************************
 ***************************************************************************/
-
-static int pci_rgbled_probe (struct pci_dev *pdev, const struct pci_device_id *id){
+static int pci_rgbled_spi_probe (struct pci_dev *pdev, const struct pci_device_id *id){
 
     /*  REGISTER PCI DEVICE  */
-    err = pci_enable_device(pdev);
-    if (err)
-        goto err_enable_device;
+    err_spi = pci_enable_device(pdev);
+    if (err_spi)
+        goto err_enable_spi_device;
 
-    err = pci_request_regions(pdev, "rgbled_driver");
-    if (err)
-        goto err_request_regions;
+    err_spi = pci_request_regions(pdev, "rgbled_spi_driver");
+    if (err_spi)
+        goto err_request_spi_regions;
 
-    err = pci_set_dma_mask(pdev, DMA_BIT_MASK(29));
-    if (err)
+    
+    devices.pdev_spi = pci_dev_get(pdev);
+    devices.spi_dev.spi_bar = pci_resource_start (pdev, 0);         /*  GET SPI BASE ADDRESS REGISTER  */
+    devices.spi_dev.spi_bar_size = pci_resource_len (pdev, 0);      /*  GET SPI BASE ADDRESS REGISTER SIZE  */
+    pci_set_master(pdev);                           /*  ENABLE DEVICE AS MASTER  */
+
+    
+    /*  MAP IO MEM FOR GPIO, DMA AND SPI   */
+    if (!(devices.gpio_dev.gpio_base = (volatile uint32_t *) ioremap(GPIO_SCORE_BASE_ADDR, BLOCK_SIZE_T))) {
+        printk(KERN_ALERT"GPIO IOMEM MAPPING FAILED!");
+        err_spi = -2;
+        goto err_spi_iomap;
+    }
+
+    if (!(devices.spi_dev.spi_base = (volatile uint32_t *) ioremap(SPI_BASE_ADDR, BLOCK_SIZE_T))) {
+        printk(KERN_ALERT"SPI IOMEM MAPPING FAILED!");
+        err_spi = -2;
+        goto err_spi_iomap;
+    }
+
+    devices.gpio_dev.gpio_pin_spi_clk = (volatile gpio_t *)(devices.gpio_dev.gpio_base + gpio_pins[11]);
+    devices.gpio_dev.gpio_pin_spi_mosi = (volatile gpio_t *)(devices.gpio_dev.gpio_base + gpio_pins[9]);
+    devices.spi_dev.ssp_control_block = (volatile ssp_control_t *)devices.spi_dev.spi_base;
+    devices.spi_dev.ssp_general_block = (volatile ssp_general_t *)(devices.spi_dev.spi_base + SPI_SSP_GENERAL_OFFSET);
+    
+    return 0;
+
+    /*  ERROR HANDLER's  */
+    err_spi_iomap:
+        iounmap(devices.gpio_dev.gpio_base);
+        iounmap(devices.spi_dev.spi_base);
+    
+    err_request_spi_regions:
+    err_enable_spi_device:
+
+    return err_spi;
+}
+
+static int pci_rgbled_dma_probe (struct pci_dev *pdev, const struct pci_device_id *id){
+
+    /*  REGISTER PCI DEVICE  */
+    err_dma = pci_enable_device(pdev);
+    if (err_dma)
+        goto err_enable_dma_device;
+
+    err_dma = pci_request_regions(pdev, "rgbled_dma_driver");
+    if (err_dma)
+        goto err_request_dma_regions;
+
+    err_dma = pci_set_dma_mask(pdev, DMA_BIT_MASK(29));
+    if (err_dma)
         goto err_set_dma_mask;
 
-    err = pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(29));
-    if (err)
+    err_dma = pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(29));
+    if (err_dma)
         goto err_set_dma_mask;
 
-    devices.pdev = pci_dev_get(pdev);
+    devices.pdev_dma = pci_dev_get(pdev);
     devices.dma_dev.dma_bar = pci_resource_start (pdev, 0);         /*  GET DMA BASE ADDRESS REGISTER  */
     devices.dma_dev.dma_bar_size = pci_resource_len (pdev, 0);      /*  GET DMA BASE ADDRESS REGISTER SIZE  */
     pci_set_master(pdev);                           /*  ENABLE DEVICE AS DMA  */
@@ -335,64 +384,55 @@ static int pci_rgbled_probe (struct pci_dev *pdev, const struct pci_device_id *i
     devices.dma_dev.dma_pool = pci_pool_create( "rgbled_devices.dma_dev.dma_pool", pdev, 4096, 32, 0 );
     devices.dma_dev.dma_data_ptr = pci_pool_alloc( devices.dma_dev.dma_pool, GFP_ATOMIC, &devices.dma_dev.dma_data_phys); 
     if (devices.dma_dev.dma_data_ptr == NULL){
-        err = -1;
+        err_dma = -1;
         goto err_pool_alloc;
-    }
-
-    /*  MAP IO MEM FOR GPIO, DMA AND SPI   */
-    if (!(devices.gpio_dev.gpio_base = (volatile uint32_t *) ioremap(GPIO_SCORE_BASE_ADDR, BLOCK_SIZE_T))) {
-        printk(KERN_ALERT"GPIO IOMEM MAPPING FAILED!");
-        err = -2;
-        goto err_iomap;
     }
 
     if (!(devices.dma_dev.dma_base = (volatile uint32_t *) ioremap(DMA_BASE_ADDR, BLOCK_SIZE_T))) {
         printk(KERN_ALERT"DMA IOMEM MAPPING FAILED!");
-        err = -2;
-        goto err_iomap;
+        err_dma = -2;
+        goto err_dma_iomap;
     }
 
-    if (!(devices.spi_dev.spi_base = (volatile uint32_t *) ioremap(SPI_BASE_ADDR, BLOCK_SIZE_T))) {
-        printk(KERN_ALERT"SPI IOMEM MAPPING FAILED!");
-        err = -2;
-        goto err_iomap;
-    }
-
-    devices.gpio_dev.gpio_pin_spi_clk = (volatile gpio_t *)(devices.gpio_dev.gpio_base + gpio_pins[11]);
-    devices.gpio_dev.gpio_pin_spi_mosi = (volatile gpio_t *)(devices.gpio_dev.gpio_base + gpio_pins[9]);
-    devices.spi_dev.ssp_control_block = (volatile ssp_control_t *)devices.spi_dev.spi_base;
-    devices.spi_dev.ssp_general_block = (volatile ssp_general_t *)(devices.spi_dev.spi_base + SPI_SSP_GENERAL_OFFSET);
     devices.dma_dev.dma_ch = (volatile dma_ch_t *)(devices.dma_dev.dma_base + dma_channels[devices.dma_dev.dma_ch_number]);
     devices.dma_dev.dma_cfg = (volatile dma_cfg_t *)(devices.dma_dev.dma_base + DMA_DMACCFG_OFF);
 
     return 0;
 
     /*  ERROR HANDLER's  */
-    err_iomap:
-        iounmap(devices.gpio_dev.gpio_base);
+    err_dma_iomap:
         iounmap(devices.dma_dev.dma_base);
-        iounmap(devices.spi_dev.spi_base);
     err_pool_alloc:
         pci_pool_free(devices.dma_dev.dma_pool, devices.dma_dev.dma_data_ptr, devices.dma_dev.dma_data_phys);
         pci_pool_destroy(devices.dma_dev.dma_pool);
-    
     err_set_dma_mask:
         pci_release_regions(pdev);
         pci_disable_device(pdev);
-    err_request_regions:
-    err_enable_device:
+    err_request_dma_regions:
+    err_enable_dma_device:
 
-    return err;
+    return err_dma;
 }
 
 
-static void pci_rgbled_remove (struct pci_dev *pdev){
+static void pci_rgbled_spi_remove (struct pci_dev *pdev){
     
     /*  UNMAP IO MEMORY  */
     iounmap(devices.gpio_dev.gpio_base);
-    iounmap(devices.dma_dev.dma_base);
     iounmap(devices.spi_dev.spi_base);
 
+    /*  UNREGISTER PCI DEVICE  */
+    pci_dev_put(pdev);
+    pci_release_regions(pdev);
+    pci_disable_device(pdev);
+
+}
+
+static void pci_rgbled_dma_remove (struct pci_dev *pdev){
+    
+    /*  UNMAP IO MEMORY  */
+    iounmap(devices.dma_dev.dma_base);
+    
        /*  FREE DMA MEMORY POOL  */
     pci_pool_free(devices.dma_dev.dma_pool, devices.dma_dev.dma_data_ptr, devices.dma_dev.dma_data_phys);
     pci_pool_destroy(devices.dma_dev.dma_pool);
@@ -406,21 +446,35 @@ static void pci_rgbled_remove (struct pci_dev *pdev){
 
 
 /**** SUPPORTED DEVICES  ****/
-static struct pci_device_id pci_supp_list[] = {
+static struct pci_device_id pci_supp_dma_list[] = {
     { PCI_VDEVICE(INTEL, 0x0f06)},
     {0,},
 };
 
+static struct pci_device_id pci_supp_spi_list[] = {
+    { PCI_VDEVICE(INTEL, 0x0f0e)},
+    {0,},
+};
 /**** EXPORT SUPPORTED DEVS TO USER SPACE  ****/
-MODULE_DEVICE_TABLE(pci, pci_supp_list);
+MODULE_DEVICE_TABLE(pci, pci_supp_dma_list);
+MODULE_DEVICE_TABLE(pci, pci_supp_spi_list);
 
 /**** REGISTERING PCI DRIVER ****/
-static struct pci_driver pdrv = {
-    .name       = "rgbled_driver",
-    .id_table   = pci_supp_list,
-    .remove     = pci_rgbled_remove,
-    .probe      = pci_rgbled_probe,
+static struct pci_driver pdrv_dma = {
+    .name       = "rgbled_dma_driver",
+    .id_table   = pci_supp_dma_list,
+    .remove     = pci_rgbled_dma_remove,
+    .probe      = pci_rgbled_dma_probe,
 };
+
+static struct pci_driver pdrv_spi = {
+    .name       = "rgbled_spi_driver",
+    .id_table   = pci_supp_spi_list,
+    .remove     = pci_rgbled_spi_remove,
+    .probe      = pci_rgbled_spi_probe,
+};
+
+
 
 /**************************************************************************
 ***************************************************************************
@@ -468,25 +522,29 @@ int __init init_module(){
 
     }
 
-    pci_register_driver(&pdrv);
+    pci_register_driver(&pdrv_dma);
+    pci_register_driver(&pdrv_spi);
     
-    if(err){
-        printk(KERN_ALERT"ERROR INITIALIZING RGBLED PCI DEVICE: err: %d",err);
+    if(err_dma || err_spi){
+        printk(KERN_ALERT"ERROR INITIALIZING RGBLED PCI DEVICE: err_dma: %d , err_spi: %d",err_dma, err_spi);
         return -1;
     }
 
     if ( devices.dma_dev.dma_bar == 0){
-        printk (KERN_ALERT"RGBLED driver cannot take possession of DMA device. BAR = 0x%x \n",devices.dma_dev.dma_bar);    
-        printk (KERN_ALERT"Try unload/blacklist dw_dmac_pci driver before.");
+        printk (KERN_ALERT"RGBLED driver cannot take possession of DMA/SPI device. BAR DMA = 0x%x :: BAR SPI = 0x%x  \n",devices.dma_dev.dma_bar,devices.spi_dev.spi_bar);    
+        printk (KERN_ALERT"Try unload/blacklist dw_dmac_pci and spi_pxa2xx_spi/pxa2xx_spi_pci driver before proceed.");
         return -1;
     }
+    printk(KERN_INFO"PCI DEVICE BAR: 0x%x  \n",devices.dma_dev.dma_bar);
+    printk(KERN_INFO"PCI DEVICE BAR: 0x%x  \n",devices.spi_dev.spi_bar);
 
     return 0;
 
 }
 
 void __exit cleanup_module(){
-    pci_unregister_driver(&pdrv);
+    pci_unregister_driver(&pdrv_dma);
+    pci_unregister_driver(&pdrv_spi);
     device_destroy(cl, first);
     class_destroy(cl);
     unregister_chrdev_region(first, 1);

@@ -18,15 +18,19 @@
 
 /*****			RGBLEDS STRUCTURES			*****/
 
-/*		rgbled_conf_t ::  4 bit led type ; 4 bits DMA channel ; 24 bits led number 	*/
+/*		rgbled_conf_t ::  4 bit led type ; 4 bits DMA channel ; 8 bits Animation ;  16 bits led number 	*/
+/*                        0 0 0 0          0 0 0 0              0 0 0 0  0 0 0 0    0000 0000 0000 0000 */
 typedef uint32_t rgbled_conf_t;
-#define RGBLED_CONF_TYPEWS281X			0
+#define RGBLED_CONF_TYPEWS281X			(0)
 #define RGBLED_CONF_TYPEAPA102 			(1 << 28)
 #define RGBLED_CONF_DMACH(value)		(value << 24)
 #define	RGBLED_CONF_LEDNUM(value)		(value)
-#define RGBLED_CONF_GET_LEDNUM(value)	(value & 0xFFFFFF)
+#define RGBLED_CONF_ANIMATION(value)	(value << 16)
+
+#define RGBLED_CONF_GET_LEDNUM(value)	(value & 0xFFFF)
 #define RGBLED_CONF_GET_LEDTYPE(value)	(value & 0xF << 28)
 #define RGBLED_CONF_GET_DMACH(value)	(value & 0xF << 24)
+#define RGBLED_CONF_GET_ANIMATION(value) (value & 0xF << 16 )
 
 
 

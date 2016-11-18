@@ -1,12 +1,12 @@
-#ifndef RGBLED_DEV_H_
+ #ifndef RGBLED_DEV_H_
 #define RGBLED_DEV_H_
 
 #include "gpio.h"
 #include "dma.h"
 #include "spi.h"
 
-#define RGBLED_DATA_SIZE_WS281X(lednum)    (sizeof(led_ws281x_t) * lednum + 2 )
-#define RGBLED_DATA_SIZE_APA102(lednum)    (sizeof(led_apa102_t) * lednum )
+#define RGBLED_DATA_SIZE_WS281X(lednum)    (sizeof(led_ws281x_t) * lednum + sizeof(__u32) * 2 )
+#define RGBLED_DATA_SIZE_APA102(lednum)    (sizeof(led_apa102_t) * lednum + sizeof(__u32) * 2 )
 
 
 extern uint32_t dma_channels[8];
@@ -14,10 +14,11 @@ extern uint32_t gpio_pins[];
 
  /*****			RGBLEDS STRUCTURES			*****/
 typedef struct {
-    __u8 dummy;    //dumy variable to fit 32bit.
-    __u8 r;
-    __u8 g;
+	/* global ; 3 bits = 1 ; 5 bits = brightness 0 - 31 */
+    __u8 global;	
     __u8 b;
+    __u8 g;
+    __u8 r;
 }__attribute__((packed)) led_apa102_t ;
 
 typedef struct {
@@ -38,7 +39,8 @@ typedef struct {
 }__attribute__((packed)) led_ws281x_t ;
 
 typedef struct{
-struct  pci_dev        	*pdev;
+struct  pci_dev        	*pdev_dma;
+struct  pci_dev        	*pdev_spi;
 		__u32 			rgbled_config;
 		gpio_dev_t		gpio_dev;
 		dma_dev_t		dma_dev;

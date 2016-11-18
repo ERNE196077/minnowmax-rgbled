@@ -147,6 +147,9 @@ uint32_t __spi_cs_ctrl__;
 
 
 typedef struct{
+			 __u32			req_int;
+			 __u32          spi_bar;
+			 __u32	        spi_bar_size;
 	volatile __u32          *spi_base;
 	volatile ssp_control_t  *ssp_control_block;
     volatile ssp_general_t  *ssp_general_block;
