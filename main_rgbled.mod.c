@@ -30,6 +30,7 @@ __attribute__((section("__versions"))) = {
 	{ 0x27e1a049, __VMLINUX_SYMBOL_STR(printk) },
 	{ 0x42ee214b, __VMLINUX_SYMBOL_STR(device_create) },
 	{ 0x2a37d074, __VMLINUX_SYMBOL_STR(dma_pool_free) },
+	{ 0x2072ee9b, __VMLINUX_SYMBOL_STR(request_threaded_irq) },
 	{ 0x767789b9, __VMLINUX_SYMBOL_STR(cdev_add) },
 	{ 0xd66074e6, __VMLINUX_SYMBOL_STR(module_put) },
 	{ 0x42c8de35, __VMLINUX_SYMBOL_STR(ioremap_nocache) },
@@ -48,6 +49,7 @@ __attribute__((section("__versions"))) = {
 	{ 0x3a4dddd9, __VMLINUX_SYMBOL_STR(dma_ops) },
 	{ 0x29537c9e, __VMLINUX_SYMBOL_STR(alloc_chrdev_region) },
 	{ 0xde407e3c, __VMLINUX_SYMBOL_STR(try_module_get) },
+	{ 0xf20dabd8, __VMLINUX_SYMBOL_STR(free_irq) },
 };
 
 static const char __module_depends[]

@@ -14,6 +14,9 @@
 #include <linux/pci_regs.h>
 #include <linux/slab.h>
 #include <linux/delay.h>
+#include <linux/interrupt.h>
+#include <linux/sched.h>
+//#include <linux/tqueue.h>
 
 #include "rgbled_driver.h"
 #include "headers/rgbled_devices.h"
@@ -31,14 +34,18 @@ static dev_t first;         // Global variable for the first device number
 static struct cdev c_dev;   // Global variable for the character device structure
 static struct class *cl;    // Global variable for the device class
 
+int k ;
 /********* RGBLED VARIABLES  ************/
 
 devices_t    devices;
 __u32 i ;   
 __u32 test_num = 0;
+__u32 result;
+__u32 spi_irq_sta = 0;
+__u32 fifo_level = 0;
 
 /*  PCI VARIABLES   */
-static int err_dma, err_spi;
+static int err_dma, err_spi, sscr1, ssdr;
 
 /**************************************************************************
 ***************************************************************************
@@ -68,6 +75,71 @@ static int device_release(struct inode *inode, struct file *file){
 
     return 0;
 }
+
+/**************************************************************************
+***************************************************************************
+***************************************************************************
+*****************     INTERRUPT HANDLERS          *************************
+***************************************************************************
+***************************************************************************
+***************************************************************************/
+
+
+static irqreturn_t short_spi_interrupt(int irq, void *dev_id)
+{
+    if ( devices.spi_dev.ssp_control_block->__sssr__ & SPI_SSP_SSSR_TNF_TRANSMITFIFONOTFULL ){
+
+        /* PRINT USEFUL INFORMATION */
+        spi_irq_sta = devices.spi_dev.ssp_control_block->__sssr__;
+        sscr1 = devices.spi_dev.ssp_control_block->__sscr1__;
+        fifo_level = devices.spi_dev.ssp_control_block->__sitf__  ;
+        printk(KERN_INFO"SPI interrupt!! \nSTATUS : 0x%08x\nFIFO level : %08x\n SSCR1 : %08x\n\n",spi_irq_sta, fifo_level,sscr1);
+
+        /* CLEAR INTERRUPTS */
+        devices.spi_dev.ssp_control_block->__sssr__ = SPI_SSP_SSSR_ROR_RECEIVEFIFOOVERRUN;
+
+        sscr1 =  devices.spi_dev.ssp_control_block->__sscr1__ ;
+
+        sscr1 &= ~( SPI_SSP_SSCR1_TIE_TRANSFIFOLEVELINTERRENA | SPI_SSP_SSCR1_RIE_RECEIFIFOLEVELINTERRENA );
+        sscr1 &= ( SPI_SSP_SSCR1_TFT_TRANSMITFIFOTRIGTHRESHOLD(8) | SPI_SSP_SSCR1_RFT_RECEIVEFIFOTRIGTHRESHOLD(8) );
+
+        devices.spi_dev.ssp_control_block->__sscr1__ = sscr1 ;
+
+        do {
+                 while ( devices.spi_dev.ssp_control_block->__sssr__ & SPI_SSP_SSSR_RNE_RECEIVEFIFONOTEMPTY) {
+                         ssdr = devices.spi_dev.ssp_control_block->__ssdr__;
+                 }
+         } while ( devices.spi_dev.ssp_control_block->__sssr__ & SPI_SSP_SSSR_BSY_SPIBUSY );
+ 
+        devices.spi_dev.ssp_control_block->__sscr0__ &= ~SPI_SSP_SSCR0_SSE_SSPENABLE ;
+
+        spi_irq_sta = devices.spi_dev.ssp_control_block->__sssr__;
+        sscr1 = devices.spi_dev.ssp_control_block->__sscr1__;
+        fifo_level = devices.spi_dev.ssp_control_block->__sitf__  ;
+        printk(KERN_INFO"SPI interrupt!! \nSTATUS : 0x%08x\nFIFO level : %08x\n SSCR1 : %08x\n\n",spi_irq_sta, fifo_level,sscr1);
+
+
+        return IRQ_HANDLED;
+    }
+
+    return IRQ_NONE;
+}
+
+
+
+static irqreturn_t short_dma_interrupt(int irq, void *dev_id)
+{
+    devices.dma_dev.dma_ch->__cfg_l__ |= DMA_CFG_LO_CHSUSP_SUSPENDDMACHANNELACTIVITY;       
+    spi_irq_sta = devices.spi_dev.ssp_control_block->__sssr__;
+
+    devices.spi_dev.ssp_control_block->__sssr__ &= ~SPI_SSP_SSSR_TFS_TRANSMITFIFOSERVICEREQ;
+    fifo_level = (devices.spi_dev.ssp_control_block->__sssr__ & SPI_SSP_SITF_READTRANSFIFOENTRIESSPI ) >> 20 ;
+    printk(KERN_INFO"SPI interrupt!!  0x%x\n  FIFO level : %d \n\n",spi_irq_sta, fifo_level);
+    
+    return IRQ_HANDLED;
+}
+
+
 
 /**************************************************************************
 ***************************************************************************
@@ -102,6 +174,33 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
             *((__u8 *)devices.dma_dev.dma_data_ptr + i) = 0x00;    
     
 
+
+        if (devices.spi_dev.spi_irqn >= 0) {
+            result = request_irq(devices.spi_dev.spi_irqn, short_spi_interrupt,
+                                 IRQF_SHARED, "rgbled_spi_driver", &(devices.spi_dev));
+            if (result) {
+                printk(KERN_INFO "SPI: can't get assigned irq %i\n",
+                       devices.spi_dev.spi_irqn);
+                devices.spi_dev.spi_irqn = -1;
+            }
+            else { /* actually enable it -- assume this *is* a parallel port */
+                 printk(KERN_INFO"SPI interrupt REGISTERED!!\n");
+            }
+        }
+/*
+        if (devices.dma_dev.dma_irqn >= 0) {
+            result = request_irq(devices.dma_dev.dma_irqn, short_dma_interrupt,
+                                 IRQF_SHARED, "rgbled_dma_driver", &(devices.dma_dev));
+            if (result) {
+                printk(KERN_INFO "DMA: can't get assigned irq %i\n",
+                       spi_irq);
+                spi_irq = -1;
+            }
+            else {*/ /* actually enable it -- assume this *is* a parallel port */
+           /*      printk(KERN_INFO"DMA interrupt REGISTERED!!\n");
+            }
+        }
+        */
 
         /*  CREATE DMA MEMORY POOL FOR THE DATA  */
         //devices.dma_dev.dma_data_ptr = kmalloc(devices.dma_dev.dma_data_size, GFP_DMA);
@@ -151,7 +250,7 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
             //SPI_SSP_SSCR1_STRF_RWFORRECEIVEFIFO |
             //SPI_SSP_SSCR1_EFWR_ENABLEFIFOREADWRITE |
             SPI_SSP_SSCR1_RFT_RECEIVEFIFOTRIGTHRESHOLD(0x0) |
-            SPI_SSP_SSCR1_TFT_TRANSMITFIFOTRIGTHRESHOLD(0xF) |
+            SPI_SSP_SSCR1_TFT_TRANSMITFIFOTRIGTHRESHOLD(0xC) |
             SPI_SSP_SSCR1_TIE_TRANSFIFOLEVELINTERRENA |    // POSSIBLY CHANGE
             SPI_SSP_SSCR1_RIE_RECEIFIFOLEVELINTERRDISA ;    // POSSIBLY CHANGE
 
@@ -271,7 +370,17 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
         devices.dma_dev.dma_cfg->__reqdstreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number)) | (0x1 << devices.dma_dev.dma_ch_number);
         
         //devices.dma_dev.dma_cfg->__sglrqdstreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number)) | (0x1 << devices.dma_dev.dma_ch_number);
+         
+        for ( k = 0; k < 100; ++k)
+        {
+         
+            spi_irq_sta = devices.spi_dev.ssp_control_block->__sssr__ ;
+            fifo_level = devices.spi_dev.ssp_control_block->__sitf__ ;
+            printk(KERN_INFO"STATUS  Receive = %d  :  Transmit = %d\nFIFO level : %d\n\n",(spi_irq_sta & SPI_SSP_SSSR_RFL_RECEIVEFIFOLEVEL)>>12, (spi_irq_sta & SPI_SSP_SSSR_TFL_TRANSMITFIFOLEVEL)>>8 , (fifo_level & SPI_SSP_SITF_READTRANSFIFOENTRIESSPI) >> 16 );
+
+        }
         
+
         break;
     
     
@@ -338,6 +447,7 @@ static int pci_rgbled_spi_probe (struct pci_dev *pdev, const struct pci_device_i
         goto err_spi_iomap;
     }
 
+    devices.spi_dev.spi_irqn = SPI_IRQn;
     devices.gpio_dev.gpio_pin_spi_clk = (volatile gpio_t *)(devices.gpio_dev.gpio_base + gpio_pins[11]);
     devices.gpio_dev.gpio_pin_spi_mosi = (volatile gpio_t *)(devices.gpio_dev.gpio_base + gpio_pins[9]);
     devices.spi_dev.ssp_control_block = (volatile ssp_control_t *)devices.spi_dev.spi_base;
@@ -394,6 +504,7 @@ static int pci_rgbled_dma_probe (struct pci_dev *pdev, const struct pci_device_i
         goto err_dma_iomap;
     }
 
+    devices.dma_dev.dma_irqn = DMA_IRQn;
     devices.dma_dev.dma_ch = (volatile dma_ch_t *)(devices.dma_dev.dma_base + dma_channels[devices.dma_dev.dma_ch_number]);
     devices.dma_dev.dma_cfg = (volatile dma_cfg_t *)(devices.dma_dev.dma_base + DMA_DMACCFG_OFF);
 
@@ -418,6 +529,8 @@ static int pci_rgbled_dma_probe (struct pci_dev *pdev, const struct pci_device_i
 static void pci_rgbled_spi_remove (struct pci_dev *pdev){
     
     /*  UNMAP IO MEMORY  */
+    free_irq(devices.spi_dev.spi_irqn, &(devices.spi_dev));
+
     iounmap(devices.gpio_dev.gpio_base);
     iounmap(devices.spi_dev.spi_base);
 
@@ -543,6 +656,7 @@ int __init init_module(){
 }
 
 void __exit cleanup_module(){
+
     pci_unregister_driver(&pdrv_dma);
     pci_unregister_driver(&pdrv_spi);
     device_destroy(cl, first);

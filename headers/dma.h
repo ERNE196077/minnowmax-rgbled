@@ -7,6 +7,7 @@
 /*****			DMA BASE REGISTERS			*****/
 
 #define 	DMA_BASE_ADDR			0x90c04000 //90818000
+#define		DMA_IRQn 				19
 #define 	DMA_CTL_L_RESERVED_MASK	0xE0080000
 #define		DMA_CTL_H_RESERVED_MASK	0xFFFFE000
 #define		DMA_CFG_L_RESERVED_MASK	0x0000001F
@@ -200,6 +201,7 @@ typedef struct {
 
 /*****			DMA 			*****/
 typedef struct{
+			 __u32			dma_irqn;
 			 __u8	        dma_ch_number;
 			 __u32          dma_bar;
 			 __u32	        dma_bar_size;

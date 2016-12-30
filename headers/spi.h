@@ -6,6 +6,7 @@
 
 #define SPI_BASE_ADDR			0x90c18000
 #define SPI_SSP_GENERAL_OFFSET	(0x400 / 4)
+#define SPI_IRQn 				19
 
 
 typedef struct{
@@ -123,7 +124,7 @@ uint32_t __itf__;		// INTEGRATED IN-CHIP SOUND INTERFACE
 #define SPI_SSP_ITF_SETTRANSHIGHWATERMARK12S(value)	(value & 0x3FF)
 uint32_t __sitf__;
 #define SPI_SSP_SITF_READTRANSFIFOENTRIESSPI		(0x1FF << 20)
-#define SPI_SSP_SITF_SETTRANSLOWWATERMARKSPI(value)	((value & 0xFF) << 10)
+#define SPI_SSP_SITF_SETTRANSLOWWATERMARKSPI(value)	((value & 0xFF) << 8)
 #define SPI_SSP_SITF_SETTRANSHIGHWATERMARKSPI(value)	(value & 0xFF)
 uint32_t __sirf__;
 #define SPI_SSP_SIRF_READRECEIFIFOENTRIESSPI		(0x1FF << 20)
@@ -147,6 +148,7 @@ uint32_t __spi_cs_ctrl__;
 
 
 typedef struct{
+			 __u32			spi_irqn;
 			 __u32			req_int;
 			 __u32          spi_bar;
 			 __u32	        spi_bar_size;
