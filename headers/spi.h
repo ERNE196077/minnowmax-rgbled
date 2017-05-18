@@ -157,6 +157,4 @@ typedef struct{
     volatile ssp_general_t  *ssp_general_block;
 } spi_dev_t;
 
-
-
-#endif /* DMA_H_ */
+#endif /* SPI_H_ */

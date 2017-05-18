@@ -35,6 +35,10 @@ static struct cdev c_dev;   // Global variable for the character device structur
 static struct class *cl;    // Global variable for the device class
 
 int k ;
+
+/********* PCI VARIABLES  ************/
+static int err_dma, err_spi, sscr1, ssdr;
+
 /********* RGBLED VARIABLES  ************/
 
 devices_t    devices;
@@ -44,8 +48,6 @@ __u32 result;
 __u32 spi_irq_sta = 0;
 __u32 fifo_level = 0;
 
-/*  PCI VARIABLES   */
-static int err_dma, err_spi, sscr1, ssdr;
 
 /**************************************************************************
 ***************************************************************************
@@ -151,6 +153,10 @@ static irqreturn_t short_dma_interrupt(int irq, void *dev_id)
 
 static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned long ioctl_params){
     switch (ioctl_num){
+
+    /**************************************************************************
+    *****************     IOCTL - SET RGBLED CONFIG          ******************
+    ***************************************************************************/
     case IOCTL_RGBLED_SETCONFIG:
         get_user(devices.rgbled_config, (__u32 *)ioctl_params );
         devices.dma_dev.dma_ch_number = RGBLED_CONF_GET_DMACH(devices.rgbled_config);
@@ -162,6 +168,9 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
         break;
 
 
+    /**************************************************************************
+    *****************     IOCTL - SET RGBLED CONFIG          ******************
+    ***************************************************************************/
     case IOCTL_RGBLED_CONFIGURE:
 
         /************ SETTING DMA MEMORY ************/
@@ -173,17 +182,14 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
         for(i = 0 ; i < 1024 ; i++)
             *((__u8 *)devices.dma_dev.dma_data_ptr + i) = 0x00;    
     
-
-
         if (devices.spi_dev.spi_irqn >= 0) {
-            result = request_irq(devices.spi_dev.spi_irqn, short_spi_interrupt,
-                                 IRQF_SHARED, "rgbled_spi_driver", &(devices.spi_dev));
+            
+            result = request_irq(devices.spi_dev.spi_irqn, short_spi_interrupt, IRQF_SHARED, "rgbled_spi_driver", &(devices.spi_dev));
             if (result) {
-                printk(KERN_INFO "SPI: can't get assigned irq %i\n",
-                       devices.spi_dev.spi_irqn);
+                printk(KERN_INFO "SPI: can't get assigned irq %i\n", devices.spi_dev.spi_irqn);
                 devices.spi_dev.spi_irqn = -1;
             }
-            else { /* actually enable it -- assume this *is* a parallel port */
+            else { 
                  printk(KERN_INFO"SPI interrupt REGISTERED!!\n");
             }
         }
@@ -485,10 +491,13 @@ static int pci_rgbled_dma_probe (struct pci_dev *pdev, const struct pci_device_i
     if (err_dma)
         goto err_set_dma_mask;
 
+    /*  GET DMA BASE ADDRESS REGISTER  */   
     devices.pdev_dma = pci_dev_get(pdev);
-    devices.dma_dev.dma_bar = pci_resource_start (pdev, 0);         /*  GET DMA BASE ADDRESS REGISTER  */
-    devices.dma_dev.dma_bar_size = pci_resource_len (pdev, 0);      /*  GET DMA BASE ADDRESS REGISTER SIZE  */
-    pci_set_master(pdev);                           /*  ENABLE DEVICE AS DMA  */
+    devices.dma_dev.dma_bar = pci_resource_start (pdev, 0);  
+    /*  GET DMA BASE ADDRESS REGISTER SIZE  */       
+    devices.dma_dev.dma_bar_size = pci_resource_len (pdev, 0);   
+    /*  ENABLE DEVICE AS DMA  */   
+    pci_set_master(pdev);                          
 
     /*  CREATE DMA MEMORY POOL FOR THE LLI's  */
     devices.dma_dev.dma_pool = pci_pool_create( "rgbled_devices.dma_dev.dma_pool", pdev, 4096, 32, 0 );
