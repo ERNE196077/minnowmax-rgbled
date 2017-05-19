@@ -48,6 +48,88 @@ __u32 result;
 __u32 spi_irq_sta = 0;
 __u32 fifo_level = 0;
 
+/********* SSP CONFIG VARIABLES  ************/
+__u32 ssp_sscr0_cfg = 
+            SPI_SSP_SSCR0_MOD_NORMALSSPMODE |
+            SPI_SSP_SSCR0_ACS_CLOCKBYAUDIOCLOCK |
+            SPI_SSP_SSCR0_TIM_NOINTERRUPTFIFOUNDERRUN |
+            SPI_SSP_SSCR0_RIM_NOINTERRUPTFIFOOVERRUN |
+            SPI_SSP_SSCR0_NCS_CLOCKBYECS |
+            SPI_SSP_SSCR0_EDSS_ONEPREPENDTODSS |
+            SPI_SSP_SSCR0_SCR_SERIALCLOCKRATE(20) |
+            SPI_SSP_SSCR0_SSE_SSPDISABLE |
+            SPI_SSP_SSCR0_ECS_EXTERNALCLOCKFROMGPIO |
+            SPI_SSP_SSCR0_FRF_MOTOROLA |
+            SPI_SSP_SSCR0_DSS_DATASIZESELECT(0x7) ;
+
+__u32 ssp_sscr1_cfg = 
+            SPI_SSP_SSCR1_TTELP_TXDTRISTATEONCLOCKEDGE |
+            SPI_SSP_SSCR1_TTE_TXDNOTTRISTATED |
+            SPI_SSP_SSCR1_EBCEI_NOINTERRUPTONBITCOUNTERR |
+            SPI_SSP_SSCR1_SCFR_SLAVECLKFREERUNNING |
+            SPI_SSP_SSCR1_ECRA_NOREQCLOCKFROMOTHERSSP |
+            SPI_SSP_SSCR1_ECRB_NOREQCLOCKFROMOTHERSSP |
+            SPI_SSP_SSCR1_SCLKDIR_MASTERMODECLOCK |
+            SPI_SSP_SSCR1_SFRMDIR_MASTERMODEFRAME |
+            SPI_SSP_SSCR1_RWOT_TRANSMITANDRECEIVE |
+            SPI_SSP_SSCR1_TRAIL_CPUHANDLETRAILINGBYTE |     // NEED TO CHANGE
+            SPI_SSP_SSCR1_TSRE_DMATRANSMITREQDISABLE |      // NEED TO CHANGE
+            SPI_SSP_SSCR1_RSRE_DMARECEIVEREQDISABLE |       // NEED TO CHANGE
+            SPI_SSP_SSCR1_TINTE_NOINTERRUPTONTIMEOUT |
+            SPI_SSP_SSCR1_PINTE_NOTRAILINGBYTEINTERRUPT |
+            SPI_SSP_SSCR1_IFS_FRAMEPOLARITYBYTHEFORMAT |
+            //SPI_SSP_SSCR1_STRF_RWFORRECEIVEFIFO |
+            //SPI_SSP_SSCR1_EFWR_ENABLEFIFOREADWRITE |
+            SPI_SSP_SSCR1_RFT_RECEIVEFIFOTRIGTHRESHOLD(0x0) |
+            SPI_SSP_SSCR1_TFT_TRANSMITFIFOTRIGTHRESHOLD(0xC) |
+            SPI_SSP_SSCR1_TIE_TRANSFIFOLEVELINTERRENA |    // POSSIBLY CHANGE
+            SPI_SSP_SSCR1_RIE_RECEIFIFOLEVELINTERRDISA ; 
+__u32 ssp_ssacd_cfg = 
+            SPI_SSP_SSACD_ACPS_AUDIOCLK_32_842MHZ |
+            SPI_SSP_SSACD_SCDB_SYSCLKNODIVIDED |
+            SPI_SSP_SSACD_ACDS_AUDIOCLKDIVIDER(2) ;
+
+
+/********* DMA CONFIG VARIABLES  ************/
+__u32 dma_ctl_l_cfg =
+            DMA_CTL_LO_LLPSRCEN_SRCLLPCHAINNINGDISABLE |
+            DMA_CTL_LO_LLPDSTEN_DSTLLPCHAINNINGDISABLE |
+            DMA_CTL_LO_SMS_SRCMASTERLAYER1 |
+            DMA_CTL_LO_DMS_DSTMASTERLAYER1 |
+            DMA_CTL_LO_TTFC_FLOWCONTROLBYDMA |
+            DMA_CTL_LO_DSTSCATTEREN_DESTSCATTERDISABLE |
+            DMA_CTL_LO_SRCGATHEREN_SOURCEGATHERDISABLE |
+            DMA_CTL_LO_SRCMSIZE_SRCBURSTITEMNUM(0x0) |
+            DMA_CTL_LO_DESTMSIZE_DSTBURSTITEMNUM(0x0) |
+            DMA_CTL_LO_SINC_SOURCEADDRINCREMENT |
+            DMA_CTL_LO_DINC_DESTADDRNOCHANGE |
+            DMA_CTL_LO_SRCTRWIDTH_SRCTRANSFEROF32BITS |
+            DMA_CTL_LO_DSTTRWIDTH_DSTTRANSFEROF32BITS |
+            DMA_CTL_LO_INTEN_INTERRUPTSDISABLED ;
+__u32 dma_ctl_h_cfg = 
+            DMA_CTL_HI_DONE_DONEBITZERO |
+            DMA_CTL_HI_BLOCKTS_DMAFLOWBLOCKSIZE(0x9) ;
+__u32 dma_cfg_l_cfg = 
+            DMA_CFG_LO_RELOADDST_NORELOADDSTAFTERTRANSFER |
+            DMA_CFG_LO_RELOADSRC_NORELOADSRCAFTERTRANSFER |
+            DMA_CFG_LO_MAXABRST_NOLIMITBURSTTRANSFER |
+            DMA_CFG_LO_SRCHSPOL_SRCHANDSHAKEACTIVEHIGH |
+            DMA_CFG_LO_DSTHSPOL_DSTHANDSHAKEACTIVEHIGH |
+            DMA_CFG_LO_LOCKB_BUSNOTLOCKED |
+            DMA_CFG_LO_LOCKCH_CHANNELNOTLOCKED |
+            DMA_CFG_LO_LOCKBL_BUSLOCKEDOVERDMATRANSFER |
+            DMA_CFG_LO_LOCKCHL_CHLOCKEDOVERDMATRANSFER |
+            DMA_CFG_LO_HSSELSRC_SOURCESWHANDSHAKING |               // TO BE CHANGED PROBABLY
+            DMA_CFG_LO_HSSELDST_DESTSWHANDSHAKING |
+            DMA_CFG_LO_CHSUSP_NOSUSREACTIVATEDMAACTIVITY |
+            DMA_CFG_LO_CHPRIOR_HIGHESTPRIORITY ;
+__u32 dma_cfg_h_cfg = 
+            DMA_CFG_HI_DESTPER_DSTHWHANDSHAKEIFACE(0x0) |
+            DMA_CFG_HI_SRCPER_SRCHWHANDSHAKEIFACE(0x0) |
+            DMA_CFG_HI_SSUPDEN_DISABLESRCSTATUSUPDATE |
+            DMA_CFG_HI_DSUPDEN_DISABLEDSTSTATUSUPDATE |
+            DMA_CFG_HI_FIFOMODE_SPACEDATAEQTOTRANSWDITH |
+            DMA_CFG_HI_FCMODE_SRCTRANSREQWHENTHEYOCURR ;
 
 /**************************************************************************
 ***************************************************************************
@@ -224,49 +306,10 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
     
         
         /************ SETTING SPI ************/
-        devices.spi_dev.ssp_control_block->__sscr0__ =
-            SPI_SSP_SSCR0_MOD_NORMALSSPMODE |
-            SPI_SSP_SSCR0_ACS_CLOCKBYAUDIOCLOCK |
-            SPI_SSP_SSCR0_TIM_NOINTERRUPTFIFOUNDERRUN |
-            SPI_SSP_SSCR0_RIM_NOINTERRUPTFIFOOVERRUN |
-            SPI_SSP_SSCR0_NCS_CLOCKBYECS |
-            SPI_SSP_SSCR0_EDSS_ONEPREPENDTODSS |
-            SPI_SSP_SSCR0_SCR_SERIALCLOCKRATE(20) |
-            SPI_SSP_SSCR0_SSE_SSPDISABLE |
-            SPI_SSP_SSCR0_ECS_EXTERNALCLOCKFROMGPIO |
-            SPI_SSP_SSCR0_FRF_MOTOROLA |
-            SPI_SSP_SSCR0_DSS_DATASIZESELECT(0x7) ; //0X7
-
-        devices.spi_dev.ssp_control_block->__sscr1__ =
-            SPI_SSP_SSCR1_TTELP_TXDTRISTATEONCLOCKEDGE |
-            SPI_SSP_SSCR1_TTE_TXDNOTTRISTATED |
-            SPI_SSP_SSCR1_EBCEI_NOINTERRUPTONBITCOUNTERR |
-            SPI_SSP_SSCR1_SCFR_SLAVECLKFREERUNNING |
-            SPI_SSP_SSCR1_ECRA_NOREQCLOCKFROMOTHERSSP |
-            SPI_SSP_SSCR1_ECRB_NOREQCLOCKFROMOTHERSSP |
-            SPI_SSP_SSCR1_SCLKDIR_MASTERMODECLOCK |
-            SPI_SSP_SSCR1_SFRMDIR_MASTERMODEFRAME |
-            SPI_SSP_SSCR1_RWOT_TRANSMITANDRECEIVE |
-            SPI_SSP_SSCR1_TRAIL_CPUHANDLETRAILINGBYTE |     // NEED TO CHANGE
-            SPI_SSP_SSCR1_TSRE_DMATRANSMITREQDISABLE |      // NEED TO CHANGE
-            SPI_SSP_SSCR1_RSRE_DMARECEIVEREQDISABLE |       // NEED TO CHANGE
-            SPI_SSP_SSCR1_TINTE_NOINTERRUPTONTIMEOUT |
-            SPI_SSP_SSCR1_PINTE_NOTRAILINGBYTEINTERRUPT |
-            SPI_SSP_SSCR1_IFS_FRAMEPOLARITYBYTHEFORMAT |
-            //SPI_SSP_SSCR1_STRF_RWFORRECEIVEFIFO |
-            //SPI_SSP_SSCR1_EFWR_ENABLEFIFOREADWRITE |
-            SPI_SSP_SSCR1_RFT_RECEIVEFIFOTRIGTHRESHOLD(0x0) |
-            SPI_SSP_SSCR1_TFT_TRANSMITFIFOTRIGTHRESHOLD(0xC) |
-            SPI_SSP_SSCR1_TIE_TRANSFIFOLEVELINTERRENA |    // POSSIBLY CHANGE
-            SPI_SSP_SSCR1_RIE_RECEIFIFOLEVELINTERRDISA ;    // POSSIBLY CHANGE
-
-        devices.spi_dev.ssp_control_block->__ssacd__ =
-            SPI_SSP_SSACD_ACPS_AUDIOCLK_32_842MHZ |
-            SPI_SSP_SSACD_SCDB_SYSCLKNODIVIDED |
-            SPI_SSP_SSACD_ACDS_AUDIOCLKDIVIDER(2) ;
-
+        devices.spi_dev.ssp_control_block->__sscr0__ = ssp_sscr0_cfg; 
+        devices.spi_dev.ssp_control_block->__sscr1__ = ssp_sscr1_cfg; 
+        devices.spi_dev.ssp_control_block->__ssacd__ = ssp_ssacd_cfg;
         devices.spi_dev.ssp_control_block->__sitf__ &= ~0xFFFF ;
-
         devices.spi_dev.ssp_control_block->__sitf__ |=
             SPI_SSP_SITF_SETTRANSLOWWATERMARKSPI(0x0F)    |
             SPI_SSP_SITF_SETTRANSHIGHWATERMARKSPI(0xFF) ;
@@ -276,73 +319,40 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
             SPI_SSP_PRVCLKPARAMS_N_DIVISOR(0xFF) |
             SPI_SSP_PRVCLKPARAMS_M_DIVIDEND(0x3) |
             SPI_SSP_PRVCLKPARAMS_ENABLECLOCK ;
-    
-        devices.spi_dev.ssp_control_block->__sscr0__ |= SPI_SSP_SSCR0_SSE_SSPENABLE;
-        
-        
+
         /************ SETTING DMA ************/
         devices.dma_dev.dma_cfg->__dmacfgre_l__ = 0x1;
         devices.dma_dev.dma_ch->__sar_l__ = devices.dma_dev.dma_data_phys;
-        devices.dma_dev.dma_ch->__dar_l__ = SPI_BASE_ADDR+0x10;
+        devices.dma_dev.dma_ch->__dar_l__ = SPI_BASE_ADDR + 0x10;
         devices.dma_dev.dma_ch->__llp_l__ = 0x0;
-        devices.dma_dev.dma_ch->__ctl_l__ =
-            DMA_CTL_LO_LLPSRCEN_SRCLLPCHAINNINGDISABLE |
-            DMA_CTL_LO_LLPDSTEN_DSTLLPCHAINNINGDISABLE |
-            DMA_CTL_LO_SMS_SRCMASTERLAYER1 |
-            DMA_CTL_LO_DMS_DSTMASTERLAYER1 |
-            DMA_CTL_LO_TTFC_FLOWCONTROLBYDMA |
-            DMA_CTL_LO_DSTSCATTEREN_DESTSCATTERDISABLE |
-            DMA_CTL_LO_SRCGATHEREN_SOURCEGATHERDISABLE |
-            DMA_CTL_LO_SRCMSIZE_SRCBURSTITEMNUM(0x0) |
-            DMA_CTL_LO_DESTMSIZE_DSTBURSTITEMNUM(0x0) |
-            DMA_CTL_LO_SINC_SOURCEADDRINCREMENT |
-            DMA_CTL_LO_DINC_DESTADDRNOCHANGE |
-            DMA_CTL_LO_SRCTRWIDTH_SRCTRANSFEROF32BITS |
-            DMA_CTL_LO_DSTTRWIDTH_DSTTRANSFEROF32BITS |
-            DMA_CTL_LO_INTEN_INTERRUPTSDISABLED ;
-        devices.dma_dev.dma_ch->__ctl_h__ =
-            DMA_CTL_HI_DONE_DONEBITZERO |
-            DMA_CTL_HI_BLOCKTS_DMAFLOWBLOCKSIZE(0x9) ;
-        devices.dma_dev.dma_ch->__cfg_l__ =
-            DMA_CFG_LO_RELOADDST_NORELOADDSTAFTERTRANSFER |
-            DMA_CFG_LO_RELOADSRC_NORELOADSRCAFTERTRANSFER |
-            DMA_CFG_LO_MAXABRST_NOLIMITBURSTTRANSFER |
-            DMA_CFG_LO_SRCHSPOL_SRCHANDSHAKEACTIVEHIGH |
-            DMA_CFG_LO_DSTHSPOL_DSTHANDSHAKEACTIVEHIGH |
-            DMA_CFG_LO_LOCKB_BUSNOTLOCKED |
-            DMA_CFG_LO_LOCKCH_CHANNELNOTLOCKED |
-            DMA_CFG_LO_LOCKBL_BUSLOCKEDOVERDMATRANSFER |
-            DMA_CFG_LO_LOCKCHL_CHLOCKEDOVERDMATRANSFER |
-            DMA_CFG_LO_HSSELSRC_SOURCESWHANDSHAKING |               // TO BE CHANGED PROBABLY
-            DMA_CFG_LO_HSSELDST_DESTSWHANDSHAKING |
-            DMA_CFG_LO_CHSUSP_NOSUSREACTIVATEDMAACTIVITY |
-            DMA_CFG_LO_CHPRIOR_HIGHESTPRIORITY ;
-        devices.dma_dev.dma_ch->__cfg_h__ =
-            DMA_CFG_HI_DESTPER_DSTHWHANDSHAKEIFACE(0x0) |
-            DMA_CFG_HI_SRCPER_SRCHWHANDSHAKEIFACE(0x0) |
-            DMA_CFG_HI_SSUPDEN_DISABLESRCSTATUSUPDATE |
-            DMA_CFG_HI_DSUPDEN_DISABLEDSTSTATUSUPDATE |
-            DMA_CFG_HI_FIFOMODE_SPACEDATAEQTOTRANSWDITH |
-            DMA_CFG_HI_FCMODE_SRCTRANSREQWHENTHEYOCURR ;
-
+        devices.dma_dev.dma_ch->__ctl_l__ = dma_ctl_l_cfg;
+        devices.dma_dev.dma_ch->__ctl_h__ = dma_ctl_h_cfg;
+        devices.dma_dev.dma_ch->__cfg_l__ = dma_cfg_l_cfg;
+        devices.dma_dev.dma_ch->__cfg_h__ = dma_cfg_h_cfg;
         devices.dma_dev.dma_cfg->__dmacfgre_l__ = DMA_DMACFGREG_L_DMA_ENA;
 
         break;
 
     case IOCTL_RGBLED_DECONFIGURE:
 
+        /* Disable DMA Channel */
         devices.dma_dev.dma_cfg->__chenreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number));
         
+        /* Disable DMA Request for the Chnannel */
         devices.dma_dev.dma_cfg->__reqdstreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number));
         devices.dma_dev.dma_cfg->__reqsrcreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number));
         
+        /* Disable DMA Single Request for the Chnannel */
         devices.dma_dev.dma_cfg->__sglrqdstreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number));
         devices.dma_dev.dma_cfg->__sglrqsrcreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number));
         
+        /* Disable SSP */
         devices.spi_dev.ssp_control_block->__sscr0__ &= ~SPI_SSP_SSCR0_SSE_SSPENABLE;
 
+        /* Configure SPI MOSI pin */
         GPIO_CFG_FUNCTION(devices.gpio_dev.gpio_pin_spi_mosi->__cfg__,0);
-        /* IF RGBLEDS ARE APA102 DECONFIGURE CLOCK LINE */
+        
+        /* If LED is APA102 class, configure SPI CLK pin */
         if(RGBLED_CONF_GET_LEDTYPE(devices.rgbled_config))
             GPIO_CFG_FUNCTION(devices.gpio_dev.gpio_pin_spi_clk->__cfg__,0);
 
@@ -350,7 +360,6 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
 
     case IOCTL_RGBLED_RENDER:
 
-        devices.spi_dev.ssp_control_block->__sscr0__ &= ~SPI_SSP_SSCR0_SSE_SSPENABLE;
         test_num++;
         rgbled_test(devices.dma_dev.dma_data_ptr, test_num);
         
@@ -359,23 +368,17 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
 
 
 
-        devices.dma_dev.dma_ch->__ctl_h__ =
-            DMA_CTL_HI_DONE_DONEBITZERO |
-            DMA_CTL_HI_BLOCKTS_DMAFLOWBLOCKSIZE(452);
-            devices.dma_dev.dma_ch->__sar_l__ = devices.dma_dev.dma_data_phys;
         
-
+        /* Enable SSP */
         devices.spi_dev.ssp_control_block->__sscr0__ |= SPI_SSP_SSCR0_SSE_SSPENABLE;    
       
+        /* Enable DMA Channel */
         devices.dma_dev.dma_cfg->__chenreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number)) | (0x1 << devices.dma_dev.dma_ch_number);
     
         devices.dma_dev.dma_cfg->__reqsrcreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number)) | (0x1 << devices.dma_dev.dma_ch_number);
-        //devices.dma_dev.dma_cfg->__sglrqsrcreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number)) | (0x1 << devices.dma_dev.dma_ch_number);
-        //msleep(100);
-
+        
         devices.dma_dev.dma_cfg->__reqdstreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number)) | (0x1 << devices.dma_dev.dma_ch_number);
         
-        //devices.dma_dev.dma_cfg->__sglrqdstreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number)) | (0x1 << devices.dma_dev.dma_ch_number);
          
         for ( k = 0; k < 100; ++k)
         {
