@@ -1,4 +1,4 @@
-cmd_/home/minnow/workspace/minnow-ws281x/dma.o := gcc -Wp,-MD,/home/minnow/workspace/minnow-ws281x/.dma.o.d  -nostdinc -isystem /usr/lib/gcc/x86_64-pc-linux-gnu/6.3.1/include -I./arch/x86/include -I./arch/x86/include/generated/uapi -I./arch/x86/include/generated  -I./include -I./arch/x86/include/uapi -I./include/uapi -I./include/generated/uapi -include ./include/linux/kconfig.h -D__KERNEL__ -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs -fno-strict-aliasing -fno-common -Werror-implicit-function-declaration -Wno-format-security -std=gnu89 -fno-PIE -mno-sse -mno-mmx -mno-sse2 -mno-3dnow -mno-avx -m64 -falign-jumps=1 -falign-loops=1 -mno-80387 -mno-fp-ret-in-387 -mpreferred-stack-boundary=3 -mskip-rax-setup -mtune=generic -mno-red-zone -mcmodel=kernel -funit-at-a-time -maccumulate-outgoing-args -DCONFIG_AS_CFI=1 -DCONFIG_AS_CFI_SIGNAL_FRAME=1 -DCONFIG_AS_CFI_SECTIONS=1 -DCONFIG_AS_FXSAVEQ=1 -DCONFIG_AS_SSSE3=1 -DCONFIG_AS_CRC32=1 -DCONFIG_AS_AVX=1 -DCONFIG_AS_AVX2=1 -DCONFIG_AS_AVX512=1 -DCONFIG_AS_SHA1_NI=1 -DCONFIG_AS_SHA256_NI=1 -pipe -Wno-sign-compare -fno-asynchronous-unwind-tables -fno-delete-null-pointer-checks -Wno-frame-address -O2 --param=allow-store-data-races=0 -DCC_HAVE_ASM_GOTO -Wframe-larger-than=2048 -fstack-protector-strong -Wno-unused-but-set-variable -Wno-unused-const-variable -fno-omit-frame-pointer -fno-optimize-sibling-calls -fno-var-tracking-assignments -pg -mfentry -DCC_USING_FENTRY -Wdeclaration-after-statement -Wno-pointer-sign -fno-strict-overflow -fconserve-stack -Werror=implicit-int -Werror=strict-prototypes -Werror=date-time -Werror=incompatible-pointer-types  -DMODULE  -DKBUILD_BASENAME='"dma"'  -DKBUILD_MODNAME='"main_rgbled"' -c -o /home/minnow/workspace/minnow-ws281x/.tmp_dma.o /home/minnow/workspace/minnow-ws281x/dma.c
+cmd_/home/minnow/workspace/minnow-ws281x/dma.o := gcc -Wp,-MD,/home/minnow/workspace/minnow-ws281x/.dma.o.d  -nostdinc -isystem /usr/lib/gcc/x86_64-pc-linux-gnu/6.2.1/include -I./arch/x86/include -I./arch/x86/include/generated/uapi -I./arch/x86/include/generated  -I./include -I./arch/x86/include/uapi -I./include/uapi -I./include/generated/uapi -include ./include/linux/kconfig.h -D__KERNEL__ -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs -fno-strict-aliasing -fno-common -Werror-implicit-function-declaration -Wno-format-security -std=gnu89 -fno-PIE -mno-sse -mno-mmx -mno-sse2 -mno-3dnow -mno-avx -m64 -falign-jumps=1 -falign-loops=1 -mno-80387 -mno-fp-ret-in-387 -mpreferred-stack-boundary=3 -mskip-rax-setup -mtune=generic -mno-red-zone -mcmodel=kernel -funit-at-a-time -maccumulate-outgoing-args -DCONFIG_AS_CFI=1 -DCONFIG_AS_CFI_SIGNAL_FRAME=1 -DCONFIG_AS_CFI_SECTIONS=1 -DCONFIG_AS_FXSAVEQ=1 -DCONFIG_AS_SSSE3=1 -DCONFIG_AS_CRC32=1 -DCONFIG_AS_AVX=1 -DCONFIG_AS_AVX2=1 -DCONFIG_AS_SHA1_NI=1 -DCONFIG_AS_SHA256_NI=1 -pipe -Wno-sign-compare -fno-asynchronous-unwind-tables -fno-delete-null-pointer-checks -Wno-maybe-uninitialized -Wno-frame-address -O2 --param=allow-store-data-races=0 -Wframe-larger-than=2048 -fstack-protector-strong -Wno-unused-but-set-variable -Wno-unused-const-variable -fno-omit-frame-pointer -fno-optimize-sibling-calls -fno-var-tracking-assignments -pg -mfentry -DCC_USING_FENTRY -Wdeclaration-after-statement -Wno-pointer-sign -fno-strict-overflow -fconserve-stack -Werror=implicit-int -Werror=strict-prototypes -Werror=date-time -Werror=incompatible-pointer-types -DCC_HAVE_ASM_GOTO  -DMODULE  -DKBUILD_BASENAME='"dma"'  -DKBUILD_MODNAME='"main_rgbled"' -c -o /home/minnow/workspace/minnow-ws281x/.tmp_dma.o /home/minnow/workspace/minnow-ws281x/dma.c
 
 source_/home/minnow/workspace/minnow-ws281x/dma.o := /home/minnow/workspace/minnow-ws281x/dma.c
 
@@ -6,9 +6,7 @@ deps_/home/minnow/workspace/minnow-ws281x/dma.o := \
   /home/minnow/workspace/minnow-ws281x/headers/dma.h \
   include/linux/pci.h \
     $(wildcard include/config/pci/iov.h) \
-    $(wildcard include/config/pcieaer.h) \
     $(wildcard include/config/pcieaspm.h) \
-    $(wildcard include/config/pcie/ptm.h) \
     $(wildcard include/config/pci/msi.h) \
     $(wildcard include/config/pci/ats.h) \
     $(wildcard include/config/pci/domains/generic.h) \
@@ -16,6 +14,7 @@ deps_/home/minnow/workspace/minnow-ws281x/dma.o := \
     $(wildcard include/config/pci.h) \
     $(wildcard include/config/sysfs.h) \
     $(wildcard include/config/pcieportbus.h) \
+    $(wildcard include/config/pcieaer.h) \
     $(wildcard include/config/pcie/ecrc.h) \
     $(wildcard include/config/ht/irq.h) \
     $(wildcard include/config/pci/domains.h) \
@@ -67,25 +66,15 @@ deps_/home/minnow/workspace/minnow-ws281x/dma.o := \
   include/uapi/linux/uuid.h \
   include/linux/string.h \
     $(wildcard include/config/binary/printf.h) \
-  /usr/lib/gcc/x86_64-pc-linux-gnu/6.3.1/include/stdarg.h \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/6.2.1/include/stdarg.h \
   include/uapi/linux/string.h \
   arch/x86/include/asm/string.h \
   arch/x86/include/asm/string_64.h \
     $(wildcard include/config/kmemcheck.h) \
-    $(wildcard include/config/x86/mce.h) \
-  include/linux/jump_label.h \
-    $(wildcard include/config/jump/label.h) \
-    $(wildcard include/config/modules.h) \
-  arch/x86/include/asm/jump_label.h \
-    $(wildcard include/config/x86/64.h) \
-  arch/x86/include/asm/asm.h \
-  arch/x86/include/asm/nops.h \
-    $(wildcard include/config/mk7.h) \
-    $(wildcard include/config/x86/p6/nop.h) \
-  include/linux/stringify.h \
   include/linux/init.h \
+    $(wildcard include/config/broken/rodata.h) \
     $(wildcard include/config/debug/rodata.h) \
-    $(wildcard include/config/debug/set/module/ronx.h) \
+    $(wildcard include/config/lto.h) \
   include/linux/ioport.h \
     $(wildcard include/config/memory/hotremove.h) \
   include/linux/list.h \
@@ -103,22 +92,28 @@ deps_/home/minnow/workspace/minnow-ws281x/dma.o := \
     $(wildcard include/config/tracing.h) \
     $(wildcard include/config/ftrace/mcount/record.h) \
   include/linux/linkage.h \
+  include/linux/stringify.h \
   include/linux/export.h \
     $(wildcard include/config/have/underscore/symbol/prefix.h) \
+    $(wildcard include/config/modules.h) \
     $(wildcard include/config/modversions.h) \
-    $(wildcard include/config/module/rel/crcs.h) \
     $(wildcard include/config/trim/unused/ksyms.h) \
     $(wildcard include/config/unused/symbols.h) \
   arch/x86/include/asm/linkage.h \
+    $(wildcard include/config/x86/64.h) \
     $(wildcard include/config/x86/alignment/16.h) \
   include/linux/bitops.h \
   arch/x86/include/asm/bitops.h \
     $(wildcard include/config/x86/cmov.h) \
   arch/x86/include/asm/alternative.h \
     $(wildcard include/config/smp.h) \
+  arch/x86/include/asm/asm.h \
   arch/x86/include/asm/rmwcc.h \
   arch/x86/include/asm/barrier.h \
     $(wildcard include/config/x86/ppro/fence.h) \
+  arch/x86/include/asm/nops.h \
+    $(wildcard include/config/mk7.h) \
+    $(wildcard include/config/x86/p6/nop.h) \
   include/asm-generic/barrier.h \
   include/asm-generic/bitops/find.h \
     $(wildcard include/config/generic/find/first/bit.h) \
@@ -152,7 +147,6 @@ deps_/home/minnow/workspace/minnow-ws281x/dma.o := \
   include/linux/typecheck.h \
   include/linux/printk.h \
     $(wildcard include/config/message/loglevel/default.h) \
-    $(wildcard include/config/console/loglevel/default.h) \
     $(wildcard include/config/early/printk.h) \
     $(wildcard include/config/printk/nmi.h) \
     $(wildcard include/config/printk.h) \
@@ -167,6 +161,9 @@ deps_/home/minnow/workspace/minnow-ws281x/dma.o := \
     $(wildcard include/config/x86/internode/cache/shift.h) \
     $(wildcard include/config/x86/vsmp.h) \
   include/linux/dynamic_debug.h \
+    $(wildcard include/config/jump/label.h) \
+  include/linux/jump_label.h \
+  arch/x86/include/asm/jump_label.h \
   include/linux/errno.h \
   include/uapi/linux/errno.h \
   arch/x86/include/uapi/asm/errno.h \
@@ -181,8 +178,8 @@ deps_/home/minnow/workspace/minnow-ws281x/dma.o := \
     $(wildcard include/config/kernfs.h) \
   include/linux/err.h \
   include/linux/mutex.h \
-    $(wildcard include/config/mutex/spin/on/owner.h) \
     $(wildcard include/config/debug/mutexes.h) \
+    $(wildcard include/config/mutex/spin/on/owner.h) \
   arch/x86/include/asm/current.h \
   arch/x86/include/asm/percpu.h \
     $(wildcard include/config/x86/64/smp.h) \
@@ -199,6 +196,7 @@ deps_/home/minnow/workspace/minnow-ws281x/dma.o := \
     $(wildcard include/config/debug/spinlock.h) \
   arch/x86/include/asm/spinlock_types.h \
     $(wildcard include/config/paravirt/spinlocks.h) \
+    $(wildcard include/config/queued/spinlocks.h) \
   include/asm-generic/qspinlock_types.h \
   include/asm-generic/qrwlock_types.h \
   include/linux/lockdep.h \
@@ -216,6 +214,7 @@ deps_/home/minnow/workspace/minnow-ws281x/dma.o := \
   arch/x86/include/asm/processor.h \
     $(wildcard include/config/cc/stackprotector.h) \
     $(wildcard include/config/vm86.h) \
+    $(wildcard include/config/m486.h) \
     $(wildcard include/config/x86/debugctlmsr.h) \
     $(wildcard include/config/xen.h) \
   arch/x86/include/asm/processor-flags.h \
@@ -275,7 +274,6 @@ deps_/home/minnow/workspace/minnow-ws281x/dma.o := \
     $(wildcard include/config/s390.h) \
   include/linux/bug.h \
     $(wildcard include/config/generic/bug.h) \
-    $(wildcard include/config/bug/on/data/corruption.h) \
   arch/x86/include/asm/bug.h \
     $(wildcard include/config/debug/bugverbose.h) \
   include/asm-generic/bug.h \
@@ -305,8 +303,6 @@ deps_/home/minnow/workspace/minnow-ws281x/dma.o := \
     $(wildcard include/config/trace/irqflags/support.h) \
   arch/x86/include/asm/irqflags.h \
   include/linux/osq_lock.h \
-  include/linux/debug_locks.h \
-    $(wildcard include/config/debug/locking/api/selftests.h) \
   include/linux/idr.h \
   include/linux/rcupdate.h \
     $(wildcard include/config/tiny/rcu.h) \
@@ -329,12 +325,10 @@ deps_/home/minnow/workspace/minnow-ws281x/dma.o := \
     $(wildcard include/config/preempt/notifiers.h) \
   arch/x86/include/asm/preempt.h \
   include/linux/thread_info.h \
-    $(wildcard include/config/thread/info/in/task.h) \
+    $(wildcard include/config/compat.h) \
     $(wildcard include/config/debug/stack/usage.h) \
     $(wildcard include/config/have/arch/within/stack/frames.h) \
     $(wildcard include/config/hardened/usercopy.h) \
-  include/linux/restart_block.h \
-    $(wildcard include/config/compat.h) \
   arch/x86/include/asm/thread_info.h \
     $(wildcard include/config/ia32/emulation.h) \
   arch/x86/include/asm/cpufeature.h \
@@ -427,7 +421,6 @@ deps_/home/minnow/workspace/minnow-ws281x/dma.o := \
   include/uapi/linux/sysctl.h \
   include/linux/device.h \
     $(wildcard include/config/debug/devres.h) \
-    $(wildcard include/config/srcu.h) \
     $(wildcard include/config/generic/msi/irq/domain.h) \
     $(wildcard include/config/pinctrl.h) \
     $(wildcard include/config/generic/msi/irq.h) \
@@ -520,6 +513,7 @@ deps_/home/minnow/workspace/minnow-ws281x/dma.o := \
   include/linux/edd.h \
   include/uapi/linux/edd.h \
   arch/x86/include/asm/e820.h \
+    $(wildcard include/config/efi.h) \
     $(wildcard include/config/hibernation.h) \
   arch/x86/include/uapi/asm/e820.h \
     $(wildcard include/config/x86/pmem/legacy.h) \
@@ -546,7 +540,6 @@ deps_/home/minnow/workspace/minnow-ws281x/dma.o := \
   arch/x86/include/asm/numa.h \
     $(wildcard include/config/numa/emu.h) \
   arch/x86/include/asm/topology.h \
-    $(wildcard include/config/sched/mc/prio.h) \
   include/asm-generic/topology.h \
     $(wildcard include/config/have/memoryless/nodes.h) \
   arch/x86/include/asm/mmu.h \
@@ -555,7 +548,6 @@ deps_/home/minnow/workspace/minnow-ws281x/dma.o := \
     $(wildcard include/config/acpi/sleep.h) \
   arch/x86/include/asm/io.h \
     $(wildcard include/config/mtrr.h) \
-    $(wildcard include/config/x86/pat.h) \
   arch/x86/include/generated/asm/early_ioremap.h \
   include/asm-generic/early_ioremap.h \
     $(wildcard include/config/generic/early/ioremap.h) \
@@ -577,10 +569,15 @@ deps_/home/minnow/workspace/minnow-ws281x/dma.o := \
   include/xen/interface/features.h \
   arch/x86/include/uapi/asm/vsyscall.h \
   include/asm-generic/fixmap.h \
+  arch/x86/include/asm/idle.h \
   arch/x86/include/asm/io_apic.h \
   arch/x86/include/asm/irq_vectors.h \
     $(wildcard include/config/have/kvm.h) \
   include/linux/rcu_sync.h \
+  include/linux/blk_types.h \
+    $(wildcard include/config/blk/cgroup.h) \
+    $(wildcard include/config/blk/dev/integrity.h) \
+  include/linux/bvec.h \
   include/linux/delayed_call.h \
   include/uapi/linux/fs.h \
   include/uapi/linux/limits.h \
@@ -672,7 +669,6 @@ deps_/home/minnow/workspace/minnow-ws281x/dma.o := \
     $(wildcard include/config/cgroup/sched.h) \
     $(wildcard include/config/blk/dev/io/trace.h) \
     $(wildcard include/config/compat/brk.h) \
-    $(wildcard include/config/arch/has/scaled/cputime.h) \
     $(wildcard include/config/virt/cpu/accounting/gen.h) \
     $(wildcard include/config/sysvipc.h) \
     $(wildcard include/config/auditsyscall.h) \
@@ -681,7 +677,6 @@ deps_/home/minnow/workspace/minnow-ws281x/dma.o := \
     $(wildcard include/config/task/xacct.h) \
     $(wildcard include/config/cpusets.h) \
     $(wildcard include/config/cgroups.h) \
-    $(wildcard include/config/intel/rdt/a.h) \
     $(wildcard include/config/futex.h) \
     $(wildcard include/config/arch/want/batched/unmap/tlb/flush.h) \
     $(wildcard include/config/fault/injection.h) \
@@ -690,7 +685,6 @@ deps_/home/minnow/workspace/minnow-ws281x/dma.o := \
     $(wildcard include/config/kcov.h) \
     $(wildcard include/config/uprobes.h) \
     $(wildcard include/config/bcache.h) \
-    $(wildcard include/config/vmap/stack.h) \
     $(wildcard include/config/arch/wants/dynamic/task/struct.h) \
     $(wildcard include/config/have/unstable/sched/clock.h) \
     $(wildcard include/config/irq/time/accounting.h) \
@@ -778,13 +772,8 @@ deps_/home/minnow/workspace/minnow-ws281x/dma.o := \
   include/linux/cgroup-defs.h \
     $(wildcard include/config/sock/cgroup/data.h) \
   include/linux/percpu-refcount.h \
-  include/linux/bpf-cgroup.h \
-    $(wildcard include/config/cgroup/bpf.h) \
-  include/uapi/linux/bpf.h \
-  include/uapi/linux/bpf_common.h \
   include/linux/cgroup_subsys.h \
     $(wildcard include/config/cgroup/cpuacct.h) \
-    $(wildcard include/config/blk/cgroup.h) \
     $(wildcard include/config/cgroup/device.h) \
     $(wildcard include/config/cgroup/freezer.h) \
     $(wildcard include/config/cgroup/net/classid.h) \
@@ -833,8 +822,11 @@ deps_/home/minnow/workspace/minnow-ws281x/dma.o := \
     $(wildcard include/config/page/poisoning.h) \
     $(wildcard include/config/debug/pagealloc.h) \
     $(wildcard include/config/hugetlbfs.h) \
+  include/linux/debug_locks.h \
+    $(wildcard include/config/debug/locking/api/selftests.h) \
   include/linux/page_ext.h \
     $(wildcard include/config/idle/page/tracking.h) \
+    $(wildcard include/config/page/owner.h) \
   include/linux/stacktrace.h \
     $(wildcard include/config/stacktrace.h) \
     $(wildcard include/config/user/stacktrace/support.h) \
@@ -861,7 +853,6 @@ deps_/home/minnow/workspace/minnow-ws281x/dma.o := \
     $(wildcard include/config/balloon/compaction.h) \
   arch/x86/include/asm/pci.h \
     $(wildcard include/config/pci/msi/irq/domain.h) \
-    $(wildcard include/config/vmd.h) \
   arch/x86/include/asm/pci_64.h \
     $(wildcard include/config/calgary/iommu.h) \
   include/asm-generic/pci.h \
