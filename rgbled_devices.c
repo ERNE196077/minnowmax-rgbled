@@ -21,13 +21,14 @@ void rgbled_test(__u32 *data, __u32 test_var ){
 	g = (gx) ? g-1 : g+1;
 
 
-	for ( i = 0 ; i < 450 ; i++ ){
+	for ( i = 0 ; i < 600 ; i++ ){
 		
 			(ws281x_data + i)->r = RGBLEDWS281X_RGBCONV(r);
 			(ws281x_data + i)->g = RGBLEDWS281X_RGBCONV(g);
 			(ws281x_data + i)->b = RGBLEDWS281X_RGBCONV(b);
 		
 	}
+	/*
 	(ws281x_data + 451)->r = 0x0;
 	(ws281x_data + 451)->g = 0x0;
 	(ws281x_data + 451)->b = 0x0;
@@ -35,9 +36,5 @@ void rgbled_test(__u32 *data, __u32 test_var ){
 	(ws281x_data + 452)->r = 0x0;
 	(ws281x_data + 452)->g = 0x0;
 	(ws281x_data + 452)->b = 0x0;
-		
-		printk(KERN_INFO"LED %d RED %08x \n",0,(ws281x_data)->r);
-		printk(KERN_INFO"LED %d GREEN %08x \n",0,(ws281x_data)->g);
-		printk(KERN_INFO"LED %d BLUE %08x \n\n",0,(ws281x_data)->b);
-
+	*/	
 }

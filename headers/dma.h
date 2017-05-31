@@ -206,7 +206,8 @@ typedef struct{
 			 __u32          dma_bar;
 			 __u32	        dma_bar_size;
 	volatile __u32          *dma_base;
-	volatile dma_ch_t  		*dma_ch;
+	volatile dma_ch_t  		*dma_tx_ch;
+	volatile dma_ch_t  		*dma_rx_ch;
     volatile dma_cfg_t      *dma_cfg;
     struct   pci_pool       *dma_pool;
        		 __u32       	*dma_data_ptr;
