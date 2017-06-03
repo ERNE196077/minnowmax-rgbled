@@ -27,6 +27,7 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("ernestrc");
 MODULE_DESCRIPTION("MinnowboardMAX APA102/WS281X module.");
 MODULE_SUPPORTED_DEVICE("MinnowboardMAX");
+MODULE_INFO(intree, "Y");
 
 /********* DEVICE VARIABLES  ************/
 static int open = 0 ;
@@ -47,6 +48,7 @@ __u32 test_num = 0;
 __u32 result;
 __u32 spi_irq_sta = 0;
 __u32 fifo_level = 0;
+__u32 rx_fifo_level = 0;
 __u32 *ptrDmaRxData;
 
 /********* SSP CONFIG VARIABLES  ************/
@@ -54,7 +56,7 @@ __u32 ssp_sscr0_cfg =
             SPI_SSP_SSCR0_MOD_NORMALSSPMODE |
             SPI_SSP_SSCR0_ACS_CLOCKBYAUDIOCLOCK |
             SPI_SSP_SSCR0_TIM_NOINTERRUPTFIFOUNDERRUN |
-            SPI_SSP_SSCR0_RIM_INTERRUPTONFIFOOVERRUN |
+            SPI_SSP_SSCR0_RIM_NOINTERRUPTFIFOOVERRUN |
             SPI_SSP_SSCR0_NCS_CLOCKBYECS |
             SPI_SSP_SSCR0_EDSS_ONEPREPENDTODSS |
             SPI_SSP_SSCR0_SCR_SERIALCLOCKRATE(20) |
@@ -75,7 +77,7 @@ __u32 ssp_sscr1_cfg =
             SPI_SSP_SSCR1_RWOT_TRANSMITANDRECEIVE |
             SPI_SSP_SSCR1_TRAIL_CPUHANDLETRAILINGBYTE |     // NEED TO CHANGE
             SPI_SSP_SSCR1_TSRE_DMATRANSMITREQENABLE |      // NEED TO CHANGE
-            SPI_SSP_SSCR1_RSRE_DMARECEIVEREQDISABLE |       // NEED TO CHANGE
+            SPI_SSP_SSCR1_RSRE_DMARECEIVEREQENABLE |       // NEED TO CHANGE
             SPI_SSP_SSCR1_TINTE_NOINTERRUPTONTIMEOUT |
             SPI_SSP_SSCR1_PINTE_NOTRAILINGBYTEINTERRUPT |
             SPI_SSP_SSCR1_IFS_FRAMEPOLARITYBYTHEFORMAT |
@@ -91,14 +93,15 @@ __u32 ssp_ssacd_cfg =
             SPI_SSP_SSACD_ACDS_AUDIOCLKDIVIDER(2) ;
 
 
-/********* DMA CONFIG VARIABLES  ************/
-__u32 dma_ctl_l_cfg =
+/********* DMA TX CONFIG VARIABLES  ************/
+__u32 dma_tx_ctl_l_cfg =
             DMA_CTL_LO_LLPSRCEN_SRCLLPCHAINNINGDISABLE |
             DMA_CTL_LO_LLPDSTEN_DSTLLPCHAINNINGDISABLE |
             DMA_CTL_LO_SMS_SRCMASTERLAYER1 |
             DMA_CTL_LO_DMS_DSTMASTERLAYER1 |
-            DMA_CTL_LO_TTFC_FLOWCONTROLBYDMA |
+            //DMA_CTL_LO_TTFC_FLOWCONTROLBYDMA |
             //DMA_CTL_LO_TTFC_FLOWCONTROLBYDEST |
+            (0x6 << 20) |
             DMA_CTL_LO_DSTSCATTEREN_DESTSCATTERDISABLE |
             DMA_CTL_LO_SRCGATHEREN_SOURCEGATHERDISABLE |
             DMA_CTL_LO_SRCMSIZE_SRCBURSTITEMNUM(0x7) |
@@ -108,10 +111,10 @@ __u32 dma_ctl_l_cfg =
             DMA_CTL_LO_SRCTRWIDTH_SRCTRANSFEROF32BITS |
             DMA_CTL_LO_DSTTRWIDTH_DSTTRANSFEROF32BITS |
             DMA_CTL_LO_INTEN_INTERRUPTSDISABLED ;
-__u32 dma_ctl_h_cfg = 
+__u32 dma_tx_ctl_h_cfg = 
             DMA_CTL_HI_DONE_DONEBITZERO |
-            DMA_CTL_HI_BLOCKTS_DMAFLOWBLOCKSIZE(0x40) ; // Size of SSP fifo
-__u32 dma_cfg_l_cfg = 
+            DMA_CTL_HI_BLOCKTS_DMAFLOWBLOCKSIZE(0x1B0) ; // Size of SSP fifo
+__u32 dma_tx_cfg_l_cfg = 
             DMA_CFG_LO_RELOADDST_NORELOADDSTAFTERTRANSFER |
             DMA_CFG_LO_RELOADSRC_NORELOADSRCAFTERTRANSFER |
             DMA_CFG_LO_MAXABRST_NOLIMITBURSTTRANSFER |
@@ -123,18 +126,61 @@ __u32 dma_cfg_l_cfg =
             DMA_CFG_LO_LOCKCHL_CHLOCKEDOVERDMATRANSFER |
             //DMA_CFG_LO_HSSELSRC_SOURCEHWHANDSHAKING |
             DMA_CFG_LO_HSSELSRC_SOURCESWHANDSHAKING |               // TO BE CHANGED PROBABLY
-            //DMA_CFG_LO_HSSELDST_DESTSWHANDSHAKING |
-            DMA_CFG_LO_HSSELDST_DESTHWHANDSHAKING |
+            DMA_CFG_LO_HSSELDST_DESTSWHANDSHAKING |
+            //DMA_CFG_LO_HSSELDST_DESTHWHANDSHAKING |
             DMA_CFG_LO_CHSUSP_NOSUSREACTIVATEDMAACTIVITY |
             DMA_CFG_LO_CHPRIOR_HIGHESTPRIORITY ;
-__u32 dma_cfg_h_cfg = 
-            DMA_CFG_HI_DESTPER_DSTHWHANDSHAKEIFACE(0x19) |
+__u32 dma_tx_cfg_h_cfg = 
+            DMA_CFG_HI_DESTPER_DSTHWHANDSHAKEIFACE(19) |
             DMA_CFG_HI_SRCPER_SRCHWHANDSHAKEIFACE(0x0) |
             DMA_CFG_HI_SSUPDEN_DISABLESRCSTATUSUPDATE |
             DMA_CFG_HI_DSUPDEN_DISABLEDSTSTATUSUPDATE |
             DMA_CFG_HI_FIFOMODE_SPACEDATAEQTOTRANSWDITH |
             DMA_CFG_HI_FCMODE_SRCTRANSREQWHENTHEYOCURR ;
 
+/********* DMA RX CONFIG VARIABLES  ************/
+__u32 dma_rx_ctl_l_cfg =
+            DMA_CTL_LO_LLPSRCEN_SRCLLPCHAINNINGDISABLE |
+            DMA_CTL_LO_LLPDSTEN_DSTLLPCHAINNINGDISABLE |
+            DMA_CTL_LO_SMS_SRCMASTERLAYER1 |
+            DMA_CTL_LO_DMS_DSTMASTERLAYER1 |
+            DMA_CTL_LO_TTFC_FLOWCONTROLBYDMA |
+            //DMA_CTL_LO_TTFC_FLOWCONTROLBYDEST |
+            DMA_CTL_LO_DSTSCATTEREN_DESTSCATTERDISABLE |
+            DMA_CTL_LO_SRCGATHEREN_SOURCEGATHERDISABLE |
+            DMA_CTL_LO_SRCMSIZE_SRCBURSTITEMNUM(0x7) |
+            DMA_CTL_LO_DESTMSIZE_DSTBURSTITEMNUM(0x7) |
+            DMA_CTL_LO_SINC_SOURCEADDRNOCHANGE |
+            DMA_CTL_LO_DINC_DESTADDRNOCHANGE |
+            DMA_CTL_LO_SRCTRWIDTH_SRCTRANSFEROF32BITS |
+            DMA_CTL_LO_DSTTRWIDTH_DSTTRANSFEROF32BITS |
+            DMA_CTL_LO_INTEN_INTERRUPTSDISABLED ;
+__u32 dma_rx_ctl_h_cfg = 
+            DMA_CTL_HI_DONE_DONEBITZERO |
+            DMA_CTL_HI_BLOCKTS_DMAFLOWBLOCKSIZE(0x1B0) ; // Size of SSP fifo
+__u32 dma_rx_cfg_l_cfg = 
+            DMA_CFG_LO_RELOADDST_NORELOADDSTAFTERTRANSFER |
+            DMA_CFG_LO_RELOADSRC_NORELOADSRCAFTERTRANSFER |
+            DMA_CFG_LO_MAXABRST_NOLIMITBURSTTRANSFER |
+            DMA_CFG_LO_SRCHSPOL_SRCHANDSHAKEACTIVEHIGH |
+            DMA_CFG_LO_DSTHSPOL_DSTHANDSHAKEACTIVEHIGH |
+            DMA_CFG_LO_LOCKB_BUSNOTLOCKED |
+            DMA_CFG_LO_LOCKCH_CHANNELNOTLOCKED |
+            DMA_CFG_LO_LOCKBL_BUSLOCKEDOVERDMATRANSFER |
+            DMA_CFG_LO_LOCKCHL_CHLOCKEDOVERDMATRANSFER |
+            //DMA_CFG_LO_HSSELSRC_SOURCEHWHANDSHAKING |
+            DMA_CFG_LO_HSSELSRC_SOURCEHWHANDSHAKING |               // TO BE CHANGED PROBABLY
+            //DMA_CFG_LO_HSSELDST_DESTSWHANDSHAKING |
+            DMA_CFG_LO_HSSELDST_DESTSWHANDSHAKING |
+            DMA_CFG_LO_CHSUSP_NOSUSREACTIVATEDMAACTIVITY |
+            DMA_CFG_LO_CHPRIOR_HIGHESTPRIORITY ;
+__u32 dma_rx_cfg_h_cfg = 
+            DMA_CFG_HI_DESTPER_DSTHWHANDSHAKEIFACE(0x0) |
+            DMA_CFG_HI_SRCPER_SRCHWHANDSHAKEIFACE(0x19) |
+            DMA_CFG_HI_SSUPDEN_DISABLESRCSTATUSUPDATE |
+            DMA_CFG_HI_DSUPDEN_DISABLEDSTSTATUSUPDATE |
+            DMA_CFG_HI_FIFOMODE_SPACEDATAEQTOTRANSWDITH |
+            DMA_CFG_HI_FCMODE_SRCTRANSREQWHENTHEYOCURR ;
 /**************************************************************************
 ***************************************************************************
 ***************************************************************************
@@ -178,23 +224,23 @@ static irqreturn_t short_spi_interrupt(int irq, void *dev_id)
     if ( devices.spi_dev.ssp_control_block->__sssr__ & SPI_SSP_SSSR_TNF_TRANSMITFIFONOTFULL ){
         count3++;
         /* PRINT USEFUL INFORMATION */
-        /*spi_irq_sta = devices.spi_dev.ssp_control_block->__sssr__;
+        spi_irq_sta = devices.spi_dev.ssp_control_block->__sssr__;
         sscr1 = devices.spi_dev.ssp_control_block->__sscr1__;
         
-        fifo_level = (devices.spi_dev.ssp_control_block->__sitf__ & SPI_SSP_SITF_READTRANSFIFOENTRIESSPI) >> 20 ;
+        fifo_level = (devices.spi_dev.ssp_control_block->__sitf__ & SPI_SSP_SITF_SITFL_READTXFIFOENTRIESSPI) >> 16 ;
         printk(KERN_INFO"***************************");
         printk(KERN_INFO"SPI interrupt!! \nSTATUS : 0x%08x\nFIFO level : %d\n SSCR1 : %08x\nCount3 : %d\n DMA_SRCADDR : %08x\n\n",spi_irq_sta, fifo_level,sscr1,count3,devices.dma_dev.dma_tx_ch->__sar_l__);
-         */
+        
         if( count3 < 5){
             devices.dma_dev.dma_cfg->__chenreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number));
             devices.dma_dev.dma_cfg->__dmacfgre_l__ = 0x1;
             devices.dma_dev.dma_tx_ch->__sar_l__ = devices.dma_dev.dma_data_phys;// + (0x100 * count3);
             devices.dma_dev.dma_tx_ch->__dar_l__ = SPI_BASE_ADDR + 0x10;
             devices.dma_dev.dma_tx_ch->__llp_l__ = 0x0;
-            devices.dma_dev.dma_tx_ch->__ctl_l__ = dma_ctl_l_cfg;
-            devices.dma_dev.dma_tx_ch->__ctl_h__ = dma_ctl_h_cfg;
-            devices.dma_dev.dma_tx_ch->__cfg_l__ = dma_cfg_l_cfg;
-            devices.dma_dev.dma_tx_ch->__cfg_h__ = dma_cfg_h_cfg;
+            devices.dma_dev.dma_tx_ch->__ctl_l__ = dma_tx_ctl_l_cfg;
+            devices.dma_dev.dma_tx_ch->__ctl_h__ = dma_tx_ctl_h_cfg;
+            devices.dma_dev.dma_tx_ch->__cfg_l__ = dma_tx_cfg_l_cfg;
+            devices.dma_dev.dma_tx_ch->__cfg_h__ = dma_tx_cfg_h_cfg;
             devices.dma_dev.dma_cfg->__dmacfgre_l__ = DMA_DMACFGREG_L_DMA_ENA;
             devices.dma_dev.dma_cfg->__chenreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number)) | (0x1 << devices.dma_dev.dma_ch_number);
     
@@ -212,19 +258,19 @@ static irqreturn_t short_spi_interrupt(int irq, void *dev_id)
         //sscr1 &= ( SPI_SSP_SSCR1_TFT_TRANSMITFIFOTRIGTHRESHOLD(8) | SPI_SSP_SSCR1_RFT_RECEIVEFIFOTRIGTHRESHOLD(8) );
 
         devices.spi_dev.ssp_control_block->__sscr1__ = sscr1 ;
-
+        /*
         do {
                  while ( devices.spi_dev.ssp_control_block->__sssr__ & SPI_SSP_SSSR_RNE_RECEIVEFIFONOTEMPTY) {
                          ssdr = devices.spi_dev.ssp_control_block->__ssdr__;
                  }
          } while ( devices.spi_dev.ssp_control_block->__sssr__ & SPI_SSP_SSSR_BSY_SPIBUSY );
         
-      
+      */
          
         /*
         spi_irq_sta = devices.spi_dev.ssp_control_block->__sssr__;
         sscr1 = devices.spi_dev.ssp_control_block->__sscr1__;
-        fifo_level = (devices.spi_dev.ssp_control_block->__sitf__ & SPI_SSP_SITF_READTRANSFIFOENTRIESSPI) >> 20 ;
+        fifo_level = (devices.spi_dev.ssp_control_block->__sitf__ & SPI_SSP_SITF_SITFL_READTXFIFOENTRIESSPI) >> 16 ;
         printk(KERN_INFO"SPI interrupt!! \nSTATUS : 0x%08x\nFIFO level : %d\n SSCR1 : %08x\nCount3 : %d\n DMA_SRCADDR : %08x\n\n",spi_irq_sta, fifo_level,sscr1,count3,devices.dma_dev.dma_tx_ch->__sar_l__);
         */
         return IRQ_HANDLED;
@@ -241,7 +287,7 @@ static irqreturn_t short_dma_interrupt(int irq, void *dev_id)
     spi_irq_sta = devices.spi_dev.ssp_control_block->__sssr__;
 
     devices.spi_dev.ssp_control_block->__sssr__ &= ~SPI_SSP_SSSR_TFS_TRANSMITFIFOSERVICEREQ;
-    fifo_level = (devices.spi_dev.ssp_control_block->__sssr__ & SPI_SSP_SITF_READTRANSFIFOENTRIESSPI ) >> 20 ;
+    fifo_level = (devices.spi_dev.ssp_control_block->__sssr__ & SPI_SSP_SITF_SITFL_READTXFIFOENTRIESSPI ) >> 16 ;
     printk(KERN_INFO"SPI interrupt!!  0x%x\n  FIFO level : %d \n\n",spi_irq_sta, fifo_level);
     
     return IRQ_HANDLED;
@@ -287,7 +333,7 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
         
         for(i = 0 ; i < 1024 ; i++)
             *((__u8 *)devices.dma_dev.dma_data_ptr + i) = 0x00;    
-    
+        /*
         if (devices.spi_dev.spi_irqn >= 0) {
             
             result = request_irq(devices.spi_dev.spi_irqn, short_spi_interrupt, IRQF_SHARED, "rgbled_spi_driver", &(devices.spi_dev));
@@ -298,7 +344,7 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
             else { 
                  printk(KERN_INFO"SPI interrupt REGISTERED!!\n");
             }
-        }
+        }*/
 /*
         if (devices.dma_dev.dma_irqn >= 0) {
             result = request_irq(devices.dma_dev.dma_irqn, short_dma_interrupt,
@@ -315,11 +361,11 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
         */
 
         /*  CREATE DMA MEMORY POOL FOR THE RX DMA DATA  */
-        ptrDmaRxData = kmalloc(devices.dma_dev.dma_data_size, GFP_DMA);
+        ptrDmaRxData = kmalloc(sizeof(__u32), GFP_DMA);
         
         /* Initialize DMA data to be transmitted */
         rgbled_test(devices.dma_dev.dma_data_ptr, test_num);
-        printk(KERN_INFO"DMA RX Data phys %p \n", ptrDmaRxData);
+        printk(KERN_INFO"DMA RX Data phys %p %08x \n", ptrDmaRxData, (__u32)ptrDmaRxData);
 
         /************ SETTING GPIO ************/
         /* If SPI MOSI is already configured, leave it */
@@ -337,8 +383,8 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
         devices.spi_dev.ssp_control_block->__ssacd__ = ssp_ssacd_cfg;
         devices.spi_dev.ssp_control_block->__sitf__ &= ~0xFFFF ;
         devices.spi_dev.ssp_control_block->__sitf__ |=
-            SPI_SSP_SITF_SETTRANSLOWWATERMARKSPI(0x0F)    |
-            SPI_SSP_SITF_SETTRANSHIGHWATERMARKSPI(0xFF) ;
+            SPI_SSP_SITF_LWMTF_SETTXLOWWATERMARKSPI(0x0F)    |
+            SPI_SSP_SITF_HWMTF_SETTXHIGHWATERMARKSPI(0xFF) ;
             
        devices.spi_dev.ssp_general_block->__prv_clock_params__ =
             SPI_SSP_PRVCLKPARAMS_CLOCKUPDATE |
@@ -351,19 +397,19 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
         devices.dma_dev.dma_tx_ch->__sar_l__ = devices.dma_dev.dma_data_phys;
         devices.dma_dev.dma_tx_ch->__dar_l__ = SPI_BASE_ADDR + 0x10;
         devices.dma_dev.dma_tx_ch->__llp_l__ = 0x0;
-        devices.dma_dev.dma_tx_ch->__ctl_l__ = dma_ctl_l_cfg;
-        devices.dma_dev.dma_tx_ch->__ctl_h__ = dma_ctl_h_cfg;
-        devices.dma_dev.dma_tx_ch->__cfg_l__ = dma_cfg_l_cfg;
-        devices.dma_dev.dma_tx_ch->__cfg_h__ = dma_cfg_h_cfg;
+        devices.dma_dev.dma_tx_ch->__ctl_l__ = dma_tx_ctl_l_cfg;
+        devices.dma_dev.dma_tx_ch->__ctl_h__ = dma_tx_ctl_h_cfg;
+        devices.dma_dev.dma_tx_ch->__cfg_l__ = dma_tx_cfg_l_cfg;
+        devices.dma_dev.dma_tx_ch->__cfg_h__ = dma_tx_cfg_h_cfg;
         
         /************ SETTING RX DMA ************/
         devices.dma_dev.dma_rx_ch->__sar_l__ = SPI_BASE_ADDR + 0x10;
-        devices.dma_dev.dma_rx_ch->__dar_l__ = ;
+        devices.dma_dev.dma_rx_ch->__dar_l__ = (__u32)ptrDmaRxData;
         devices.dma_dev.dma_rx_ch->__llp_l__ = 0x0;
-        devices.dma_dev.dma_rx_ch->__ctl_l__ = dma_ctl_l_cfg;
-        devices.dma_dev.dma_rx_ch->__ctl_h__ = dma_ctl_h_cfg;
-        devices.dma_dev.dma_rx_ch->__cfg_l__ = dma_cfg_l_cfg;
-        devices.dma_dev.dma_rx_ch->__cfg_h__ = dma_cfg_h_cfg;
+        devices.dma_dev.dma_rx_ch->__ctl_l__ = dma_rx_ctl_l_cfg;
+        devices.dma_dev.dma_rx_ch->__ctl_h__ = dma_rx_ctl_h_cfg;
+        devices.dma_dev.dma_rx_ch->__cfg_l__ = dma_rx_cfg_l_cfg;
+        devices.dma_dev.dma_rx_ch->__cfg_h__ = dma_rx_cfg_h_cfg;
 
         /************ ENABLE DMA CONTROLLER ************/
         devices.dma_dev.dma_cfg->__dmacfgre_l__ = DMA_DMACFGREG_L_DMA_ENA;
@@ -403,38 +449,39 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
         __clear_cache((char *)devices.dma_dev.dma_data_ptr,
                         (char *)(devices.dma_dev.dma_data_ptr + 5 ));
 
-        while ( devices.spi_dev.ssp_control_block->__sssr__ & SPI_SSP_SSSR_RNE_RECEIVEFIFONOTEMPTY) {
+        /*while ( devices.spi_dev.ssp_control_block->__sssr__ & SPI_SSP_SSSR_RNE_RECEIVEFIFONOTEMPTY) {
             ssdr = devices.spi_dev.ssp_control_block->__ssdr__;
-        }
+        }*/
        
        /* PRINT USEFUL INFORMATION */
         spi_irq_sta = devices.spi_dev.ssp_control_block->__sssr__;
         sscr1 = devices.spi_dev.ssp_control_block->__sscr1__;
-        fifo_level = devices.spi_dev.ssp_control_block->__sitf__  ;
-        printk(KERN_ALERT"SPI  \nSTATUS : 0x%08x\nFIFO level : %08x\n SSCR1 : %08x\nDMA SRCADDR : %08x\n\n",spi_irq_sta, fifo_level,sscr1,devices.dma_dev.dma_tx_ch->__sar_l__);
+        fifo_level = (devices.spi_dev.ssp_control_block->__sitf__ & SPI_SSP_SITF_SITFL_READTXFIFOENTRIESSPI) >> 16 ;
+        rx_fifo_level = (devices.spi_dev.ssp_control_block->__sirf__ & SPI_SSP_SIRF_SIRFL_READRXFIFOENTRIESSPI) >> 8 ;
+        printk(KERN_ALERT"SPI  \nSTATUS : 0x%08x\nTX FIFO level : %d\nRX FIFO level : %d\n SSCR1 : %08x\nDMA SRCADDR : %08x\nPTR RX DATA : %d\n\n",spi_irq_sta, fifo_level,rx_fifo_level, sscr1,devices.dma_dev.dma_tx_ch->__sar_l__,*ptrDmaRxData);
 
-      
+        *ptrDmaRxData = 0;
 
-        
         /* Enable SSP */
         devices.spi_dev.ssp_control_block->__sscr0__ |= SPI_SSP_SSCR0_SSE_SSPENABLE;    
       
+        
         /* Enable DMA Channel */
-        devices.dma_dev.dma_cfg->__chenreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number)) | (0x1 << devices.dma_dev.dma_ch_number);
-    
-        //devices.dma_dev.dma_cfg->__reqsrcreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number)) | (0x1 << devices.dma_dev.dma_ch_number);
-        
-        //devices.dma_dev.dma_cfg->__reqdstreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number)) | (0x1 << devices.dma_dev.dma_ch_number);
-        
-        //udelay(10);
-        //devices.spi_dev.ssp_control_block->__sscr0__ &= ~SPI_SSP_SSCR0_SSE_SSPENABLE ;
+        devices.dma_dev.dma_cfg->__chenreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number)) | (0x1 << devices.dma_dev.dma_ch_number) | (0x1 << (8 + devices.dma_dev.dma_ch_number+1)) | (0x1 << devices.dma_dev.dma_ch_number+1);;
 
-          
+        devices.dma_dev.dma_cfg->__reqdstreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number)) | (0x1 << devices.dma_dev.dma_ch_number) | (0x1 << (8 + devices.dma_dev.dma_ch_number+1)) | (0x1 << devices.dma_dev.dma_ch_number+1);;
+        devices.dma_dev.dma_cfg->__sglrqdstreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number)) | (0x1 << devices.dma_dev.dma_ch_number) | (0x1 << (8 + devices.dma_dev.dma_ch_number+1)) | (0x1 << devices.dma_dev.dma_ch_number+1);
+        
+        
+          udelay(100);
           /* PRINT USEFUL INFORMATION */
         spi_irq_sta = devices.spi_dev.ssp_control_block->__sssr__;
         sscr1 = devices.spi_dev.ssp_control_block->__sscr1__;
         fifo_level = devices.spi_dev.ssp_control_block->__sitf__  ;
-        printk(KERN_ALERT"SPI  \nSTATUS : 0x%08x\nFIFO level : %08x\n SSCR1 : %08x\nDMA SRCADDR : %08x\n\n",spi_irq_sta, fifo_level,sscr1,devices.dma_dev.dma_tx_ch->__sar_l__);
+        rx_fifo_level = (devices.spi_dev.ssp_control_block->__sirf__ & SPI_SSP_SIRF_SIRFL_READRXFIFOENTRIESSPI) >> 8 ;
+        printk(KERN_ALERT"SPI  \nSTATUS : 0x%08x\nTX FIFO level : %d\nRX FIFO level : %d\n SSCR1 : %08x\nDMA SRCADDR : %08x\nPTR RX DATA : %d\n\n",spi_irq_sta, fifo_level,rx_fifo_level, sscr1,devices.dma_dev.dma_tx_ch->__sar_l__,*ptrDmaRxData);
+
+        //devices.spi_dev.ssp_control_block->__sscr0__ &= ~SPI_SSP_SSCR0_SSE_SSPENABLE ;
 
 
         break;
@@ -589,7 +636,7 @@ static int pci_rgbled_dma_probe (struct pci_dev *pdev, const struct pci_device_i
 static void pci_rgbled_spi_remove (struct pci_dev *pdev){
     
     /*  UNMAP IO MEMORY  */
-    free_irq(devices.spi_dev.spi_irqn, &(devices.spi_dev));
+    //free_irq(devices.spi_dev.spi_irqn, &(devices.spi_dev));
 
     iounmap(devices.gpio_dev.gpio_base);
     iounmap(devices.spi_dev.spi_base);
