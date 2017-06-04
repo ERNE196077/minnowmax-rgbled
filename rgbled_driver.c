@@ -50,6 +50,8 @@ __u32 spi_irq_sta = 0;
 __u32 fifo_level = 0;
 __u32 rx_fifo_level = 0;
 __u32 *ptrDmaRxData;
+__u32 dma_combined_int = 0;
+__u32 dma_clrreg;
 
 /********* SSP CONFIG VARIABLES  ************/
 __u32 ssp_sscr0_cfg = 
@@ -64,7 +66,6 @@ __u32 ssp_sscr0_cfg =
             SPI_SSP_SSCR0_ECS_EXTERNALCLOCKFROMGPIO |
             SPI_SSP_SSCR0_FRF_MOTOROLA |
             SPI_SSP_SSCR0_DSS_DATASIZESELECT(0x7) ;
-
 __u32 ssp_sscr1_cfg = 
             SPI_SSP_SSCR1_TTELP_TXDTRISTATEONCLOCKEDGE |
             SPI_SSP_SSCR1_TTE_TXDNOTTRISTATED |
@@ -110,7 +111,7 @@ __u32 dma_tx_ctl_l_cfg =
             DMA_CTL_LO_DINC_DESTADDRNOCHANGE |
             DMA_CTL_LO_SRCTRWIDTH_SRCTRANSFEROF32BITS |
             DMA_CTL_LO_DSTTRWIDTH_DSTTRANSFEROF32BITS |
-            DMA_CTL_LO_INTEN_INTERRUPTSDISABLED ;
+            DMA_CTL_LO_INTEN_INTERRUPTSENABLED ;
 __u32 dma_tx_ctl_h_cfg = 
             DMA_CTL_HI_DONE_DONEBITZERO |
             DMA_CTL_HI_BLOCKTS_DMAFLOWBLOCKSIZE(0x1B0) ; // Size of SSP fifo
@@ -283,14 +284,39 @@ static irqreturn_t short_spi_interrupt(int irq, void *dev_id)
 
 static irqreturn_t short_dma_interrupt(int irq, void *dev_id)
 {
-    devices.dma_dev.dma_tx_ch->__cfg_l__ |= DMA_CFG_LO_CHSUSP_SUSPENDDMACHANNELACTIVITY;       
-    spi_irq_sta = devices.spi_dev.ssp_control_block->__sssr__;
-
-    devices.spi_dev.ssp_control_block->__sssr__ &= ~SPI_SSP_SSSR_TFS_TRANSMITFIFOSERVICEREQ;
+    dma_cfg_t *dma_gen_regs = devices.dma_dev.dma_cfg;
     fifo_level = (devices.spi_dev.ssp_control_block->__sssr__ & SPI_SSP_SITF_SITFL_READTXFIFOENTRIESSPI ) >> 16 ;
-    printk(KERN_INFO"SPI interrupt!!  0x%x\n  FIFO level : %d \n\n",spi_irq_sta, fifo_level);
     
-    return IRQ_HANDLED;
+    if ( dma_gen_regs->__statusint__ & 0x1F ){
+        
+        printk(KERN_ALERT"DMA interrupt!!\n");
+        printk(KERN_INFO"Combined Status 0x%08x \n",dma_gen_regs->__statusint__);
+        printk(KERN_INFO"Raw Status Tfr 0x%08x \n",dma_gen_regs->__rawtfr__);
+        printk(KERN_INFO"Raw Status Block 0x%08x \n",dma_gen_regs->__rawblock__);
+        printk(KERN_INFO"Raw Status Src Tran 0x%08x \n",dma_gen_regs->__rawsrctran__);
+        printk(KERN_INFO"Raw Status Dest Tran 0x%08x \n",dma_gen_regs->__rawdsttran__);
+        printk(KERN_INFO"Raw Status Err 0x%08x \n",dma_gen_regs->__rawerr__);
+        printk(KERN_INFO"Status Tfr 0x%08x \n",dma_gen_regs->__statustfr__);
+        printk(KERN_INFO"Status Block 0x%08x \n",dma_gen_regs->__statusblock__);
+        printk(KERN_INFO"Status Src Tran 0x%08x \n",dma_gen_regs->__statussrctran__);
+        printk(KERN_INFO"Status Dest Tran 0x%08x \n",dma_gen_regs->__statusdsttran__);
+        printk(KERN_INFO"Status Err 0x%08x \n",dma_gen_regs->__statuserr__);
+        printk(KERN_INFO"SSP FIFO Level 0x%08x \n",fifo_level);
+        
+        dma_clrreg = dma_gen_regs->__cleartfr__;
+        dma_gen_regs->__cleartfr__ = dma_clrreg & (~ 0xF);
+        dma_clrreg = dma_gen_regs->__clearblock__;
+        dma_gen_regs->__clearblock__ = dma_clrreg & (~ 0xF);
+        dma_clrreg = dma_gen_regs->__clearsrctran__;
+        dma_gen_regs->__clearsrctran__ = dma_clrreg & (~ 0xF);
+        dma_clrreg = dma_gen_regs->__cleardsttran__;
+        dma_gen_regs->__cleardsttran__ = dma_clrreg & (~ 0xF);
+        dma_clrreg = dma_gen_regs->__clearerr__;
+        dma_gen_regs->__clearerr__ = dma_clrreg & (~ 0xF);
+
+        return IRQ_HANDLED;    
+    }
+    return IRQ_NONE;
 }
 
 
@@ -345,7 +371,7 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
                  printk(KERN_INFO"SPI interrupt REGISTERED!!\n");
             }
         }*/
-/*
+
         if (devices.dma_dev.dma_irqn >= 0) {
             result = request_irq(devices.dma_dev.dma_irqn, short_dma_interrupt,
                                  IRQF_SHARED, "rgbled_dma_driver", &(devices.dma_dev));
@@ -354,11 +380,12 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
                        spi_irq);
                 spi_irq = -1;
             }
-            else {*/ /* actually enable it -- assume this *is* a parallel port */
-           /*      printk(KERN_INFO"DMA interrupt REGISTERED!!\n");
+            else {
+            /* actually enable it -- assume this *is* a parallel port */
+                 printk(KERN_INFO"DMA interrupt REGISTERED!!\n");
             }
         }
-        */
+        
 
         /*  CREATE DMA MEMORY POOL FOR THE RX DMA DATA  */
         ptrDmaRxData = kmalloc(sizeof(__u32), GFP_DMA);

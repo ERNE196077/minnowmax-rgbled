@@ -20,7 +20,7 @@
 #define		DMA_OFFSET_CH5			(0x1B8  / 4)
 #define		DMA_OFFSET_CH6			(0x210  / 4)
 #define		DMA_OFFSET_CH7			(0x268  / 4)
-#define     DMA_DMACCFG_OFF			(0x360 / 4)
+#define     DMA_DMACCFG_OFF			(0x2C0 / 4)
 
 
 
@@ -150,7 +150,56 @@ typedef struct{
 
 
 typedef struct {
-	uint32_t __statusint_l__;
+	uint32_t __rawtfr__;
+	uint32_t __rsv_0x2c4__;
+	uint32_t __rawblock__;
+	uint32_t __rsv_0x2cc__;
+	uint32_t __rawsrctran__;
+	uint32_t __rsv_0x2d4__;
+	uint32_t __rawdsttran__;
+	uint32_t __rsv_0x2dc__;
+	uint32_t __rawerr__;
+	uint32_t __resv_0x2e4__;
+	uint32_t __statustfr__;
+	uint32_t __resv_0x2ec__;
+	uint32_t __statusblock__;
+	#define DMA_INT_STATUSREG_MASK(channel)	( 0xFF & ( 0x1 << channel ) )
+	uint32_t __resv_0x2f4__;
+	uint32_t __statussrctran__;
+	uint32_t __resv_0x2fc__;
+	uint32_t __statusdsttran__;
+	uint32_t __resv_0x304__;
+	uint32_t __statuserr__;
+	uint32_t __resv_0x30c__;
+	uint32_t __masktfr__;
+	#define DMA_INT_MASKREG_MASK(channel)	( 0xFF & ( 0x1 << channel ) )
+	#define DMA_INT_MASKREG_MASK_WE(channel)	( 0xFF00 & ( 0x1 << ( channel + 8 ) ) )
+	uint32_t __resv_0x314__;
+	uint32_t __maskblock__;
+	uint32_t __resv_0x31c__;
+	uint32_t __masksrctran__;
+	uint32_t __resv_0x324__;
+	uint32_t __maskdsttran__;
+	uint32_t __resv_0x32c__;
+	uint32_t __maskerr__;
+	uint32_t __resv_0x334__;
+	uint32_t __cleartfr__;
+	#define DMA_INT_CLEARREG_MASK(channel)	( 0xFF & ( 0x1 << channel ) )
+	uint32_t __resv_0x33c__;
+	uint32_t __clearblock__;
+	uint32_t __resv_0x344__;
+	uint32_t __clearsrctran__;
+	uint32_t __resv_0x34c__;
+	uint32_t __cleardsttran__;
+	uint32_t __resv_0x354__;
+	uint32_t __clearerr__;
+	uint32_t __resv_0x35c__;
+	uint32_t __statusint__;
+	#define DMA_INT_COMBINEDINTREG_ERRMASK	( 0x1 << 4 )
+	#define DMA_INT_COMBINEDINTREG_DSTTMASK	( 0x1 << 3 )
+	#define DMA_INT_COMBINEDINTREG_SRCTMASK	( 0x1 << 2 )
+	#define DMA_INT_COMBINEDINTREG_BLOCKMASK	( 0x1 << 1 )
+	#define DMA_INT_COMBINEDINTREG_TFRMASK	( 0x1 )
 	uint32_t __rsv_0x364__;
 	uint32_t __reqsrcreg_l__;
 	uint32_t __rsv_0x36c__;
