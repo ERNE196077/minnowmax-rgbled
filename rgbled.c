@@ -102,8 +102,8 @@ int rgbled_init (rgbled_conf_t *rgbled_conf) {
  //while (1){
     rgbled_render(file);
     usleep(4100);
-    rgbled_dmaprintdata(file);
-    rgbled_deconfigure(file);
+    //rgbled_dmaprintdata(file);
+    //rgbled_deconfigure(file);
   //}
 
   //rgbled_dmaprintdata(file);

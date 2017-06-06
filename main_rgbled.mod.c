@@ -24,7 +24,6 @@ __attribute__((section("__versions"))) = {
 	{ 0x514d23e8, __VMLINUX_SYMBOL_STR(device_destroy) },
 	{ 0x6729d3df, __VMLINUX_SYMBOL_STR(__get_user_4) },
 	{ 0xe3ee703b, __VMLINUX_SYMBOL_STR(pci_dev_get) },
-	{ 0xeae3dfd6, __VMLINUX_SYMBOL_STR(__const_udelay) },
 	{ 0x458bf59c, __VMLINUX_SYMBOL_STR(pci_release_regions) },
 	{ 0x7485e15e, __VMLINUX_SYMBOL_STR(unregister_chrdev_region) },
 	{ 0xb5aa7165, __VMLINUX_SYMBOL_STR(dma_pool_destroy) },
@@ -32,6 +31,7 @@ __attribute__((section("__versions"))) = {
 	{ 0x27e1a049, __VMLINUX_SYMBOL_STR(printk) },
 	{ 0xcde84cfe, __VMLINUX_SYMBOL_STR(device_create) },
 	{ 0x2a37d074, __VMLINUX_SYMBOL_STR(dma_pool_free) },
+	{ 0x2072ee9b, __VMLINUX_SYMBOL_STR(request_threaded_irq) },
 	{ 0xb755a603, __VMLINUX_SYMBOL_STR(cdev_add) },
 	{ 0x6ab3243c, __VMLINUX_SYMBOL_STR(module_put) },
 	{ 0x42c8de35, __VMLINUX_SYMBOL_STR(ioremap_nocache) },
@@ -50,6 +50,7 @@ __attribute__((section("__versions"))) = {
 	{ 0xdb4afb16, __VMLINUX_SYMBOL_STR(dma_ops) },
 	{ 0x29537c9e, __VMLINUX_SYMBOL_STR(alloc_chrdev_region) },
 	{ 0x72c6e1a, __VMLINUX_SYMBOL_STR(try_module_get) },
+	{ 0xf20dabd8, __VMLINUX_SYMBOL_STR(free_irq) },
 };
 
 static const char __module_depends[]
