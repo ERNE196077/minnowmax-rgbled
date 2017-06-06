@@ -21,6 +21,7 @@
 /*		rgbled_conf_t ::  4 bit led type ; 4 bits DMA channel ; 8 bits Animation ;  16 bits led number 	*/
 /*                        0 0 0 0          0 0 0 0              0 0 0 0  0 0 0 0    0000 0000 0000 0000 */
 typedef uint32_t rgbled_conf_t;
+
 #define RGBLED_CONF_TYPEWS281X			(0)
 #define RGBLED_CONF_TYPEAPA102 			(1 << 28)
 #define RGBLED_CONF_DMACH(value)		(value << 24)
