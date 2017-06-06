@@ -264,5 +264,11 @@ typedef struct{
 			 __u32          dma_data_size;
 } dma_dev_t;
 
+typedef struct _dma_item_t_{
+	__u32	src_addr;
+	__u32	blk_size;
+	struct _dma_item_t_ *next;
+} dma_item_t
+
 
 #endif /* DMA_H_ */

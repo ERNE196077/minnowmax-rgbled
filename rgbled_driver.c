@@ -53,6 +53,7 @@ __u32 *ptrDmaRxData;
 __u32 dma_combined_int = 0;
 __u32 dma_clrreg;
 volatile dma_cfg_t *dma_gen_regs ;
+static dma_item_t *dma_list;
 
 
 /********* SSP CONFIG VARIABLES  ************/
@@ -392,12 +393,38 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
     ***************************************************************************/
     case IOCTL_RGBLED_SETCONFIG:
         get_user(devices.rgbled_config, (__u32 *)ioctl_params );
-        devices.dma_dev.dma_ch_number = RGBLED_CONF_GET_DMACH(devices.rgbled_config);
-        
+
+        /* Print configuration information */
         printk(KERN_ALERT"Type: %d  LedNum: %d  DMACh: %d  Anim: %d\n\n",RGBLED_CONF_GET_LEDTYPE(devices.rgbled_config) >> 28, 
                                                                 RGBLED_CONF_GET_LEDNUM(devices.rgbled_config), 
                                                                 RGBLED_CONF_GET_DMACH(devices.rgbled_config) >> 24 ,
                                                                 RGBLED_CONF_GET_ANIMATION(devices.rgbled_config) >> 16);
+        
+        /* Set DMA channel to use */
+        devices.dma_dev.dma_ch_number = RGBLED_CONF_GET_DMACH(devices.rgbled_config);
+        
+        /* Set DMA total transmission size - In Bytes */
+        devices.dma_dev.dma_data_size = (RGBLED_CONF_GET_LEDTYPE(devices.rgbled_config)) ? 
+                                        RGBLED_DATA_SIZE_APA102 (RGBLED_CONF_GET_LEDNUM(devices.rgbled_config)): 
+                                        RGBLED_DATA_SIZE_WS281X (RGBLED_CONF_GET_LEDNUM(devices.rgbled_config));
+        
+        /*  CREATE DMA MEMORY POOL FOR THE LLI's  */
+        devices.dma_dev.dma_pool = pci_pool_create( "rgbled_dma_pool", pdev, 8192, 32, 0 );
+        devices.dma_dev.dma_data_ptr = pci_pool_alloc( devices.dma_dev.dma_pool, GFP_ATOMIC, &devices.dma_dev.dma_data_phys); 
+        if (devices.dma_dev.dma_data_ptr == NULL){
+            err_dma = -1;
+            goto err_pool_alloc;
+        }
+
+        for(i = 0 ; i < 1024 ; i++)
+            *((__u8 *)devices.dma_dev.dma_data_ptr + i) = 0x00;    
+        
+
+        err_pool_alloc:
+        pci_pool_free(devices.dma_dev.dma_pool, devices.dma_dev.dma_data_ptr, devices.dma_dev.dma_data_phys);
+        pci_pool_destroy(devices.dma_dev.dma_pool);
+    
+
         break;
 
 
@@ -407,13 +434,8 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
     case IOCTL_RGBLED_CONFIGURE:
 
         /************ SETTING DMA MEMORY ************/
-        devices.dma_dev.dma_data_size = (RGBLED_CONF_GET_LEDTYPE(devices.rgbled_config)) ? 
-                                        RGBLED_DATA_SIZE_APA102 (RGBLED_CONF_GET_LEDNUM(devices.rgbled_config)): 
-                                        RGBLED_DATA_SIZE_WS281X (RGBLED_CONF_GET_LEDNUM(devices.rgbled_config));
         dma_gen_regs = devices.dma_dev.dma_cfg;
         
-        for(i = 0 ; i < 1024 ; i++)
-            *((__u8 *)devices.dma_dev.dma_data_ptr + i) = 0x00;    
         
 
         devices.dma_dev.dma_cfg->__chenreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number)) | (0x1 << (8 + (devices.dma_dev.dma_ch_number + 1)));
@@ -720,13 +742,7 @@ static int pci_rgbled_dma_probe (struct pci_dev *pdev, const struct pci_device_i
     /*  ENABLE DEVICE AS DMA  */   
     pci_set_master(pdev);                          
 
-    /*  CREATE DMA MEMORY POOL FOR THE LLI's  */
-    devices.dma_dev.dma_pool = pci_pool_create( "rgbled_devices.dma_dev.dma_pool", pdev, 8192, 32, 0 );
-    devices.dma_dev.dma_data_ptr = pci_pool_alloc( devices.dma_dev.dma_pool, GFP_ATOMIC, &devices.dma_dev.dma_data_phys); 
-    if (devices.dma_dev.dma_data_ptr == NULL){
-        err_dma = -1;
-        goto err_pool_alloc;
-    }
+    
 
     if (!(devices.dma_dev.dma_base = (volatile uint32_t *) ioremap(DMA_BASE_ADDR, BLOCK_SIZE_T))) {
         printk(KERN_ALERT"DMA IOMEM MAPPING FAILED!");
@@ -746,9 +762,6 @@ static int pci_rgbled_dma_probe (struct pci_dev *pdev, const struct pci_device_i
     /*  ERROR HANDLER's  */
     err_dma_iomap:
         iounmap(devices.dma_dev.dma_base);
-    err_pool_alloc:
-        pci_pool_free(devices.dma_dev.dma_pool, devices.dma_dev.dma_data_ptr, devices.dma_dev.dma_data_phys);
-        pci_pool_destroy(devices.dma_dev.dma_pool);
     err_set_dma_mask:
         pci_release_regions(pdev);
         pci_disable_device(pdev);
