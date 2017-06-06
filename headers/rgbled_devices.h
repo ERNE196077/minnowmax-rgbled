@@ -7,6 +7,7 @@
 
 #define RGBLED_DATA_SIZE_WS281X(lednum)    (sizeof(led_ws281x_t) * lednum + sizeof(__u32) * 2 )
 #define RGBLED_DATA_SIZE_APA102(lednum)    (sizeof(led_apa102_t) * lednum + sizeof(__u32) * 2 )
+#define RGBLED_DATA_DMA_POOL_SIZE(bytes)	 (bytes % 1024 ? ((bytes / 1024) + 1) * 1024 : bytes)
 
 
 extern uint32_t dma_channels[8];

@@ -291,6 +291,7 @@ static irqreturn_t short_dma_interrupt(int irq, void *dev_id)
     dma_dev_t *dma_dev = (dma_dev_t *)dev_id;
     __u32 status = dma_dev->dma_cfg->__statusint__;
 
+    
     fifo_level = (devices.spi_dev.ssp_control_block->__sitf__ & SPI_SSP_SITF_SITFL_READTXFIFOENTRIESSPI) >> 16 ;
         spi_irq_sta = devices.spi_dev.ssp_control_block->__sssr__;
         sscr1 = devices.spi_dev.ssp_control_block->__sscr1__;
@@ -337,17 +338,17 @@ static irqreturn_t short_dma_interrupt(int irq, void *dev_id)
             devices.dma_dev.dma_cfg->__chenreg_l__ = (0x1 << (8 + (devices.dma_dev.dma_ch_number + 1))) | (0x1 << (devices.dma_dev.dma_ch_number + 1));
         }
         // Clear DMA Interrupts
-        __raw_writel(0xFF , &(dma_gen_regs->__cleartfr__));
-        __raw_writel(0xFF , &(dma_gen_regs->__clearblock__));
-        __raw_writel(0xFF , &(dma_gen_regs->__clearsrctran__));
-        __raw_writel(0xFF , &(dma_gen_regs->__cleardsttran__));
-        __raw_writel(0xFF , &(dma_gen_regs->__clearerr__ ));
+        __raw_writel(0xFF , &(dma_dev->dma_cfg->__cleartfr__));
+        __raw_writel(0xFF , &(dma_dev->dma_cfg->__clearblock__));
+        __raw_writel(0xFF , &(dma_dev->dma_cfg->__clearsrctran__));
+        __raw_writel(0xFF , &(dma_dev->dma_cfg->__cleardsttran__));
+        __raw_writel(0xFF , &(dma_dev->dma_cfg->__clearerr__ ));
         // Refresh DMA Interrupt Masks - Only activate transmission complete interrupt
-        __raw_writel(0xFFFF , &(dma_gen_regs->__masktfr__));
-        __raw_writel(0xFF00 , &(dma_gen_regs->__maskblock__));
-        __raw_writel(0xFF00 , &(dma_gen_regs->__masksrctran__));
-        __raw_writel(0xFF00 , &(dma_gen_regs->__maskdsttran__));
-        __raw_writel(0xFF00 , &(dma_gen_regs->__maskerr__ ));
+        __raw_writel(0xFFFF , &(dma_dev->dma_cfg->__masktfr__));
+        __raw_writel(0xFF00 , &(dma_dev->dma_cfg->__maskblock__));
+        __raw_writel(0xFF00 , &(dma_dev->dma_cfg->__masksrctran__));
+        __raw_writel(0xFF00 , &(dma_dev->dma_cfg->__maskdsttran__));
+        __raw_writel(0xFF00 , &(dma_dev->dma_cfg->__maskerr__ ));
 
         // Reconfigure DMA Channel
         dma_dev->dma_tx_ch->__sar_l__ = devices.dma_dev.dma_data_phys;
@@ -408,19 +409,31 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
                                         RGBLED_DATA_SIZE_APA102 (RGBLED_CONF_GET_LEDNUM(devices.rgbled_config)): 
                                         RGBLED_DATA_SIZE_WS281X (RGBLED_CONF_GET_LEDNUM(devices.rgbled_config));
         
-        /*  CREATE DMA MEMORY POOL FOR THE LLI's  */
-        devices.dma_dev.dma_pool = pci_pool_create( "rgbled_dma_pool", pdev, 8192, 32, 0 );
+        /*  Allocate the PCI memory pool for the DMA data  */
+        devices.dma_dev.dma_pool = pci_pool_create( "rgbled_dma_pool", pdev, RGBLED_DATA_DMA_POOL_SIZE(devices.dma_dev.dma_data_size), 32, 0 );
         devices.dma_dev.dma_data_ptr = pci_pool_alloc( devices.dma_dev.dma_pool, GFP_ATOMIC, &devices.dma_dev.dma_data_phys); 
         if (devices.dma_dev.dma_data_ptr == NULL){
-            err_dma = -1;
-            goto err_pool_alloc;
+            printk(KERN_ALERT"Cannot allocate pci memory block for DMA data, please release memory and try again");
         }
 
-        for(i = 0 ; i < 1024 ; i++)
+        /* "memset" DMA data memory */
+        for(i = 0 ; i < devices.dma_dev.dma_data_size ; i++)
             *((__u8 *)devices.dma_dev.dma_data_ptr + i) = 0x00;    
         
+        /* Set GPIO pins */
+        /* If SPI MOSI is already configured, leave it */
+        if(!(devices.gpio_dev.gpio_pin_spi_mosi->__cfg__ & 0x1))
+            GPIO_CFG_FUNCTION(devices.gpio_dev.gpio_pin_spi_mosi->__cfg__,1);
+        /* Configure SPI CLK if APA102 LEDs are used */
+        if(RGBLED_CONF_GET_LEDTYPE(devices.rgbled_config))
+            if(!(devices.gpio_dev.gpio_pin_spi_clk->__cfg__ & 0x1))    
+                GPIO_CFG_FUNCTION(devices.gpio_dev.gpio_pin_spi_clk->__cfg__,1);
+    
 
-        err_pool_alloc:
+        /* Map DMA channel registers to a device pointer */
+        devices.dma_dev.dma_tx_ch = (volatile dma_ch_t *)(devices.dma_dev.dma_base + dma_channels[devices.dma_dev.dma_ch_number]);
+        devices.dma_dev.dma_rx_ch = (volatile dma_ch_t *)(devices.dma_dev.dma_base + dma_channels[devices.dma_dev.dma_ch_number+1]);
+
         pci_pool_free(devices.dma_dev.dma_pool, devices.dma_dev.dma_data_ptr, devices.dma_dev.dma_data_phys);
         pci_pool_destroy(devices.dma_dev.dma_pool);
     
@@ -471,15 +484,7 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
         rgbled_test(devices.dma_dev.dma_data_ptr, test_num);
         printk(KERN_INFO"DMA RX Data phys %p %08x \n", ptrDmaRxData, (__u32)ptrDmaRxData);
 
-        /************ SETTING GPIO ************/
-        /* If SPI MOSI is already configured, leave it */
-        if(!(devices.gpio_dev.gpio_pin_spi_mosi->__cfg__ & 0x1))
-        GPIO_CFG_FUNCTION(devices.gpio_dev.gpio_pin_spi_mosi->__cfg__,1);
-        /* IF RGBLEDS ARE APA102 CONFIGURE CLOCK LINE */
-        if(RGBLED_CONF_GET_LEDTYPE(devices.rgbled_config))
-            if(!(devices.gpio_dev.gpio_pin_spi_clk->__cfg__ & 0x1))    
-                GPIO_CFG_FUNCTION(devices.gpio_dev.gpio_pin_spi_clk->__cfg__,1);
-    
+        
         
         /************ SETTING SPI ************/
         devices.spi_dev.ssp_control_block->__sscr0__ = ssp_sscr0_cfg; 
@@ -750,9 +755,10 @@ static int pci_rgbled_dma_probe (struct pci_dev *pdev, const struct pci_device_i
         goto err_dma_iomap;
     }
 
+    /* Set DMA controller interrupt id */
     devices.dma_dev.dma_irqn = DMA_IRQn;
-    devices.dma_dev.dma_tx_ch = (volatile dma_ch_t *)(devices.dma_dev.dma_base + dma_channels[devices.dma_dev.dma_ch_number]);
-    devices.dma_dev.dma_rx_ch = (volatile dma_ch_t *)(devices.dma_dev.dma_base + dma_channels[devices.dma_dev.dma_ch_number+1]);
+
+    /* Map DMA general registers to a device pointer */
     devices.dma_dev.dma_cfg = (volatile dma_cfg_t *)(devices.dma_dev.dma_base + DMA_DMACCFG_OFF);
     
 

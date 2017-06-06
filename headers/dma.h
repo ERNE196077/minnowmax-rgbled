@@ -176,7 +176,7 @@ typedef struct {
 	#define DMA_INT_MASKREG_MASK_WE(channel)	( 0xFF00 & ( 0x1 << ( channel + 8 ) ) )
 	uint32_t __resv_0x314__;
 	uint32_t __maskblock__;
-	uint32_t __resv_0x31c__;
+	 I __resv_0x31c__;
 	uint32_t __masksrctran__;
 	uint32_t __resv_0x324__;
 	uint32_t __maskdsttran__;
