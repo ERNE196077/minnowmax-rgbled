@@ -21,7 +21,7 @@ void rgbled_test(__u32 *data, __u32 test_var ){
 	g = (gx) ? g-1 : g+1;
 
 
-	for ( i = 0 ; i < 600 ; i++ ){
+	for ( i = 0 ; i < test_var ; i++ ){
 		
 			(ws281x_data + i)->r = RGBLEDWS281X_RGBCONV(r);
 			(ws281x_data + i)->g = RGBLEDWS281X_RGBCONV(g);

@@ -163,7 +163,7 @@ typedef struct {
 	uint32_t __statustfr__;
 	uint32_t __resv_0x2ec__;
 	uint32_t __statusblock__;
-	#define DMA_INT_STATUSREG_MASK(channel)	( 0xFF & ( 0x1 << channel ) )
+	#define DMA_INT_STATUSREG_MASK(channel)	( 0xFF & ( 0x1 << (channel) ) )
 	uint32_t __resv_0x2f4__;
 	uint32_t __statussrctran__;
 	uint32_t __resv_0x2fc__;
@@ -172,8 +172,8 @@ typedef struct {
 	uint32_t __statuserr__;
 	uint32_t __resv_0x30c__;
 	uint32_t __masktfr__;
-	#define DMA_INT_MASKREG_MASK(channel)	( 0xFF & ( 0x1 << channel ) )
-	#define DMA_INT_MASKREG_MASK_WE(channel)	( 0xFF00 & ( 0x1 << ( channel + 8 ) ) )
+	#define DMA_INT_MASKREG_MASK(channel)	( 0xFF & ( 0x1 << (channel) ) )
+	#define DMA_INT_MASKREG_MASK_WE(channel)	( 0xFF00 & ( 0x1 << ( (channel) + 8 ) ) )
 	uint32_t __resv_0x314__;
 	uint32_t __maskblock__;
 	uint32_t __resv_0x31c__;
@@ -184,7 +184,7 @@ typedef struct {
 	uint32_t __maskerr__;
 	uint32_t __resv_0x334__;
 	uint32_t __cleartfr__;
-	#define DMA_INT_CLEARREG_MASK(channel)	( 0xFF & ( 0x1 << channel ) )
+	#define DMA_INT_CLEARREG_MASK(channel)	( 0xFF & ( 0x1 << (channel) ) )
 	uint32_t __resv_0x33c__;
 	uint32_t __clearblock__;
 	uint32_t __resv_0x344__;
@@ -218,7 +218,7 @@ typedef struct {
 	#define DMA_DMACFGREG_L_DMA_DIS				(0x0)					// 0 - DW_ahb_dmac Disabled; 1 - DW_ahb_dmac Enabled
 	uint32_t __resv_0x39c__;
 	uint32_t __chenreg_l__;				// DW_ahb_dmac Channel Enable Register
-	#define DMA_DMACHENREG_L_CH_EN_WE(value)	(value<<8)		// This register enables the CH_EN to be written in the bit choosen
+	#define DMA_DMACHENREG_L_CH_EN_WE(value)	((value) << 8)		// This register enables the CH_EN to be written in the bit choosen
 	#define DMA_DMACHENREG_L_CH_EN(value)		(value)			// 0 - Disable the channel; 1 - Enable the channel
 	uint32_t __rsv_0x3a4__[10];
 	uint32_t __dmaparamsch7__;
@@ -249,6 +249,12 @@ typedef struct {
 
 
 /*****			DMA 			*****/
+typedef struct _dma_item_t_{
+	__u32	src_addr;
+	__u32	blk_size;
+	struct _dma_item_t_ *next;
+} dma_item_t;
+
 typedef struct{
 			 __u32			dma_irqn;
 			 __u8	        dma_ch_number;
@@ -262,13 +268,11 @@ typedef struct{
        		 __u32       	*dma_data_ptr;
              dma_addr_t     dma_data_phys;
 			 __u32          dma_data_size;
+			 dma_item_t 	*dma_list;
+			 __u32			dma_list_itemnumber;
 } dma_dev_t;
 
-typedef struct _dma_item_t_{
-	__u32	src_addr;
-	__u32	blk_size;
-	struct _dma_item_t_ *next;
-} dma_item_t;
+
 
 
 #endif /* DMA_H_ */

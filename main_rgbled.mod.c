@@ -38,6 +38,7 @@ __attribute__((section("__versions"))) = {
 	{ 0x771cf835, __VMLINUX_SYMBOL_STR(dma_pool_alloc) },
 	{ 0xbdfb6dbb, __VMLINUX_SYMBOL_STR(__fentry__) },
 	{ 0xe75f88ab, __VMLINUX_SYMBOL_STR(pci_unregister_driver) },
+	{ 0x37a0cba, __VMLINUX_SYMBOL_STR(kfree) },
 	{ 0x2911fa86, __VMLINUX_SYMBOL_STR(pci_request_regions) },
 	{ 0xb7ba2853, __VMLINUX_SYMBOL_STR(dma_supported) },
 	{ 0xedc03953, __VMLINUX_SYMBOL_STR(iounmap) },

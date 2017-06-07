@@ -100,10 +100,13 @@ int rgbled_init (rgbled_conf_t *rgbled_conf) {
   //rgbled_configure(file);
   //rgbled_dmaprintdata(file);
   printf("about to Render\n");
- //while (1){
-  rgbled_render(file);
+  sleep(2);
+  while (1){
+    rgbled_render(file);
+    usleep(8500);
+  }
     //usleep(4100);
-    //rgbled_dmaprintdata(file);
+  //rgbled_dmaprintdata(file);
     //rgbled_deconfigure(file);
   //}
 
