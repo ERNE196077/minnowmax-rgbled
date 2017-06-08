@@ -97,44 +97,12 @@ int rgbled_init (rgbled_conf_t *rgbled_conf) {
   }
 
   rgbled_setconfig(file, rgbled_conf);
-  //rgbled_configure(file);
-  //rgbled_dmaprintdata(file);
   printf("about to Render\n");
   sleep(2);
-  while (1){
+  //while (1){
     rgbled_render(file);
-    usleep(8500);
-  }
-    //usleep(4100);
-  //rgbled_dmaprintdata(file);
-    //rgbled_deconfigure(file);
+  //  usleep(8500);
   //}
-
-  //rgbled_dmaprintdata(file);
-   /* rgbled_deconfigure(file);
-
-//    rgbled_setahblayer(file, &ahbl);
-
-    rgbled_configure(file);
-    usleep(10000);
-
-    rgbled_dmaadditem(file,&l1);
-    usleep(10000);
-    rgbled_dmaadditem(file,&l2);
-    usleep(10000);
-
-    rgbled_dmaprintitems(file);
-
-   rgbled_render(file);
-   //usleep(100000);
-   rgbled_dmaprintitems(file);
-
-*/
-
-
-/*
-char ch;
-ch = getchar();
-*/
+  
 	return 0;
 }
