@@ -6,7 +6,7 @@
 
 	
 int rx=0, gx=0, bx=1;
-int r=0, g=128, b=255;
+int r=255, g=128, b=0;
 void rgbled_test(__u32 *data, __u32 test_var ){
 	__u32 i;
 
@@ -16,18 +16,29 @@ void rgbled_test(__u32 *data, __u32 test_var ){
 	if(g == 0) gx = 0; else if(g==255) gx = 1;
 	if(b == 0) bx = 0; else if(b==255) bx = 1;
 
-	b = (bx) ? b-1 : b+1;
-	r = (rx) ? r-1 : r+1; 
-	g = (gx) ? g-1 : g+1;
+	//b = (bx) ? b-1 : b+1;
+	//r = (rx) ? r-1 : r+1; 
+	//g = (gx) ? g-1 : g+1;
 
 
 	for ( i = 0 ; i < test_var ; i++ ){
-		
+			if (rx)
+				r++;
+			else 
+				rx--;
+			if(gx)
+				g++;
+			else 
+				g--;
+			if (bx)
+				b++;
+			else
+				b--;
 			(ws281x_data + i)->r = RGBLEDWS281X_RGBCONV(r);
 			(ws281x_data + i)->g = RGBLEDWS281X_RGBCONV(g);
 			(ws281x_data + i)->b = RGBLEDWS281X_RGBCONV(b);
 		
-	}
+	}  
 	/*
 	(ws281x_data + 451)->r = 0x0;
 	(ws281x_data + 451)->g = 0x0;
