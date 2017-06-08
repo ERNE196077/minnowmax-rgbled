@@ -1,4 +1,4 @@
-    
+
 
 #include <linux/module.h>
 #include <linux/kernel.h>
@@ -351,6 +351,12 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
         
         /*** Memory Allocation ***/
 
+        /* If pool was already created destroy it and create a new one (Reconfiguring driver) */
+        if ( devices.dma_dev.dma_pool ){ 
+            pci_pool_free(devices.dma_dev.dma_pool, devices.dma_dev.dma_data_ptr, devices.dma_dev.dma_data_phys);   
+            pci_pool_destroy(devices.dma_dev.dma_pool);
+        }
+        
         /*  Allocate the PCI memory pool for the TX DMA data  */
         devices.dma_dev.dma_pool = pci_pool_create( "rgbled_dma_pool", devices.pdev_dma, RGBLED_DMA_POOL_SIZE(devices.dma_dev.dma_data_size), 32, 0 );
         devices.dma_dev.dma_data_ptr = pci_pool_alloc( devices.dma_dev.dma_pool, GFP_ATOMIC, &devices.dma_dev.dma_data_phys); 
@@ -382,6 +388,11 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
         
         /* Allocate the needed memory */
         devices.dma_dev.dma_list_itemnumber = RBGLED_DMA_ITEMLISTNUMBER(devices.dma_dev.dma_data_size);
+        
+        /* If it is a reconfiguration free the previous allocation */
+        if ( devices.dma_dev.dma_list ){
+            kfree(devices.dma_dev.dma_list);
+        }
         devices.dma_dev.dma_list = kmalloc(sizeof(dma_item_t) * devices.dma_dev.dma_list_itemnumber, GFP_HIGHUSER);
 
         /* Build DMA transmission list */
@@ -689,7 +700,7 @@ static int pci_rgbled_dma_probe (struct pci_dev *pdev, const struct pci_device_i
 
     return 0;
 
-    /*  ERROR HANDLER's  */
+    /*  ERrror handlers  */
     err_dma_iomap:
         iounmap(devices.dma_dev.dma_base);
     err_set_dma_mask:
@@ -704,10 +715,15 @@ static int pci_rgbled_dma_probe (struct pci_dev *pdev, const struct pci_device_i
 
 static void pci_rgbled_spi_remove (struct pci_dev *pdev){
     
-    /*  Unmap MMIO */
-    kfree(devices.dma_dev.dma_list);
+    /*  Free memory allocated for DMA list  */
+    if ( devices.dma_dev.dma_list ){
+        kfree(devices.dma_dev.dma_list);
+    }
+
+    /*  Free IRQ line */
     free_irq(devices.spi_dev.spi_irqn, &(devices.spi_dev));
     
+    /*  Unmap MMIO */
     iounmap(devices.gpio_dev.gpio_base);
     iounmap(devices.spi_dev.spi_base);
 
@@ -724,9 +740,11 @@ static void pci_rgbled_dma_remove (struct pci_dev *pdev){
     /*  Unmap MMIO */
     iounmap(devices.dma_dev.dma_base);
     
-       /*  Free DMA memory pool  */
-    pci_pool_free(devices.dma_dev.dma_pool, devices.dma_dev.dma_data_ptr, devices.dma_dev.dma_data_phys);
-    pci_pool_destroy(devices.dma_dev.dma_pool);
+       /*  Free DMA memory pool if it was created */
+    if ( devices.dma_dev.dma_pool ){
+        pci_pool_free(devices.dma_dev.dma_pool, devices.dma_dev.dma_data_ptr, devices.dma_dev.dma_data_phys);
+        pci_pool_destroy(devices.dma_dev.dma_pool);
+    }
  
     /*  Unregister PCI device */
     pci_dev_put(pdev);
