@@ -4,14 +4,11 @@
 #include "gpio.h"
 #include "dma.h"
 #include "spi.h"
-
-
-extern uint32_t dma_channels[8];
-extern uint32_t gpio_pins[];
+#include "../rgbled_driver.h"
 
  /*****			RGBLEDS STRUCTURES			*****/
 typedef struct {
-	/* global ; 3 bits = 1 ; 5 bits = brightness 0 - 31 */
+	/* global: 3 bits = 1 ; 5 bits = brightness 0 - 31 */
     __u8 global;	
     __u8 b;
     __u8 g;
@@ -45,6 +42,13 @@ struct  pci_dev        	*pdev_spi;
 } devices_t;
 
 
-void rgbled_test(__u32 *data, __u32 test_var);
+
+extern uint32_t dma_channels[8];
+extern uint32_t gpio_pins[];
+extern devices_t devices;
+
+
+void rgbled_setcolor(__u32 *data, led_t ledcolor);
+void rgbled_usermatrix(__u32 *data, led_t *ledmatrix);
 
 #endif

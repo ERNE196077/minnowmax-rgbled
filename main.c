@@ -8,7 +8,7 @@
 
 int main (){
 
-	rgbled_conf_t ledsconfig = RGBLED_CONF_TYPEWS281X | RGBLED_CONF_DMACH(0) | RGBLED_CONF_LEDNUM(287) | RGBLED_CONF_ANIMATION(3) ;
+	rgbled_conf_t ledsconfig = RGBLED_CONF_TYPEWS281X | RGBLED_CONF_DMACH(0) | RGBLED_CONF_LEDNUM(288 	) | RGBLED_CONF_ANIMATION(3) ;
 
 	rgbled_init(&ledsconfig);
 

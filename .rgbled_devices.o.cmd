@@ -899,6 +899,7 @@ deps_/home/minnow/workspace/minnow-ws281x/rgbled_devices.o := \
   include/linux/swiotlb.h \
   include/linux/dma-contiguous.h \
   /home/minnow/workspace/minnow-ws281x/headers/spi.h \
+  /home/minnow/workspace/minnow-ws281x/headers/../rgbled_driver.h \
 
 /home/minnow/workspace/minnow-ws281x/rgbled_devices.o: $(deps_/home/minnow/workspace/minnow-ws281x/rgbled_devices.o)
 

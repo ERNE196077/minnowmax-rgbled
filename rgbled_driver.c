@@ -59,6 +59,9 @@ static __u32 spiRxData;
 static __u32 ssdr; 
 static __u8 finish_flag = 0;
 static dma_item_t *head;
+static led_t *user_leds;
+static led_t user_color;
+static led_function_t led_function;
 
 
 /*** SSP configuration variables ***/
@@ -368,6 +371,13 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
         for(i = 0 ; i < devices.dma_dev.dma_data_size ; i++)
             *((__u8 *)devices.dma_dev.dma_data_ptr + i) = 0x00;    
         
+        if (user_leds){
+            kfree(user_leds);
+
+            user_leds = kmalloc(sizeof(led_t) * RGBLED_CONF_GET_LEDNUM(devices.rgbled_config), GFP_HIGHUSER);
+            printk(KERN_ERR"Lednum %d : PTR user_leds %p \n",RGBLED_CONF_GET_LEDNUM(devices.rgbled_config), user_leds);
+        }
+
         /*** GPIO pin configuration ***/
 
         /* If SPI MOSI is already configured, leave it */
@@ -395,6 +405,7 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
         }
         devices.dma_dev.dma_list = kmalloc(sizeof(dma_item_t) * devices.dma_dev.dma_list_itemnumber, GFP_HIGHUSER);
 
+        
         /* Build DMA transmission list */
         for ( i = 0 ; i < devices.dma_dev.dma_list_itemnumber ; i++ ){
             devices.dma_dev.dma_list[i].src_addr = devices.dma_dev.dma_data_phys + (RGBLED_DMA_BLOCK_SIZE * 4 * i);
@@ -421,49 +432,97 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
         break;
 
 
+    
+    /*** IOCTL - DMA print items - Deprecated, to be deleted ***/
+
+    case IOCTL_RGBLED_USERCOLOR:
+        copy_from_user(&user_color,(void *)ioctl_params, sizeof(led_t));
+        rgbled_setcolor(devices.dma_dev.dma_data_ptr, user_color);
+
+        goto renderleds;
+
+
     /*** IOCTL - Configuration - Deprecated, will be used to other functions ***/
 
-    case IOCTL_RGBLED_CONFIGURE:
+    case IOCTL_RGBLED_USERLEDS:
+        if (!user_leds){
+            printk(KERN_ERR"rgbled: driver not in <<leds_userdefined>> function, set function first prior use it");
+            break;
+        }
+        copy_from_user(user_leds,(void *)ioctl_params, sizeof(led_t) * RGBLED_CONF_GET_LEDNUM(devices.rgbled_config));
         
-        break;
-
-    /*** IOCTL - Deconfigure - Deprecated, will be used to other functions ***/
-
-    case IOCTL_RGBLED_DECONFIGURE:
-
-        /* Disable DMA Channel */
-        devices.dma_dev.dma_cfg->__chenreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number));
+        rgbled_usermatrix(devices.dma_dev.dma_data_ptr, user_leds);
+        goto renderleds;
         
-        /* Disable DMA Request for the Chnannel */
-        devices.dma_dev.dma_cfg->__reqdstreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number));
-        devices.dma_dev.dma_cfg->__reqsrcreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number));
         
-        /* Disable DMA Single Request for the Chnannel */
-        devices.dma_dev.dma_cfg->__sglrqdstreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number));
-        devices.dma_dev.dma_cfg->__sglrqsrcreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number));
+
+    
+    case IOCTL_RGBLED_FUNCTION:
+        copy_from_user(&led_function,(void *)ioctl_params, sizeof(led_function_t));
         
-        /* Disable SSP */
-        devices.spi_dev.ssp_control_block->__sscr0__ &= ~SPI_SSP_SSCR0_SSE_SSPENABLE;
+        if (devices.dma_dev.dma_data_ptr == NULL){
+            printk(KERN_ERR"rgbled: driver has not being configured by the user, function cannot be set");
+            break;
+        }
 
-        /* Configure SPI MOSI pin */
-        GPIO_CFG_FUNCTION(devices.gpio_dev.gpio_pin_spi_mosi->__cfg__,0);
+
+        switch (led_function){
+            case leds_userdefined:
+                if(!user_leds)
+                    user_leds = kmalloc(sizeof(led_t) * RGBLED_CONF_GET_LEDNUM(devices.rgbled_config), GFP_HIGHUSER);
+
+                rgbled_setcolor(devices.dma_dev.dma_data_ptr, (led_t){0,0,0});
+                break; 
+            case leds_off:
+                rgbled_setcolor(devices.dma_dev.dma_data_ptr, (led_t){0,0,0});
+                goto nouserdefined;
+                break;
+            case leds_on:
+                rgbled_setcolor(devices.dma_dev.dma_data_ptr, (led_t){255,255,255});
+                goto nouserdefined;
+                break;
+            case leds_solar:
+                rgbled_setcolor(devices.dma_dev.dma_data_ptr, (led_t){255,100,41});
+                goto nouserdefined;
+                break;
+            case leds_warm:
+                rgbled_setcolor(devices.dma_dev.dma_data_ptr, (led_t){255,90,20});
+                goto nouserdefined;
+                break;
+            case leds_green:
+                rgbled_setcolor(devices.dma_dev.dma_data_ptr, (led_t){0,255,0});
+                goto nouserdefined;
+                break;
+            case leds_red:
+                rgbled_setcolor(devices.dma_dev.dma_data_ptr, (led_t){255,0,0});
+                goto nouserdefined;
+                break;
+            case leds_blue:
+                rgbled_setcolor(devices.dma_dev.dma_data_ptr, (led_t){0,0,255});
+                goto nouserdefined;
+                break;
+
+            nouserdefined:
+            default:
+                if(user_leds){
+                    kfree(user_leds);
+                    user_leds = NULL;
+                }
+                break;
+        }
+
         
-        /* If LED is APA102 class, configure SPI CLK pin */
-        if(RGBLED_CONF_GET_LEDTYPE(devices.rgbled_config))
-            GPIO_CFG_FUNCTION(devices.gpio_dev.gpio_pin_spi_clk->__cfg__,0);
 
-        break;
-
+        //break;
     /*** IOCTL - Render RGB leds ***/
 
     case IOCTL_RGBLED_RENDER:
         
+        renderleds:
+        
         /*** Data preparation ***/
-
-        /* TODO - Clear to add X11 information */
-        rgbled_test(devices.dma_dev.dma_data_ptr, RGBLED_CONF_GET_LEDNUM(devices.rgbled_config));
-        __clear_cache((char *)devices.dma_dev.dma_data_ptr,
-                        (char *)(devices.dma_dev.dma_data_ptr + 5 ));
+        //__clear_cache((char *)devices.dma_dev.dma_data_ptr,
+        //                (char *)(devices.dma_dev.dma_data_ptr + 5 ));
 
         /* Point head to the first DMA item and reset the finish flag */
         head = devices.dma_dev.dma_list;
@@ -541,27 +600,8 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
 
         break;
     
-    /*** IOCTL - DMA print items - Deprecated, to be deleted ***/
-
-    case IOCTL_DMA_PRINTITEMS:
-        printk(KERN_ALERT"DMA data address: %p\n\n",devices.dma_dev.dma_data_ptr);
-        printk(KERN_ALERT"DMA mem size : %08x\n\n",devices.dma_dev.dma_data_size);
-        printk(KERN_INFO"__chenreg_l__\t\t%08x\n", devices.dma_dev.dma_cfg->__chenreg_l__ );
-        printk(KERN_INFO"__dmacfgre_l__\t\t%08x\n", devices.dma_dev.dma_cfg->__dmacfgre_l__ );
-        printk(KERN_INFO"__reqdstreg_l__\t\t%08x\n", devices.dma_dev.dma_cfg->__reqdstreg_l__);
-        printk(KERN_INFO"__reqsrcreg_l__\t\t%08x\n", devices.dma_dev.dma_cfg->__reqsrcreg_l__);
-        printk(KERN_INFO"__sglrqdstreg_l__\t\t%08x\n", devices.dma_dev.dma_cfg->__sglrqdstreg_l__);
-        printk(KERN_INFO"__sglrqsrcreg_l__\t\t%08x\n\n", devices.dma_dev.dma_cfg->__sglrqsrcreg_l__);
     
-        printk(KERN_INFO"__src_l__\t\t%08x\n", devices.dma_dev.dma_tx_ch->__sar_l__ );
-        printk(KERN_INFO"__dst_l__\t\t%08x\n", devices.dma_dev.dma_tx_ch->__dar_l__);
-        printk(KERN_INFO"__llp_l__\t\t%08x\n", devices.dma_dev.dma_tx_ch->__llp_l__);
-        printk(KERN_INFO"__ctl_l__\t\t%08x\n", devices.dma_dev.dma_tx_ch->__ctl_l__);
-        printk(KERN_INFO"__ctl_h__\t\t%08x\n", devices.dma_dev.dma_tx_ch->__ctl_h__);
-        printk(KERN_INFO"__cfg_l__\t\t%08x\n", devices.dma_dev.dma_tx_ch->__cfg_l__);
-        printk(KERN_INFO"__cfg_h__\t\t%08x\n\n", devices.dma_dev.dma_tx_ch->__cfg_h__);
-
-    break;
+    
 
     }
     return 0;
@@ -718,6 +758,10 @@ static void pci_rgbled_spi_remove (struct pci_dev *pdev){
     /*  Free memory allocated for DMA list  */
     if ( devices.dma_dev.dma_list ){
         kfree(devices.dma_dev.dma_list);
+    }
+
+    if(user_leds){
+        kfree(user_leds);
     }
 
     /*  Free IRQ line */

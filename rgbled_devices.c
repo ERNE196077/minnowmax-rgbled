@@ -7,45 +7,54 @@
 	
 int rx=0, gx=0, bx=1;
 int r=255, g=128, b=0;
-void rgbled_test(__u32 *data, __u32 test_var ){
-	__u32 i;
+void rgbled_setcolor(__u32 *data, led_t ledcolor){
+	__u16 lednumber = RGBLED_CONF_GET_LEDNUM(devices.rgbled_config);
+	__u32 ledtype = RGBLED_CONF_GET_LEDTYPE(devices.rgbled_config);
+	__u16 i;
+	led_ws281x_t *ws281x_data;
+	led_apa102_t *apa102_data;
+	switch (ledtype){
 
-	led_ws281x_t *ws281x_data = (led_ws281x_t *) data ; 
+		case RGBLED_CONF_TYPEAPA102:
+		break;
 
-	if(r == 0) rx = 0; else if(r==255) rx = 1;
-	if(g == 0) gx = 0; else if(g==255) gx = 1;
-	if(b == 0) bx = 0; else if(b==255) bx = 1;
+		case RGBLED_CONF_TYPEWS281X:
+			ws281x_data = (led_ws281x_t *) data ;
+			for ( i = 0 ; i < lednumber ; i++ ){
+				(ws281x_data + i)->r = RGBLEDWS281X_RGBCONV(ledcolor.r);
+				(ws281x_data + i)->g = RGBLEDWS281X_RGBCONV(ledcolor.g);
+				(ws281x_data + i)->b = RGBLEDWS281X_RGBCONV(ledcolor.b);
+			}
+			printk(KERN_INFO"Set color %08x \n",*((__u32 *)ws281x_data));
+		break;
 
-	//b = (bx) ? b-1 : b+1;
-	//r = (rx) ? r-1 : r+1; 
-	//g = (gx) ? g-1 : g+1;
+	}
+}
 
 
-	for ( i = 0 ; i < test_var ; i++ ){
-			if (rx)
-				r++;
-			else 
-				rx--;
-			if(gx)
-				g++;
-			else 
-				g--;
-			if (bx)
-				b++;
-			else
-				b--;
-			(ws281x_data + i)->r = RGBLEDWS281X_RGBCONV(r);
-			(ws281x_data + i)->g = RGBLEDWS281X_RGBCONV(g);
-			(ws281x_data + i)->b = RGBLEDWS281X_RGBCONV(b);
-		
-	}  
-	/*
-	(ws281x_data + 451)->r = 0x0;
-	(ws281x_data + 451)->g = 0x0;
-	(ws281x_data + 451)->b = 0x0;
+void rgbled_usermatrix(__u32 *data, led_t *ledmatrix){
+	__u16 lednumber = RGBLED_CONF_GET_LEDNUM(devices.rgbled_config);
+	__u32 ledtype = RGBLED_CONF_GET_LEDTYPE(devices.rgbled_config);
+	__u16 i;
+	led_ws281x_t *ws281x_data;
+	led_apa102_t *apa102_data;
 
-	(ws281x_data + 452)->r = 0x0;
-	(ws281x_data + 452)->g = 0x0;
-	(ws281x_data + 452)->b = 0x0;
-	*/	
+	switch (ledtype){
+
+		case RGBLED_CONF_TYPEAPA102:
+		break;
+
+		case RGBLED_CONF_TYPEWS281X:
+			ws281x_data = (led_ws281x_t *) data ;
+			for ( i = 0 ; i < lednumber ; i++ ){
+				(ws281x_data + i)->r = RGBLEDWS281X_RGBCONV((ledmatrix + i)->r);
+				(ws281x_data + i)->g = RGBLEDWS281X_RGBCONV((ledmatrix + i)->g);
+				(ws281x_data + i)->b = RGBLEDWS281X_RGBCONV((ledmatrix + i)->b);
+
+				
+			}
+			printk(KERN_INFO"User defined %08x\n",*((__u32 *)ws281x_data));
+		break;
+
+	}
 }
