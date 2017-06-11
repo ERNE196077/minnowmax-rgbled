@@ -76,7 +76,7 @@ __u32 ssp_sscr0_cfg =
             SPI_SSP_SSCR0_SSE_SSPDISABLE |
             SPI_SSP_SSCR0_ECS_EXTERNALCLOCKFROMGPIO |
             SPI_SSP_SSCR0_FRF_MOTOROLA |
-            SPI_SSP_SSCR0_DSS_DATASIZESELECT(0xF) ;
+            SPI_SSP_SSCR0_DSS_DATASIZESELECT(0x7) ;
 __u32 ssp_sscr1_cfg = 
             SPI_SSP_SSCR1_TTELP_TXDTRISTATEONCLOCKEDGE |
             SPI_SSP_SSCR1_TTE_TXDNOTTRISTATED |
@@ -241,6 +241,7 @@ static irqreturn_t short_spi_interrupt(int irq, void *dev_id)
 
             /* If the finish flag is set end the data transmission */
             if( finish_flag ){
+                /* Deactivate RX DMA channel */
                 devices.dma_dev.dma_cfg->__chenreg_l__ = (0x1 << (8 + (devices.dma_dev.dma_ch_number + 1)));
                 /* Flush the SSP SPI RX FIFO to finish the data transmission */
                 do {
@@ -431,6 +432,27 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
         /* Deactivate SSP SPI */
         devices.spi_dev.ssp_control_block->__sscr0__ &= ~SPI_SSP_SSCR0_SSE_SSPENABLE;
 
+        /* Configuring SPI */
+        devices.spi_dev.ssp_control_block->__sscr0__ = ssp_sscr0_cfg;
+        if  (RGBLED_CONF_GET_LEDTYPE(devices.rgbled_config))
+            devices.spi_dev.ssp_control_block->__sscr0__ |= SPI_SSP_SSCR0_DSS_DATASIZESELECT(0xF);
+
+        devices.spi_dev.ssp_control_block->__sscr1__ = ssp_sscr1_cfg; 
+        devices.spi_dev.ssp_control_block->__sssr__ &= ssp_sssr_clearint_mask;
+        devices.spi_dev.ssp_control_block->__ssacd__ = ssp_ssacd_cfg;
+        devices.spi_dev.ssp_control_block->__sitf__ &= ~0xFFFF ;
+        devices.spi_dev.ssp_control_block->__sitf__ |=
+            SPI_SSP_SITF_LWMTF_SETTXLOWWATERMARKSPI(0xFF)    |
+            SPI_SSP_SITF_HWMTF_SETTXHIGHWATERMARKSPI(0xFF) ;
+            
+        devices.spi_dev.ssp_general_block->__prv_clock_params__ =
+            SPI_SSP_PRVCLKPARAMS_CLOCKUPDATE |
+            SPI_SSP_PRVCLKPARAMS_N_DIVISOR(0xFF) |
+            SPI_SSP_PRVCLKPARAMS_M_DIVIDEND(0x3) |
+            SPI_SSP_PRVCLKPARAMS_ENABLECLOCK ;
+
+        
+
         break;
 
 
@@ -523,9 +545,7 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
         renderleds:
         
         /*** Data preparation ***/
-        //__clear_cache((char *)devices.dma_dev.dma_data_ptr,
-        //                (char *)(devices.dma_dev.dma_data_ptr + 5 ));
-
+        
         /* Point head to the first DMA item and reset the finish flag */
         head = devices.dma_dev.dma_list;
         finish_flag = 0;
@@ -537,22 +557,6 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
 
         /* Deactivate SSP SPI */
         devices.spi_dev.ssp_control_block->__sscr0__ &= ~SPI_SSP_SSCR0_SSE_SSPENABLE;
-
-        /* Configuring SPI */
-        devices.spi_dev.ssp_control_block->__sscr0__ = ssp_sscr0_cfg; 
-        devices.spi_dev.ssp_control_block->__sscr1__ = ssp_sscr1_cfg; 
-        devices.spi_dev.ssp_control_block->__sssr__ &= ssp_sssr_clearint_mask;
-        devices.spi_dev.ssp_control_block->__ssacd__ = ssp_ssacd_cfg;
-        devices.spi_dev.ssp_control_block->__sitf__ &= ~0xFFFF ;
-        devices.spi_dev.ssp_control_block->__sitf__ |=
-            SPI_SSP_SITF_LWMTF_SETTXLOWWATERMARKSPI(0xFF)    |
-            SPI_SSP_SITF_HWMTF_SETTXHIGHWATERMARKSPI(0xFF) ;
-            
-        devices.spi_dev.ssp_general_block->__prv_clock_params__ =
-            SPI_SSP_PRVCLKPARAMS_CLOCKUPDATE |
-            SPI_SSP_PRVCLKPARAMS_N_DIVISOR(0xFF) |
-            SPI_SSP_PRVCLKPARAMS_M_DIVIDEND(0x3) |
-            SPI_SSP_PRVCLKPARAMS_ENABLECLOCK ;
 
         /* Configuring TX DMA */
         devices.dma_dev.dma_tx_ch->__sar_l__ = head->src_addr;
