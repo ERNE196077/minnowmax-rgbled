@@ -52,6 +52,10 @@ typedef enum{
 	leds_function3
 }led_function_t;
 
+typedef enum{
+	ledtype_ws281x,
+	ledtype_apa102
+}led_type_t;
 
 
 

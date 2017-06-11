@@ -309,11 +309,10 @@ int rgbled_init (rgbled_conf_t *rgbled_conf) {
   }
 
   rgbled_setconfig(file, rgbled_conf);
-  rgbled_function(file,leds_userdefined);
-
-  rgbled_sendleds(file,test_matrix);
-  sleep(5);
-  rgbled_function(file,leds_warm);
+  //0rgbled_function(file,leds_userdefined);
+   rgbled_function(file,leds_on);
+  
+  //rgbled_sendleds(file,test_matrix);
   //while (1){
   //  rgbled_render(file);
   //  usleep(8500);

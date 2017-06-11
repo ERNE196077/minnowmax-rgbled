@@ -33,7 +33,7 @@ MODULE_INFO(intree, "Y");
 #define RGBLED_DMA_BLOCK_SIZE                   (0x80)
 #define RGBLED_DMA_POOL_SIZE(bytes)             (bytes % 1024 ? ((bytes / 1024) + 1) * 1024 : bytes)
 #define RGBLED_DATA_SIZE_WS281X(lednum)         (sizeof(led_ws281x_t) * lednum )
-#define RGBLED_DATA_SIZE_APA102(lednum)         (sizeof(led_apa102_t) * lednum )
+#define RGBLED_DATA_SIZE_APA102(lednum)         (sizeof(led_apa102_t) * ( lednum + 2 ) )
 #define RBGLED_DMA_ITEMLISTNUMBER(datasize)     (datasize % (RGBLED_DMA_BLOCK_SIZE * 4) ? ((datasize / (RGBLED_DMA_BLOCK_SIZE * 4)) + 1) : (datasize / (RGBLED_DMA_BLOCK_SIZE * 4)))
 #define RGBLED_DMA_DATABLOCKREMAINDER(datasize) ((datasize % (RGBLED_DMA_BLOCK_SIZE * 4) / 4))
 
@@ -76,7 +76,7 @@ __u32 ssp_sscr0_cfg =
             SPI_SSP_SSCR0_SSE_SSPDISABLE |
             SPI_SSP_SSCR0_ECS_EXTERNALCLOCKFROMGPIO |
             SPI_SSP_SSCR0_FRF_MOTOROLA |
-            SPI_SSP_SSCR0_DSS_DATASIZESELECT(0x7) ;
+            SPI_SSP_SSCR0_DSS_DATASIZESELECT(0xF) ;
 __u32 ssp_sscr1_cfg = 
             SPI_SSP_SSCR1_TTELP_TXDTRISTATEONCLOCKEDGE |
             SPI_SSP_SSCR1_TTE_TXDNOTTRISTATED |
@@ -95,6 +95,8 @@ __u32 ssp_sscr1_cfg =
             SPI_SSP_SSCR1_IFS_FRAMEPOLARITYBYTHEFORMAT |
             SPI_SSP_SSCR1_RFT_RECEIVEFIFOTRIGTHRESHOLD(0x9) |
             SPI_SSP_SSCR1_TFT_TRANSMITFIFOTRIGTHRESHOLD(0xC) |
+            SPI_SSP_SSCR1_SPH_MOTOROLACLKONATFRMSTART |
+            SPI_SSP_SSCR1_SPO_MOTOROLACLOCKIDLEASHIGH |
             SPI_SSP_SSCR1_TIE_TRANSFIFOLEVELINTERRENA |   
             SPI_SSP_SSCR1_RIE_RECEIFIFOLEVELINTERRDISA ; 
 __u32 ssp_ssacd_cfg = 
@@ -351,7 +353,7 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
         devices.dma_dev.dma_data_size = (RGBLED_CONF_GET_LEDTYPE(devices.rgbled_config)) ? 
                                         RGBLED_DATA_SIZE_APA102 (RGBLED_CONF_GET_LEDNUM(devices.rgbled_config)): 
                                         RGBLED_DATA_SIZE_WS281X (RGBLED_CONF_GET_LEDNUM(devices.rgbled_config));
-        
+        printk(KERN_ALERT"data_size (bytes) %x :: lednum %d :: bs  %d",devices.dma_dev.dma_data_size,RGBLED_CONF_GET_LEDNUM(devices.rgbled_config),RGBLED_DMA_DATABLOCKREMAINDER(devices.dma_dev.dma_data_size));
         /*** Memory Allocation ***/
 
         /* If pool was already created destroy it and create a new one (Reconfiguring driver) */
@@ -482,7 +484,7 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
                 goto nouserdefined;
                 break;
             case leds_solar:
-                rgbled_setcolor(devices.dma_dev.dma_data_ptr, (led_t){255,100,41});
+                rgbled_setcolor(devices.dma_dev.dma_data_ptr, (led_t){255,85,41});
                 goto nouserdefined;
                 break;
             case leds_warm:

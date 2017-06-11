@@ -9,10 +9,10 @@
  /*****			RGBLEDS STRUCTURES			*****/
 typedef struct {
 	/* global: 3 bits = 1 ; 5 bits = brightness 0 - 31 */
-    __u8 global;	
-    __u8 b;
-    __u8 g;
     __u8 r;
+    __u8 g;
+    __u8 b;
+    __u8 global;	
 }__attribute__((packed)) led_apa102_t ;
 
 typedef struct {
