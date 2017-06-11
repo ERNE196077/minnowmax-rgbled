@@ -1,1 +1,0 @@
-cmd_/home/ernestrc/workspace/minnow_local/minnow-ws281x/main_rgbled.ko := ld -r -m elf_x86_64 -T ./scripts/module-common.lds --build-id  -o /home/ernestrc/workspace/minnow_local/minnow-ws281x/main_rgbled.ko /home/ernestrc/workspace/minnow_local/minnow-ws281x/main_rgbled.o /home/ernestrc/workspace/minnow_local/minnow-ws281x/main_rgbled.mod.o ;  true

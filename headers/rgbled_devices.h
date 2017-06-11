@@ -36,6 +36,7 @@ typedef struct{
 struct  pci_dev        	*pdev_dma;
 struct  pci_dev        	*pdev_spi;
 		__u32 			rgbled_config;
+		__u32			apa102_endframes;
 		gpio_dev_t		gpio_dev;
 		dma_dev_t		dma_dev;
 		spi_dev_t		spi_dev;

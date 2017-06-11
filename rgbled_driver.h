@@ -19,6 +19,7 @@
 #define RGBLED_CONF_DMACH(value)		((value) << 24)
 #define	RGBLED_CONF_LEDNUM(value)		(value)
 #define RGBLED_CONF_ANIMATION(value)	((value) << 16)
+#define RGBLED_CONF_APA102ENDFRAMES(lednum)	((lednum) / 64 ) 
 
 #define RGBLED_CONF_GET_LEDNUM(value)		((value) & 0xFFFF)
 #define RGBLED_CONF_GET_LEDTYPE(value)		(((value) & 0xF0000000) >> 28)

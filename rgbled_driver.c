@@ -33,7 +33,7 @@ MODULE_INFO(intree, "Y");
 #define RGBLED_DMA_BLOCK_SIZE                   (0x80)
 #define RGBLED_DMA_POOL_SIZE(bytes)             (bytes % 1024 ? ((bytes / 1024) + 1) * 1024 : bytes)
 #define RGBLED_DATA_SIZE_WS281X(lednum)         (sizeof(led_ws281x_t) * lednum )
-#define RGBLED_DATA_SIZE_APA102(lednum)         (sizeof(led_apa102_t) * ( lednum + 2 ) )
+#define RGBLED_DATA_SIZE_APA102(lednum)         (sizeof(led_apa102_t) * ( lednum + 2 + RGBLED_CONF_APA102ENDFRAMES(lednum)) )
 #define RBGLED_DMA_ITEMLISTNUMBER(datasize)     (datasize % (RGBLED_DMA_BLOCK_SIZE * 4) ? ((datasize / (RGBLED_DMA_BLOCK_SIZE * 4)) + 1) : (datasize / (RGBLED_DMA_BLOCK_SIZE * 4)))
 #define RGBLED_DMA_DATABLOCKREMAINDER(datasize) ((datasize % (RGBLED_DMA_BLOCK_SIZE * 4) / 4))
 
@@ -195,30 +195,6 @@ __u32 dma_rx_cfg_h_cfg =
             DMA_CFG_HI_FIFOMODE_SPACEDATAEQTOTRANSWDITH |
             DMA_CFG_HI_FCMODE_SRCTRANSREQWHENTHEYOCURR ;
 
-/**************************************************************************
-*****************   Module char device functions    ***********************
-***************************************************************************/
-
-static int device_open(struct inode *inode, struct file *file){
-    if (open)
-        return -EBUSY;
-
-    printk(KERN_INFO       "FILE "DEV_NAME" OPEN!\n");
-
-    open++;
-    try_module_get(THIS_MODULE);
-
-    return 0;
-}
-
-static int device_release(struct inode *inode, struct file *file){
-    open--;
-    module_put(THIS_MODULE);
-
-    printk(KERN_INFO"FILE "DEV_NAME" CLOSE!\n");
-
-    return 0;
-}
 
 /**************************************************************************
 *****************     Interrupt callbacks         *************************
@@ -354,8 +330,10 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
         devices.dma_dev.dma_data_size = (RGBLED_CONF_GET_LEDTYPE(devices.rgbled_config)) ? 
                                         RGBLED_DATA_SIZE_APA102 (RGBLED_CONF_GET_LEDNUM(devices.rgbled_config)): 
                                         RGBLED_DATA_SIZE_WS281X (RGBLED_CONF_GET_LEDNUM(devices.rgbled_config));
-        printk(KERN_ALERT"data_size (bytes) %x :: lednum %d :: bs  %d",devices.dma_dev.dma_data_size,RGBLED_CONF_GET_LEDNUM(devices.rgbled_config),RGBLED_DMA_DATABLOCKREMAINDER(devices.dma_dev.dma_data_size));
-        /*** Memory Allocation ***/
+        
+        if(RGBLED_CONF_GET_LEDTYPE(devices.rgbled_config))
+		devices.apa102_endframes = RGBLED_CONF_APA102ENDFRAMES(RGBLED_CONF_GET_LEDNUM(devices.rgbled_config));
+	/*** Memory Allocation ***/
 
         /* If pool was already created destroy it and create a new one (Reconfiguring driver) */
         if ( devices.dma_dev.dma_pool ){ 
@@ -374,12 +352,11 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
         for(i = 0 ; i < devices.dma_dev.dma_data_size ; i++)
             *((__u8 *)devices.dma_dev.dma_data_ptr + i) = 0x00;    
         
+	/* In a case that a reconfiguration is needed and a user buffer exists recreate it */
         if (user_leds){
             kfree(user_leds);
-
-            user_leds = kmalloc(sizeof(led_t) * RGBLED_CONF_GET_LEDNUM(devices.rgbled_config), GFP_HIGHUSER);
-            printk(KERN_ERR"Lednum %d : PTR user_leds %p \n",RGBLED_CONF_GET_LEDNUM(devices.rgbled_config), user_leds);
-        }
+	    user_leds = kmalloc(sizeof(led_t) * RGBLED_CONF_GET_LEDNUM(devices.rgbled_config), GFP_HIGHUSER);
+	}
 
         /*** GPIO pin configuration ***/
 
@@ -394,6 +371,7 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
         /* MMIO mapping for DMA */
         
         /* Map DMA channel registers to a local pointer */
+
         devices.dma_dev.dma_tx_ch = (volatile dma_ch_t *)(devices.dma_dev.dma_base + dma_channels[devices.dma_dev.dma_ch_number]);
         devices.dma_dev.dma_rx_ch = (volatile dma_ch_t *)(devices.dma_dev.dma_base + dma_channels[devices.dma_dev.dma_ch_number+1]);
 
@@ -405,6 +383,7 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
         /* If it is a reconfiguration free the previous allocation */
         if ( devices.dma_dev.dma_list ){
             kfree(devices.dma_dev.dma_list);
+	    devices.dma_dev.dma_list = NULL;
         }
         devices.dma_dev.dma_list = kmalloc(sizeof(dma_item_t) * devices.dma_dev.dma_list_itemnumber, GFP_HIGHUSER);
 
@@ -451,14 +430,10 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
             SPI_SSP_PRVCLKPARAMS_M_DIVIDEND(0x3) |
             SPI_SSP_PRVCLKPARAMS_ENABLECLOCK ;
 
-        
-
         break;
 
-
     
-    /*** IOCTL - DMA print items - Deprecated, to be deleted ***/
-
+    /*** IOCTL - Render strip with a user specified color ***/
     case IOCTL_RGBLED_USERCOLOR:
         copy_from_user(&user_color,(void *)ioctl_params, sizeof(led_t));
         rgbled_setcolor(devices.dma_dev.dma_data_ptr, user_color);
@@ -466,21 +441,24 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
         goto renderleds;
 
 
-    /*** IOCTL - Configuration - Deprecated, will be used to other functions ***/
-
+    /*** IOCTL - Receive LED color matrix from userspace ***/
     case IOCTL_RGBLED_USERLEDS:
+	/* Check if there is memory allocated for the user data */
         if (!user_leds){
             printk(KERN_ERR"rgbled: driver not in <<leds_userdefined>> function, set function first prior use it");
             break;
         }
-        copy_from_user(user_leds,(void *)ioctl_params, sizeof(led_t) * RGBLED_CONF_GET_LEDNUM(devices.rgbled_config));
         
+	copy_from_user(user_leds,(void *)ioctl_params, sizeof(led_t) * RGBLED_CONF_GET_LEDNUM(devices.rgbled_config));
+        
+	/* Build the data stream from the users information */
         rgbled_usermatrix(devices.dma_dev.dma_data_ptr, user_leds);
-        goto renderleds;
         
-        
-
+	/* Render the leds */
+	goto renderleds;
     
+
+    /*** IOCTL - Set function or color preset ***/
     case IOCTL_RGBLED_FUNCTION:
         copy_from_user(&led_function,(void *)ioctl_params, sizeof(led_function_t));
         
@@ -494,38 +472,46 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
             case leds_userdefined:
                 if(!user_leds)
                     user_leds = kmalloc(sizeof(led_t) * RGBLED_CONF_GET_LEDNUM(devices.rgbled_config), GFP_HIGHUSER);
-
+		/* Refresh colors by setting off */
                 rgbled_setcolor(devices.dma_dev.dma_data_ptr, (led_t){0,0,0});
                 break; 
-            case leds_off:
+            
+	    case leds_off:
                 rgbled_setcolor(devices.dma_dev.dma_data_ptr, (led_t){0,0,0});
                 goto nouserdefined;
                 break;
-            case leds_on:
+            
+	    case leds_on:
                 rgbled_setcolor(devices.dma_dev.dma_data_ptr, (led_t){255,255,255});
                 goto nouserdefined;
                 break;
-            case leds_solar:
+            
+	    case leds_solar:
                 rgbled_setcolor(devices.dma_dev.dma_data_ptr, (led_t){255,85,41});
                 goto nouserdefined;
                 break;
-            case leds_warm:
+            
+	    case leds_warm:
                 rgbled_setcolor(devices.dma_dev.dma_data_ptr, (led_t){255,90,20});
                 goto nouserdefined;
                 break;
-            case leds_green:
+            
+	    case leds_green:
                 rgbled_setcolor(devices.dma_dev.dma_data_ptr, (led_t){0,255,0});
                 goto nouserdefined;
                 break;
-            case leds_red:
+            
+	    case leds_red:
                 rgbled_setcolor(devices.dma_dev.dma_data_ptr, (led_t){255,0,0});
                 goto nouserdefined;
                 break;
-            case leds_blue:
+            
+	    case leds_blue:
                 rgbled_setcolor(devices.dma_dev.dma_data_ptr, (led_t){0,0,255});
                 goto nouserdefined;
                 break;
 
+    	    /* When no data from user is needed free user buffer */
             nouserdefined:
             default:
                 if(user_leds){
@@ -536,8 +522,6 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
         }
 
         
-
-        //break;
     /*** IOCTL - Render RGB leds ***/
 
     case IOCTL_RGBLED_RENDER:
@@ -553,10 +537,10 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
         /*** Device Configuration ***/
 
         /* Deactivate DMA channels */
-        devices.dma_dev.dma_cfg->__chenreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number)) | (0x1 << (8 + (devices.dma_dev.dma_ch_number + 1)));
+	//        devices.dma_dev.dma_cfg->__chenreg_l__ = (0x1 << (8 + devices.dma_dev.dma_ch_number)) | (0x1 << (8 + (devices.dma_dev.dma_ch_number + 1)));
 
         /* Deactivate SSP SPI */
-        devices.spi_dev.ssp_control_block->__sscr0__ &= ~SPI_SSP_SSCR0_SSE_SSPENABLE;
+        //devices.spi_dev.ssp_control_block->__sscr0__ &= ~SPI_SSP_SSCR0_SSE_SSPENABLE;
 
         /* Configuring TX DMA */
         devices.dma_dev.dma_tx_ch->__sar_l__ = head->src_addr;
@@ -613,9 +597,38 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
     return 0;
 }
 
+
+/**************************************************************************
+*****************   Module char device functions    ***********************
+***************************************************************************/
+
+static int device_open(struct inode *inode, struct file *file){
+    if (open)
+        return -EBUSY;
+    open++;
+    try_module_get(THIS_MODULE);
+
+    return 0;
+}
+
+static int device_release(struct inode *inode, struct file *file){
+    open--;
+    module_put(THIS_MODULE);
+
+    return 0;
+}
+
+struct file_operations fop = {
+    .unlocked_ioctl = device_ioctl,
+    .open = device_open,
+    .release = device_release
+};
+
+
 /**************************************************************************
 *****************     PCI functions      **********************************
 ***************************************************************************/
+
 static int pci_rgbled_spi_probe (struct pci_dev *pdev, const struct pci_device_id *id){
 
     /*  Register PCI device  */
@@ -738,7 +751,6 @@ static int pci_rgbled_dma_probe (struct pci_dev *pdev, const struct pci_device_i
             goto err_dma_iomap;
         }
         else {
-        // actually enable it -- assume this *is* a parallel port 
              printk(KERN_INFO"rgbled: DMA interrupt registered\n");
         }
     }
@@ -746,7 +758,7 @@ static int pci_rgbled_dma_probe (struct pci_dev *pdev, const struct pci_device_i
 
     return 0;
 
-    /*  ERrror handlers  */
+    /*  Error handlers  */
     err_dma_iomap:
         iounmap(devices.dma_dev.dma_base);
     err_set_dma_mask:
@@ -758,14 +770,13 @@ static int pci_rgbled_dma_probe (struct pci_dev *pdev, const struct pci_device_i
     return err_dma;
 }
 
-
 static void pci_rgbled_spi_remove (struct pci_dev *pdev){
     
     /*  Free memory allocated for DMA list  */
     if ( devices.dma_dev.dma_list ){
         kfree(devices.dma_dev.dma_list);
     }
-
+    /* Free memory allocated for user LEDs data */
     if(user_leds){
         kfree(user_leds);
     }
@@ -832,18 +843,6 @@ static struct pci_driver pdrv_spi = {
     .id_table   = pci_supp_spi_list,
     .remove     = pci_rgbled_spi_remove,
     .probe      = pci_rgbled_spi_probe,
-};
-
-
-
-/**************************************************************************
-*****************     Init / Cleanup functions          *******************
-***************************************************************************/
-
-struct file_operations fop = {
-    .unlocked_ioctl = device_ioctl,
-    .open = device_open,
-    .release = device_release
 };
 
 

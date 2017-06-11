@@ -238,6 +238,60 @@ static led_t test_matrix[288] = {{255,90,20},
                             {0,255,0},
                           {0,255,0},
                         {0,255,0},
+                        {0,255,0},{255,90,20},
+                                {255,0,0},
+                                {0,0,255},
+                                {0,255,255},
+                                {255,255,0},
+                              {0,255,0},
+                            {0,255,0},
+                          {0,255,0},
+                        {0,255,0},
+                        {0,255,0},{255,90,20},
+                                {255,0,0},
+                                {0,0,255},
+                                {0,255,255},
+                                {255,255,0},
+                              {0,255,0},
+                            {0,255,0},
+                          {0,255,0},
+                        {0,255,0},
+                        {0,255,0},{255,90,20},
+                                {255,0,0},
+                                {0,0,255},
+                                {0,255,255},
+                                {255,255,0},
+                              {0,255,0},
+                            {0,255,0},
+                          {0,255,0},
+                        {0,255,0},
+                        {0,255,0},{255,90,20},
+                                {255,0,0},
+                                {0,0,255},
+                                {0,255,255},
+                                {255,255,0},
+                              {0,255,0},
+                            {0,255,0},
+                          {0,255,0},
+                        {0,255,0},
+                        {0,255,0},{255,90,20},
+                                {255,0,0},
+                                {0,0,255},
+                                {0,255,255},
+                                {255,255,0},
+                              {0,255,0},
+                            {0,255,0},
+                          {0,255,0},
+                        {0,255,0},
+                        {0,255,0},{255,90,20},
+                                {255,0,0},
+                                {0,0,255},
+                                {0,255,255},
+                                {255,255,0},
+                              {0,255,0},
+                            {0,255,0},
+                          {0,255,0},
+                        {0,255,0},
                         {0,255,0}};
 
 
@@ -308,15 +362,23 @@ int rgbled_init (rgbled_conf_t *rgbled_conf) {
 	 exit(-1);
   }
 
-  rgbled_setconfig(file, rgbled_conf);
-  //0rgbled_function(file,leds_userdefined);
-   rgbled_function(file,leds_on);
-  
-  //rgbled_sendleds(file,test_matrix);
-  //while (1){
-  //  rgbled_render(file);
-  //  usleep(8500);
-  //}
+ rgbled_setconfig(file, rgbled_conf);
+ rgbled_function(file,leds_userdefined);
+ rgbled_sendleds(file,test_matrix);
+  sleep(1);
+  rgbled_function(file,leds_red);
+  sleep(1);
+  rgbled_function(file,leds_blue);
+  sleep(1);
+  rgbled_function(file,leds_green);
+  sleep(1);
+  rgbled_function(file,leds_solar);
+  sleep(1);
+  rgbled_function(file,leds_warm);
+  sleep(1);
+  rgbled_function(file,leds_on);
+  sleep(1);
+  rgbled_function(file,leds_off);
   
 	return 0;
 }
