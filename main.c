@@ -8,9 +8,14 @@
 
 int main (){
 
-	rgbled_conf_t ledsconfig = RGBLED_CONF_TYPEAPA102 | RGBLED_CONF_DMACH(0) | RGBLED_CONF_LEDNUM(288) | RGBLED_CONF_ANIMATION(3) ;
+	rgbled_conf_t ledsconfig = RGBLED_CONF_TYPEAPA102 | 
+							RGBLED_CONF_DMACH(0) | 
+							RGBLED_CONF_LEDNUM(144);
 
-	rgbled_init(&ledsconfig);
+	if (rgbled_init(&ledsconfig))
+		return 1;
+
+	rgbled_test();
 
 return 0;
 }

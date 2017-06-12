@@ -14,15 +14,10 @@
  
 #include "../rgbled_driver.h"
 
-/*****			WS281X DEFAULT VALUES			*****/
+/*** RGBLED functions ***/
 
-#define WS281X_DEFAULT_LED_NUMBER		1
-#define WS281X_DEFAULT_DMA_CHANNEL		0
-
-
-/*****			RGBLED FUNCTIONS			*****/
-
-int	rgbled_init	(rgbled_conf_t  *rgbled_conf);
+int rgbled_init (rgbled_conf_t  *rgbled_conf);
+void rgbled_test (void);
 
 
 #endif /* RGBLED_H_ */

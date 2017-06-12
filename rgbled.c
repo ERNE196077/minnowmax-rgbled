@@ -17,11 +17,10 @@
 #include <sys/mman.h>
 #include <linux/types.h>
 #include <stdint.h>
-#include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <string.h>
 #include <sys/ioctl.h>
+#include <X11/Xlib.h>
  
 #include "headers/rgbled.h"
 
@@ -31,341 +30,38 @@
 
 
 static led_t test_led = {2,0,20};
-static led_t test_matrix[288] = {{255,90,20},
-                                {255,0,0},
-                                {0,0,255},
-                                {0,255,255},
-                                {255,255,0},
-                              {0,255,0},
-                            {0,255,0},
-                          {0,255,0},
-                        {0,255,0},
-                        {0,255,0},{255,90,20},
-                                {255,0,0},
-                                {0,0,255},
-                                {0,255,255},
-                                {255,255,0},
-                              {0,255,0},
-                            {0,255,0},
-                          {0,255,0},
-                        {0,255,0},
-                        {0,255,0},{255,90,20},
-                                {255,0,0},
-                                {0,0,255},
-                                {0,255,255},
-                                {255,255,0},
-                              {0,255,0},
-                            {0,255,0},
-                          {0,255,0},
-                        {0,255,0},
-                        {0,255,0},{255,90,20},
-                                {255,0,0},
-                                {0,0,255},
-                                {0,255,255},
-                                {255,255,0},
-                              {0,255,0},
-                            {0,255,0},
-                          {0,255,0},
-                        {0,255,0},
-                        {0,255,0},{255,90,20},
-                                {255,0,0},
-                                {0,0,255},
-                                {0,255,255},
-                                {255,255,0},
-                              {0,255,0},
-                            {0,255,0},
-                          {0,255,0},
-                        {0,255,0},
-                        {0,255,0},{255,90,20},
-                                {255,0,0},
-                                {0,0,255},
-                                {0,255,255},
-                                {255,255,0},
-                              {0,255,0},
-                            {0,255,0},
-                          {0,255,0},
-                        {0,255,0},
-                        {0,255,0},{255,90,20},
-                                {255,0,0},
-                                {0,0,255},
-                                {0,255,255},
-                                {255,255,0},
-                              {0,255,0},
-                            {0,255,0},
-                          {0,255,0},
-                        {0,255,0},
-                        {0,255,0},{255,90,20},
-                                {255,0,0},
-                                {0,0,255},
-                                {0,255,255},
-                                {255,255,0},
-                              {0,255,0},
-                            {0,255,0},
-                          {0,255,0},
-                        {0,255,0},
-                        {0,255,0},{255,90,20},
-                                {255,0,0},
-                                {0,0,255},
-                                {0,255,255},
-                                {255,255,0},
-                              {0,255,0},
-                            {0,255,0},
-                          {0,255,0},
-                        {0,255,0},
-                        {0,255,0},{255,90,20},
-                                {255,0,0},
-                                {0,0,255},
-                                {0,255,255},
-                                {255,255,0},
-                              {0,255,0},
-                            {0,255,0},
-                          {0,255,0},
-                        {0,255,0},
-                        {0,255,0},{255,90,20},
-                                {255,0,0},
-                                {0,0,255},
-                                {0,255,255},
-                                {255,255,0},
-                              {0,255,0},
-                            {0,255,0},
-                          {0,255,0},
-                        {0,255,0},
-                        {0,255,0},{255,90,20},
-                                {255,0,0},
-                                {0,0,255},
-                                {0,255,255},
-                                {255,255,0},
-                              {0,255,0},
-                            {0,255,0},
-                          {0,255,0},
-                        {0,255,0},
-                        {0,255,0},{255,90,20},
-                                {255,0,0},
-                                {0,0,255},
-                                {0,255,255},
-                                {255,255,0},
-                              {0,255,0},
-                            {0,255,0},
-                          {0,255,0},
-                        {0,255,0},
-                        {0,255,0},{255,90,20},
-                                {255,0,0},
-                                {0,0,255},
-                                {0,255,255},
-                                {255,255,0},
-                              {0,255,0},
-                            {0,255,0},
-                          {0,255,0},
-                        {0,255,0},
-                        {0,255,0},{255,90,20},
-                                {255,0,0},
-                                {0,0,255},
-                                {0,255,255},
-                                {255,255,0},
-                              {0,255,0},
-                            {0,255,0},
-                          {0,255,0},
-                        {0,255,0},
-                        {0,255,0},{255,90,20},
-                                {255,0,0},
-                                {0,0,255},
-                                {0,255,255},
-                                {255,255,0},
-                              {0,255,0},
-                            {0,255,0},
-                          {0,255,0},
-                        {0,255,0},
-                        {0,255,0},{255,90,20},
-                                {255,0,0},
-                                {0,0,255},
-                                {0,255,255},
-                                {255,255,0},
-                              {0,255,0},
-                            {0,255,0},
-                          {0,255,0},
-                        {0,255,0},
-                        {0,255,0},{255,90,20},
-                                {255,0,0},
-                                {0,0,255},
-                                {0,255,255},
-                                {255,255,0},
-                              {0,255,0},
-                            {0,255,0},
-                          {0,255,0},
-                        {0,255,0},
-                        {0,255,0},{255,90,20},
-                                {255,0,0},
-                                {0,0,255},
-                                {0,255,255},
-                                {255,255,0},
-                              {0,255,0},
-                            {0,255,0},
-                          {0,255,0},
-                        {0,255,0},
-                        {0,255,0},{255,90,20},
-                                {255,0,0},
-                                {0,0,255},
-                                {0,255,255},
-                                {255,255,0},
-                              {0,255,0},
-                            {0,255,0},
-                          {0,255,0},
-                        {0,255,0},
-                        {0,255,0},{255,90,20},
-                                {255,0,0},
-                                {0,0,255},
-                                {0,255,255},
-                                {255,255,0},
-                              {0,255,0},
-                            {0,255,0},
-                          {0,255,0},
-                        {0,255,0},
-                        {0,255,0},{255,90,20},
-                                {255,0,0},
-                                {0,0,255},
-                                {0,255,255},
-                                {255,255,0},
-                              {0,255,0},
-                            {0,255,0},
-                          {0,255,0},
-                        {0,255,0},
-                        {0,255,0},{255,90,20},
-                                {255,0,0},
-                                {0,0,255},
-                                {0,255,255},
-                                {255,255,0},
-                              {0,255,0},
-                            {0,255,0},
-                          {0,255,0},
-                        {0,255,0},
-                        {0,255,0},{255,90,20},
-                                {255,0,0},
-                                {0,0,255},
-                                {0,255,255},
-                                {255,255,0},
-                              {0,255,0},
-                            {0,255,0},
-                          {0,255,0},
-                        {0,255,0},
-                        {0,255,0},{255,90,20},
-                                {255,0,0},
-                                {0,0,255},
-                                {0,255,255},
-                                {255,255,0},
-                              {0,255,0},
-                            {0,255,0},
-                          {0,255,0},
-                        {0,255,0},
-                        {0,255,0},{255,90,20},
-                                {255,0,0},
-                                {0,0,255},
-                                {0,255,255},
-                                {255,255,0},
-                              {0,255,0},
-                            {0,255,0},
-                          {0,255,0},
-                        {0,255,0},
-                        {0,255,0},{255,90,20},
-                                {255,0,0},
-                                {0,0,255},
-                                {0,255,255},
-                                {255,255,0},
-                              {0,255,0},
-                            {0,255,0},
-                          {0,255,0},
-                        {0,255,0},
-                        {0,255,0},{255,90,20},
-                                {255,0,0},
-                                {0,0,255},
-                                {0,255,255},
-                                {255,255,0},
-                              {0,255,0},
-                            {0,255,0},
-                          {0,255,0},
-                        {0,255,0},
-                        {0,255,0},{255,90,20},
-                                {255,0,0},
-                                {0,0,255},
-                                {0,255,255},
-                                {255,255,0},
-                              {0,255,0},
-                            {0,255,0},
-                          {0,255,0},
-                        {0,255,0},
-                        {0,255,0}};
+static int file;
 
-
-static uint32_t ws281x_convert_virtual	(const volatile void *addr) {
-
-	FILE *pagemap = fopen("/proc/self/pagemap", "rb");
-
-  // Seek to the page that the buffer is on
-  unsigned long offset = (unsigned long)addr / getpagesize() * PAGEMAP_LENGTH;
-  if(fseek(pagemap, (unsigned long)offset, SEEK_SET) != 0) {
-     fprintf(stderr, "Failed to seek pagemap to proper location\n");
-     exit(1);
-  }
-  uint32_t reminder = (intptr_t)addr % BLOCK_SIZE_T;
-
-  // The page frame number is in bits 0-54 so read the first 7 bytes and clear the 55th bit
-  unsigned long page_frame_number = 0;
-  fread(&page_frame_number, 1, PAGEMAP_LENGTH-1, pagemap);
-
-  page_frame_number &= 0x7FFFFFFFFFFFFF;
-  page_frame_number <<= 12;												// Need to move bits left 12 times to get the correct boundary.
-	page_frame_number += reminder;											// We add the reminder offset.
-
-  fclose(pagemap);
-
-	return (uint32_t) page_frame_number;
-}
-
-
-int rgbled_setconfig(int file_desc, rgbled_conf_t *rgbled_conf){
+void rgbled_setconfig(int file_desc, rgbled_conf_t *rgbled_conf){
     ioctl(file_desc, IOCTL_RGBLED_SETCONFIG, rgbled_conf);
-
-    return 0;
 }
 
-
-int rgbled_sendleds(int file_desc, led_t *user_matrix){
+void rgbled_sendleds(int file_desc, led_t *user_matrix){
     ioctl(file_desc, IOCTL_RGBLED_USERLEDS, user_matrix);
     usleep(8500);
-    return 0;
 }
 
-int rgbled_function(int file_desc, led_function_t led_function){
+void rgbled_function(int file_desc, led_function_t led_function){
     ioctl(file_desc, IOCTL_RGBLED_FUNCTION, &led_function);
     usleep(8500);
-    return 0;
 }
 
-
-int rgbled_render(int file_desc){
-    ioctl(file_desc, IOCTL_RGBLED_RENDER);
-
-    return 0;
-}
-
-int rgbled_setcolor(int file_desc, led_t *color){
+void rgbled_setcolor(int file_desc, led_t *color){
     ioctl(file_desc, IOCTL_RGBLED_USERCOLOR, color);
-
-    return 0;
+    usleep(8500);
 }
-
 
 int rgbled_init (rgbled_conf_t *rgbled_conf) {
-
-  int file = open("/dev/"DEV_NAME,0);
-    if (file < 0) {
-	 printf("Can't open device file: %s\n", DEV_NAME);
-	 exit(-1);
+  file = open("/dev/"DEV_NAME,0);
+  if (file < 0) {
+    	printf("Can't open device file: %s\n", DEV_NAME);
+    	return 1;
   }
+  rgbled_setconfig(file, rgbled_conf);
+  return 0;
+}
 
- rgbled_setconfig(file, rgbled_conf);
- rgbled_function(file,leds_userdefined);
- rgbled_sendleds(file,test_matrix);
-  sleep(1);
+void rgbled_test (void){
   rgbled_function(file,leds_red);
   sleep(1);
   rgbled_function(file,leds_blue);
@@ -379,6 +75,4 @@ int rgbled_init (rgbled_conf_t *rgbled_conf) {
   rgbled_function(file,leds_on);
   sleep(1);
   rgbled_function(file,leds_off);
-  
-	return 0;
 }
