@@ -14,10 +14,13 @@
  
 #include "../rgbled_driver.h"
 
+#include "rgbled_x11.h"
+
 /*** RGBLED functions ***/
 
 int rgbled_init (rgbled_conf_t  *rgbled_conf);
 void rgbled_test (void);
+int rgbled_x11 (void);
 
 
 #endif /* RGBLED_H_ */

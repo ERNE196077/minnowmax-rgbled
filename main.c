@@ -7,7 +7,7 @@
 
 
 int main (){
-
+	/*  Run on Minnowboard 
 	rgbled_conf_t ledsconfig = RGBLED_CONF_TYPEAPA102 | 
 							RGBLED_CONF_DMACH(0) | 
 							RGBLED_CONF_LEDNUM(144);
@@ -16,6 +16,9 @@ int main (){
 		return 1;
 
 	rgbled_test();
+	*/
+	
+	rgbled_x11();
 
 return 0;
 }

@@ -20,18 +20,18 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
-#include <X11/Xlib.h>
  
 #include "headers/rgbled.h"
+#include "headers/rgbled_x11.h"
 
 
 #define PAGE_SHIFT 12
 #define PAGEMAP_LENGTH 8
 
 
-static led_t test_led = {2,0,20};
+//static led_t test_led = {2,0,20};
 static int file;
-
+static int w, h;
 void rgbled_setconfig(int file_desc, rgbled_conf_t *rgbled_conf){
     ioctl(file_desc, IOCTL_RGBLED_SETCONFIG, rgbled_conf);
 }
@@ -75,4 +75,13 @@ void rgbled_test (void){
   rgbled_function(file,leds_on);
   sleep(1);
   rgbled_function(file,leds_off);
+}
+
+
+int rgbled_x11 (void){
+  getScreenSize(&w, &h);
+
+  printf("Screen Width: %d  x  Height: %d \n",w ,h);
+
+  return 0;
 }
