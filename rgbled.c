@@ -31,7 +31,6 @@
 
 //static led_t test_led = {2,0,20};
 static int file;
-static int w, h;
 void rgbled_setconfig(int file_desc, rgbled_conf_t *rgbled_conf){
     ioctl(file_desc, IOCTL_RGBLED_SETCONFIG, rgbled_conf);
 }
@@ -78,10 +77,20 @@ void rgbled_test (void){
 }
 
 
-int rgbled_x11 (void){
-  getScreenSize(&w, &h);
 
-  printf("Screen Width: %d  x  Height: %d \n",w ,h);
+
+int rgbled_x11 (void){
+  led_t *test_leds;
+
+  test_leds = (led_t *)malloc(24);
+
+
+
+  //x11rgbleds_init(8,4,4,8,20,test_leds);
+  x11rgbleds_query();
+  //x11rgbleds_close();
+  
+  free(test_leds);
 
   return 0;
 }

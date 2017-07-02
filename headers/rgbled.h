@@ -13,7 +13,6 @@
 
  
 #include "../rgbled_driver.h"
-
 #include "rgbled_x11.h"
 
 /*** RGBLED functions ***/
