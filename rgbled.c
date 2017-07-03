@@ -82,13 +82,20 @@ void rgbled_test (void){
 int rgbled_x11 (void){
   led_t *test_leds;
 
-  test_leds = (led_t *)malloc(24);
+  test_leds = (led_t *)malloc(24 * sizeof(led_t));
 
 
 
-  //x11rgbleds_init(8,4,4,8,20,test_leds);
+  x11rgbleds_init(8,4,4,8,20,test_leds);
   x11rgbleds_query();
-  //x11rgbleds_close();
+sleep(3);
+  x11rgbleds_query();
+  sleep(3);
+
+  x11rgbleds_query();
+  sleep(3);
+  x11rgbleds_query();
+  x11rgbleds_close();
   
   free(test_leds);
 

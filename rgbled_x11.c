@@ -8,7 +8,8 @@ static int tmpstepx, tmpstepy;
 x11rawpixel_t* rawpixels;
 Display* display;
 led_t* pixels;
-XImage* TheImage;
+XImage* TheImage ;
+XImage* otherimage;
 Window root;
 XColor testxcolor;
 
@@ -46,13 +47,15 @@ int x11rgbleds_init(int topleds, int leftleds, int rightleds, int bottomleds, in
 		return -2;
 	}
 
+	root = DefaultRootWindow(display);
+
 	w = pscr->width;
 	h = pscr->height;
 
-	topstep = ( w - (border * 2)) / topleds;
-	bottomstep = ( w - (border * 2)) / bottomleds;
-	rightstep = ( h - (border * 2)) / rightleds;
-	leftstep = ( h - (border * 2)) / leftleds;
+	topstep = ( w - (border * 2)) / (topleds - 1);
+	bottomstep = ( w - (border * 2)) / (bottomleds - 1);
+	rightstep = ( h - (border * 2)) / (rightleds + 2);
+	leftstep = ( h - (border * 2)) / (leftleds + 2);
 
 	totalleds = topleds + bottomleds + rightleds + leftleds;
 
@@ -63,46 +66,49 @@ int x11rgbleds_init(int topleds, int leftleds, int rightleds, int bottomleds, in
 	tmpstepx = border;
 	tmpstepy = border;
 
-	TheImage = XGetImage (display, DefaultRootWindow(display), 0, 0, w, h, AllPlanes, ZPixmap);
-
+	
 	/* Top LEDs */
 	for (i = 0 ; i < topleds ; i++){
 		rawpixels[i].x = tmpstepx;
 		rawpixels[i].y = tmpstepy;
-		rawpixels[i].image = TheImage;
-		rawpixels[i].xcolor.pixel = XGetPixel (rawpixels[i].image, 0, 0);
-
+		rawpixels[i].image = XGetImage (display, root, tmpstepx, tmpstepy, 1, 1, AllPlanes, XYPixmap);
+		
+		if (i < topleds - 1)
 		tmpstepx += topstep;
 	}
 
 	/* Right LEDs */
 	for (i = i ; i < (topleds + rightleds) ; i++){
+		tmpstepy += rightstep;
 		rawpixels[i].x = tmpstepx;
 		rawpixels[i].y = tmpstepy;
-		rawpixels[i].image = TheImage;
+		rawpixels[i].image = XGetImage (display, root, tmpstepx, tmpstepy, 1, 1, AllPlanes, XYPixmap);
 		rawpixels[i].xcolor.pixel = XGetPixel (rawpixels[i].image, 0, 0);
 
-		tmpstepy += rightstep;
+		if (i == (topleds + rightleds - 1))
+			tmpstepy += rightstep;
 	}
 	
 	/* Bottom LEDs */
 	for (i = i ; i < (topleds + rightleds + bottomleds) ; i++){
 		rawpixels[i].x = tmpstepx;
 		rawpixels[i].y = tmpstepy;
-		rawpixels[i].image = TheImage;
+		rawpixels[i].image = XGetImage (display, root, tmpstepx, tmpstepy, 1, 1, AllPlanes, XYPixmap);
 		rawpixels[i].xcolor.pixel = XGetPixel (rawpixels[i].image, 0, 0);
 
-		tmpstepx -= bottomstep;
+		if (i < (topleds + rightleds + bottomleds - 1))
+			tmpstepx -= bottomstep;
 	}
 
 	/* Left LEDs */
 	for (i = i ; i < totalleds ; i++){
-		rawpixels[i].x = tmpstepx;
-		rawpixels[i].y = tmpstepy;
-		rawpixels[i].image = TheImage;
-		rawpixels[i].xcolor.pixel = XGetPixel (rawpixels[i].image, 0, 0);
 
 		tmpstepy -= leftstep;
+		rawpixels[i].x = tmpstepx;
+		rawpixels[i].y = tmpstepy;
+		rawpixels[i].image = XGetImage (display, root, tmpstepx, tmpstepy, 1, 1, AllPlanes, XYPixmap);
+		rawpixels[i].xcolor.pixel = XGetPixel (rawpixels[i].image, 0, 0);
+
 	}
 
 	printf("width : %d :::: height : %d\n", w, h);
@@ -118,8 +124,10 @@ int x11rgbleds_init(int topleds, int leftleds, int rightleds, int bottomleds, in
 
 int x11rgbleds_query( void ){
 	int i, eq = 0, ye = 0;
-	/*
+	
 	for (i = 0 ; i < totalleds ; i++){
+		XGetSubImage(display,root, rawpixels[i].x,rawpixels[i].y,1,1,AllPlanes, XYPixmap, rawpixels[i].image, 0,0); 
+		rawpixels[i].xcolor.pixel = XGetPixel (rawpixels[i].image, 0, 0);
 		XQueryColor (display, XDefaultColormap(display, XDefaultScreen (display)), &(rawpixels[i].xcolor));
 		pixels[i].r =  rawpixels[i].xcolor.red / 256;
 		pixels[i].g =  rawpixels[i].xcolor.green / 256;
@@ -132,7 +140,10 @@ int x11rgbleds_query( void ){
 		printf ("Blue : %d\n",pixels[i].b);
 	}
 
-	*/
+	printf ("###################################\n");
+
+	
+	/*
 	display =  XOpenDisplay(NULL);
 	if ( !display ){
 		printf("Cannot init X11 rgbleds. Is the X server running?\n");
@@ -140,13 +151,51 @@ int x11rgbleds_query( void ){
 	}
 	root = DefaultRootWindow(display);
 
-	XMapRaised(display, root);
-	XGetSubImage (display,root , 0, 0, 1100, 1100, AllPlanes, XYPixmap, TheImage, eq, ye);
+	//XMapRaised(display, root);
+	otherimage = malloc(sizeof(XImage));
+	TheImage =  XGetImage (display,root , 1200, 1200, 1, 1, AllPlanes, XYPixmap);
+
+	//XGetSubImage(display,root, 1200,1200,1,1,AllPlanes, XYPixmap, TheImage, 0,0); 
 	testxcolor.pixel = XGetPixel (TheImage, 0, 0);
+	XQueryColor (display, DefaultColormap(display, DefaultScreen (display)), &testxcolor);
+
+	printf ("Red : %d\n",testxcolor.red/256);
+		printf ("Green : %d\n",testxcolor.green/256);
+		printf ("Blue : %d\n",testxcolor.blue/256);
+
+
+
+	sleep(2);
+	//XGetSubImage(display,root, 1200,1200,1,1,AllPlanes, XYPixmap, TheImage, 0,0); 
+	testxcolor.pixel = XGetPixel (TheImage, 0, 0);
+		XQueryColor (display, DefaultColormap(display, DefaultScreen (display)), &testxcolor);
+
+	printf ("Red : %d\n",testxcolor.red/256);
+		printf ("Green : %d\n",testxcolor.green/256);
+		printf ("Blue : %d\n",testxcolor.blue/256);
+
+
+
+
+sleep(2);
+//XGetSubImage(display,root, 1200,1200,1,1,AllPlanes, XYPixmap, TheImage, 0,0); 
+	testxcolor.pixel = XGetPixel (TheImage, 0, 0);
+		XQueryColor (display, DefaultColormap(display, DefaultScreen (display)), &testxcolor);
+
+	printf ("Red : %d\n",testxcolor.red/256);
+		printf ("Green : %d\n",testxcolor.green/256);
+		printf ("Blue : %d\n",testxcolor.blue/256);
+
+
+
+
+
 
 	XFree(TheImage);
-	XCloseDisplay(display);
 
+	free(otherimage);
+	XCloseDisplay(display);
+*/
 
 	return 0;
 }
