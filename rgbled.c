@@ -79,22 +79,32 @@ void rgbled_test (void){
 
 
 
-int rgbled_x11 (void){
+int rgbled_x11 (int top, int right, int bottom, int left, int border){
   led_t *test_leds;
+  int total;
 
-  test_leds = (led_t *)malloc(24 * sizeof(led_t));
+  total = top + right + left + bottom;
+  test_leds = (led_t *)malloc(total * sizeof(led_t));
 
 
+  rgbled_function(file,leds_userdefined);
 
-  x11rgbleds_init(8,4,4,8,20,test_leds);
+  x11rgbleds_init(top,right,bottom,left,border, test_leds);
   x11rgbleds_query();
-sleep(3);
-  x11rgbleds_query();
+  rgbled_sendleds(file,test_leds);
+
   sleep(3);
-
   x11rgbleds_query();
+  rgbled_sendleds(file,test_leds);
+
   sleep(3);
   x11rgbleds_query();
+  rgbled_sendleds(file,test_leds);
+
+  sleep(3);
+  x11rgbleds_query();
+  rgbled_sendleds(file,test_leds);
+
   x11rgbleds_close();
   
   free(test_leds);

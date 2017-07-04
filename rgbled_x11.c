@@ -133,69 +133,15 @@ int x11rgbleds_query( void ){
 		pixels[i].g =  rawpixels[i].xcolor.green / 256;
 		pixels[i].b =  rawpixels[i].xcolor.blue / 256;
 
-		printf ("*****************\n");
-		printf ("X : %d ::: Y : %d\n",rawpixels[i].x, rawpixels[i].y );
-		printf ("Red : %d\n",pixels[i].r);
-		printf ("Green : %d\n",pixels[i].g);
-		printf ("Blue : %d\n",pixels[i].b);
+//		printf ("*****************\n");
+//		printf ("X : %d ::: Y : %d\n",rawpixels[i].x, rawpixels[i].y );
+//		printf ("Red : %d\n",pixels[i].r);
+//		printf ("Green : %d\n",pixels[i].g);
+//		printf ("Blue : %d\n",pixels[i].b);
 	}
 
-	printf ("###################################\n");
 
 	
-	/*
-	display =  XOpenDisplay(NULL);
-	if ( !display ){
-		printf("Cannot init X11 rgbleds. Is the X server running?\n");
-		return -1;
-	}
-	root = DefaultRootWindow(display);
-
-	//XMapRaised(display, root);
-	otherimage = malloc(sizeof(XImage));
-	TheImage =  XGetImage (display,root , 1200, 1200, 1, 1, AllPlanes, XYPixmap);
-
-	//XGetSubImage(display,root, 1200,1200,1,1,AllPlanes, XYPixmap, TheImage, 0,0); 
-	testxcolor.pixel = XGetPixel (TheImage, 0, 0);
-	XQueryColor (display, DefaultColormap(display, DefaultScreen (display)), &testxcolor);
-
-	printf ("Red : %d\n",testxcolor.red/256);
-		printf ("Green : %d\n",testxcolor.green/256);
-		printf ("Blue : %d\n",testxcolor.blue/256);
-
-
-
-	sleep(2);
-	//XGetSubImage(display,root, 1200,1200,1,1,AllPlanes, XYPixmap, TheImage, 0,0); 
-	testxcolor.pixel = XGetPixel (TheImage, 0, 0);
-		XQueryColor (display, DefaultColormap(display, DefaultScreen (display)), &testxcolor);
-
-	printf ("Red : %d\n",testxcolor.red/256);
-		printf ("Green : %d\n",testxcolor.green/256);
-		printf ("Blue : %d\n",testxcolor.blue/256);
-
-
-
-
-sleep(2);
-//XGetSubImage(display,root, 1200,1200,1,1,AllPlanes, XYPixmap, TheImage, 0,0); 
-	testxcolor.pixel = XGetPixel (TheImage, 0, 0);
-		XQueryColor (display, DefaultColormap(display, DefaultScreen (display)), &testxcolor);
-
-	printf ("Red : %d\n",testxcolor.red/256);
-		printf ("Green : %d\n",testxcolor.green/256);
-		printf ("Blue : %d\n",testxcolor.blue/256);
-
-
-
-
-
-
-	XFree(TheImage);
-
-	free(otherimage);
-	XCloseDisplay(display);
-*/
 
 	return 0;
 }

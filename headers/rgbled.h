@@ -19,7 +19,7 @@
 
 int rgbled_init (rgbled_conf_t  *rgbled_conf);
 void rgbled_test (void);
-int rgbled_x11 (void);
+int rgbled_x11 (int top, int right, int bottom, int left, int border);
 
 
 #endif /* RGBLED_H_ */
