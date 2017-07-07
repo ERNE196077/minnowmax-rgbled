@@ -30,6 +30,7 @@ Display* getScreen ( void ){
 
 
 int x11rgbleds_init(int topleds, int leftleds, int rightleds, int bottomleds, int border, led_t *pleds ){
+	
 	Screen* pscr = NULL;
 	int i;
 
@@ -111,19 +112,13 @@ int x11rgbleds_init(int topleds, int leftleds, int rightleds, int bottomleds, in
 
 	}
 
-	printf("width : %d :::: height : %d\n", w, h);
-	printf("topstep : %d\n", topstep);
-	printf("bottomstep : %d\n", bottomstep);
-	printf("rightstep : %d\n", rightstep);
-	printf("leftstep : %d\n", leftstep);
-
-
 	return 0;
 
 }
 
 int x11rgbleds_query( void ){
-	int i, eq = 0, ye = 0;
+	
+	int i;
 	
 	for (i = 0 ; i < totalleds ; i++){
 		XGetSubImage(display,root, rawpixels[i].x,rawpixels[i].y,1,1,AllPlanes, XYPixmap, rawpixels[i].image, 0,0); 
@@ -133,20 +128,13 @@ int x11rgbleds_query( void ){
 		pixels[i].g =  rawpixels[i].xcolor.green / 256;
 		pixels[i].b =  rawpixels[i].xcolor.blue / 256;
 
-//		printf ("*****************\n");
-//		printf ("X : %d ::: Y : %d\n",rawpixels[i].x, rawpixels[i].y );
-//		printf ("Red : %d\n",pixels[i].r);
-//		printf ("Green : %d\n",pixels[i].g);
-//		printf ("Blue : %d\n",pixels[i].b);
 	}
-
-
-	
 
 	return 0;
 }
 
 int x11rgbleds_close( void ){
+	
 	int i;
 	/* Free X11 buffers */
 	for (i = 0 ; i < totalleds ; i++){
