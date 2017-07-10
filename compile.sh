@@ -14,4 +14,4 @@ echo '#############################'
 echo '#     g++ routine           #'
 echo '#############################'
 
-g++  -o bin/Debug/rgbled obj/Debug/main.o obj/Debug/rgbled.o obj/Debug/rgbled_x11.o -lX11
+g++  -o bin/Debug/rgbled obj/Debug/main.o obj/Debug/rgbled.o obj/Debug/rgbled_x11.o -lX11 -lXext

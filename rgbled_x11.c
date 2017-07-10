@@ -1,46 +1,122 @@
 
 #include <stdio.h>
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include <X11/extensions/Xrender.h>
+#include <X11/extensions/XShm.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+
 #include "headers/rgbled_x11.h"
+
+struct shmimage
+{
+    XShmSegmentInfo shminfo ;
+    XImage * ximage ;
+    unsigned int * data ; // will point to the image's BGRA packed pixels
+} ;
+
+
 
 static int w, h;
 static int topstep, bottomstep, rightstep, leftstep, totalleds;
 static int tmpstepx, tmpstepy;
-x11rawpixel_t* rawpixels;
 Display* display;
 led_t* pixels;
-XImage* TheImage ;
-XImage* otherimage;
 Window root;
-XColor testxcolor;
+x11rawpixel_t *rawpixels;
+unsigned long rawpixel;
+struct shmimage image ;
 
 
+void initimage( struct shmimage * image )
+{
+    image->ximage = NULL ;
+    image->shminfo.shmaddr = (char *) -1 ;
+}
 
-Display* getScreen ( void ){
+void destroyimage( Display * dsp, struct shmimage * image )
+{
+    if( image->ximage )
+    {
+        XShmDetach( dsp, &image->shminfo ) ;
+        XDestroyImage( image->ximage ) ;
+        image->ximage = NULL ;
+    }
 
-	Display* pdsp = NULL;
-	
-	pdsp = XOpenDisplay( NULL );
-	if ( !pdsp ) {
-		fprintf(stderr, "Failed to open default display.\n");
-		return NULL;
-	}
-
-	return pdsp;
+    if( image->shminfo.shmaddr != ( char * ) -1 )
+    {
+        shmdt( image->shminfo.shmaddr ) ;
+        image->shminfo.shmaddr = ( char * ) -1 ;
+    }
 }
 
 
+int createimage( Display * dsp, struct shmimage * image, int width, int height )
+{
+    // Create a shared memory area 
+    image->shminfo.shmid = shmget( IPC_PRIVATE, width * height * 4, IPC_CREAT | 0600 ) ;
+    if( image->shminfo.shmid == -1 )
+    {
+        perror( "rgbledX11" ) ;
+        return 0 ;
+    }
+
+    // Map the shared memory segment into the address space of this process
+    image->shminfo.shmaddr = (char *) shmat( image->shminfo.shmid, 0, 0 ) ;
+    if( image->shminfo.shmaddr == (char *) -1 )
+    {
+        perror( "rgbledX11" ) ;
+        return 0 ;
+    }
+
+    image->data = (unsigned int*) image->shminfo.shmaddr ;
+    image->shminfo.readOnly = 0 ;
+
+    // Mark the shared memory segment for removal
+    // It will be removed even if this program crashes
+    shmctl( image->shminfo.shmid, IPC_RMID, 0 ) ;
+
+    // Allocate the memory needed for the XImage structure
+    image->ximage = XShmCreateImage( dsp, XDefaultVisual( dsp, XDefaultScreen( dsp ) ),
+                        DefaultDepth( dsp, XDefaultScreen( dsp ) ), ZPixmap, 0,
+                        &image->shminfo, 2560, 1024 ) ;
+    if( !image->ximage )
+    {
+        destroyimage( dsp, image ) ;
+        printf( "rgbledX11: could not allocate the XImage structure\n" ) ;
+        return 0 ;
+    }
+
+    image->ximage->data = (char *)image->data ;
+    image->ximage->width = width ;
+    image->ximage->height = height ;
+
+    // Ask the X server to attach the shared memory segment and sync
+    XShmAttach( dsp, &image->shminfo ) ;
+    XSync( dsp, False ) ;
+    return 1 ;
+}
+
 int x11rgbleds_init(int topleds, int leftleds, int rightleds, int bottomleds, int border, led_t *pleds ){
-	
-	Screen* pscr = NULL;
+	int pscr;
 	int i;
 
-	display = getScreen();
+	display = XOpenDisplay( NULL );
+
 	if ( !display ){
 		printf("Cannot init X11 rgbleds. Is the X server running?\n");
 		return -1;
 	}
 
-	pscr = DefaultScreenOfDisplay( display );
+	if( !XShmQueryExtension( display ) )
+    {
+        XCloseDisplay( display ) ;
+        printf( "rgbledX11: the X server does not support the XSHM extension\n" ) ;
+        return 1 ;
+    }
+
+	pscr = XDefaultScreen( display );
 	if ( !pscr ) {
 		fprintf(stderr, "Failed to obtain the default screen of given display.\n");
 		printf("Cannot init X11 rgbleds. Is the X server running?\n");
@@ -48,10 +124,21 @@ int x11rgbleds_init(int topleds, int leftleds, int rightleds, int bottomleds, in
 		return -2;
 	}
 
-	root = DefaultRootWindow(display);
+	initimage( &image );
+	w = XDisplayWidth( display, pscr );
+	h = XDisplayHeight( display, pscr );
 
-	w = pscr->width;
-	h = pscr->height;
+
+	if( !createimage( display, &image, w, h ) )
+    {
+        XCloseDisplay( display ) ;
+        return 1 ;
+    }
+
+	root = XDefaultRootWindow(display);
+
+	
+
 
 	topstep = ( w - (border * 2)) / (topleds - 1);
 	bottomstep = ( w - (border * 2)) / (bottomleds - 1);
@@ -72,7 +159,6 @@ int x11rgbleds_init(int topleds, int leftleds, int rightleds, int bottomleds, in
 	for (i = 0 ; i < topleds ; i++){
 		rawpixels[i].x = tmpstepx;
 		rawpixels[i].y = tmpstepy;
-		rawpixels[i].image = XGetImage (display, root, tmpstepx, tmpstepy, 1, 1, AllPlanes, XYPixmap);
 		
 		if (i < topleds - 1)
 		tmpstepx += topstep;
@@ -83,9 +169,7 @@ int x11rgbleds_init(int topleds, int leftleds, int rightleds, int bottomleds, in
 		tmpstepy += rightstep;
 		rawpixels[i].x = tmpstepx;
 		rawpixels[i].y = tmpstepy;
-		rawpixels[i].image = XGetImage (display, root, tmpstepx, tmpstepy, 1, 1, AllPlanes, XYPixmap);
-		rawpixels[i].xcolor.pixel = XGetPixel (rawpixels[i].image, 0, 0);
-
+		
 		if (i == (topleds + rightleds - 1))
 			tmpstepy += rightstep;
 	}
@@ -94,9 +178,7 @@ int x11rgbleds_init(int topleds, int leftleds, int rightleds, int bottomleds, in
 	for (i = i ; i < (topleds + rightleds + bottomleds) ; i++){
 		rawpixels[i].x = tmpstepx;
 		rawpixels[i].y = tmpstepy;
-		rawpixels[i].image = XGetImage (display, root, tmpstepx, tmpstepy, 1, 1, AllPlanes, XYPixmap);
-		rawpixels[i].xcolor.pixel = XGetPixel (rawpixels[i].image, 0, 0);
-
+		
 		if (i < (topleds + rightleds + bottomleds - 1))
 			tmpstepx -= bottomstep;
 	}
@@ -107,9 +189,7 @@ int x11rgbleds_init(int topleds, int leftleds, int rightleds, int bottomleds, in
 		tmpstepy -= leftstep;
 		rawpixels[i].x = tmpstepx;
 		rawpixels[i].y = tmpstepy;
-		rawpixels[i].image = XGetImage (display, root, tmpstepx, tmpstepy, 1, 1, AllPlanes, XYPixmap);
-		rawpixels[i].xcolor.pixel = XGetPixel (rawpixels[i].image, 0, 0);
-
+		
 	}
 
 	return 0;
@@ -120,13 +200,15 @@ int x11rgbleds_query( void ){
 	
 	int i;
 	
+	XShmGetImage( display, root, image.ximage, 0, 0, AllPlanes ) ;
+
 	for (i = 0 ; i < totalleds ; i++){
-		XGetSubImage(display,root, rawpixels[i].x,rawpixels[i].y,1,1,AllPlanes, XYPixmap, rawpixels[i].image, 0,0); 
-		rawpixels[i].xcolor.pixel = XGetPixel (rawpixels[i].image, 0, 0);
-		XQueryColor (display, XDefaultColormap(display, XDefaultScreen (display)), &(rawpixels[i].xcolor));
-		pixels[i].r =  rawpixels[i].xcolor.red / 256;
-		pixels[i].g =  rawpixels[i].xcolor.green / 256;
-		pixels[i].b =  rawpixels[i].xcolor.blue / 256;
+		
+		rawpixel = XGetPixel (image.ximage, rawpixels[i].x, rawpixels[i].y);
+		
+		pixels[i].r =  (rawpixel >> 16) & 0xff;
+		pixels[i].g =  (rawpixel >> 8) & 0xff;
+		pixels[i].b =  rawpixel & 0xff;
 
 	}
 
@@ -134,13 +216,11 @@ int x11rgbleds_query( void ){
 }
 
 int x11rgbleds_close( void ){
-	
-	int i;
 	/* Free X11 buffers */
-	for (i = 0 ; i < totalleds ; i++){
-		XFree(rawpixels[i].image);
-	}
+	
+	destroyimage( display, &image ) ;
 	XCloseDisplay(display);
+
 
 	/* Free memory allocated buffers */
 	free(rawpixels);
