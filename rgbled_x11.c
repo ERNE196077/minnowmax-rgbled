@@ -27,6 +27,7 @@ Window root;
 x11rawpixel_t *rawpixels;
 unsigned long rawpixel;
 struct shmimage image ;
+int pscr;
 
 
 void initimage( struct shmimage * image )
@@ -78,8 +79,8 @@ int createimage( Display * dsp, struct shmimage * image, int width, int height )
     shmctl( image->shminfo.shmid, IPC_RMID, 0 ) ;
 
     // Allocate the memory needed for the XImage structure
-    image->ximage = XShmCreateImage( dsp, XDefaultVisual( dsp, XDefaultScreen( dsp ) ),
-                        DefaultDepth( dsp, XDefaultScreen( dsp ) ), ZPixmap, 0,
+    image->ximage = XShmCreateImage( dsp, XDefaultVisual( dsp, DefaultScreen( dsp ) ),
+                        DefaultDepth( dsp, DefaultScreen( dsp ) ), ZPixmap, 0,
                         &image->shminfo, 2560, 1024 ) ;
     if( !image->ximage )
     {
@@ -99,7 +100,7 @@ int createimage( Display * dsp, struct shmimage * image, int width, int height )
 }
 
 int x11rgbleds_init(int topleds, int leftleds, int rightleds, int bottomleds, int border, led_t *pleds ){
-	int pscr;
+	
 	int i;
 
 	display = XOpenDisplay( NULL );
@@ -115,18 +116,23 @@ int x11rgbleds_init(int topleds, int leftleds, int rightleds, int bottomleds, in
         printf( "rgbledX11: the X server does not support the XSHM extension\n" ) ;
         return 1 ;
     }
-
-	pscr = XDefaultScreen( display );
+    
+	pscr = DefaultScreen( display );
+	/*
 	if ( !pscr ) {
 		fprintf(stderr, "Failed to obtain the default screen of given display.\n");
 		printf("Cannot init X11 rgbleds. Is the X server running?\n");
 		XCloseDisplay(display);
 		return -2;
 	}
+	*/
 
 	initimage( &image );
 	w = XDisplayWidth( display, pscr );
 	h = XDisplayHeight( display, pscr );
+
+	printf("Width : %d\n",w);
+	printf("Height : %d\n",h);
 
 
 	if( !createimage( display, &image, w, h ) )
