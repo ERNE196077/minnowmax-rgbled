@@ -113,10 +113,10 @@ int rgbled_x11 (int top, int right, int bottom, int left, int border){
   x11rgbleds_init(top,right,bottom,left,border, x11_leds);
 
   /* Start infinite loop */
-  //while (1){
+  while (1){
   	x11rgbleds_query();
-  	//rgbled_sendleds(file,x11_leds);
-  //}
+  	rgbled_sendleds(file,x11_leds);
+  }
 
   /* In case something happens rollback */
   x11rgbleds_close();

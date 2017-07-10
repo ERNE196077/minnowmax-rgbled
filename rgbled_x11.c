@@ -13,10 +13,8 @@ struct shmimage
 {
     XShmSegmentInfo shminfo ;
     XImage * ximage ;
-    unsigned int * data ; // will point to the image's BGRA packed pixels
+    unsigned int * data ; 
 } ;
-
-
 
 static int w, h;
 static int topstep, bottomstep, rightstep, leftstep, totalleds;
@@ -81,7 +79,7 @@ int createimage( Display * dsp, struct shmimage * image, int width, int height )
     // Allocate the memory needed for the XImage structure
     image->ximage = XShmCreateImage( dsp, XDefaultVisual( dsp, DefaultScreen( dsp ) ),
                         DefaultDepth( dsp, DefaultScreen( dsp ) ), ZPixmap, 0,
-                        &image->shminfo, 2560, 1024 ) ;
+                        &image->shminfo, width, height ) ;
     if( !image->ximage )
     {
         destroyimage( dsp, image ) ;
@@ -118,15 +116,7 @@ int x11rgbleds_init(int topleds, int leftleds, int rightleds, int bottomleds, in
     }
     
 	pscr = DefaultScreen( display );
-	/*
-	if ( !pscr ) {
-		fprintf(stderr, "Failed to obtain the default screen of given display.\n");
-		printf("Cannot init X11 rgbleds. Is the X server running?\n");
-		XCloseDisplay(display);
-		return -2;
-	}
-	*/
-
+	
 	initimage( &image );
 	w = XDisplayWidth( display, pscr );
 	h = XDisplayHeight( display, pscr );
@@ -141,10 +131,8 @@ int x11rgbleds_init(int topleds, int leftleds, int rightleds, int bottomleds, in
         return 1 ;
     }
 
+    /* Get X11 root window */
 	root = XDefaultRootWindow(display);
-
-	
-
 
 	topstep = ( w - (border * 2)) / (topleds - 1);
 	bottomstep = ( w - (border * 2)) / (bottomleds - 1);
@@ -206,8 +194,10 @@ int x11rgbleds_query( void ){
 	
 	int i;
 	
+	/* Refresh image contents */
 	XShmGetImage( display, root, image.ximage, 0, 0, AllPlanes ) ;
 
+	/* Get pixel color for all LEDs */
 	for (i = 0 ; i < totalleds ; i++){
 		
 		rawpixel = XGetPixel (image.ximage, rawpixels[i].x, rawpixels[i].y);
@@ -222,11 +212,10 @@ int x11rgbleds_query( void ){
 }
 
 int x11rgbleds_close( void ){
+
 	/* Free X11 buffers */
-	
 	destroyimage( display, &image ) ;
 	XCloseDisplay(display);
-
 
 	/* Free memory allocated buffers */
 	free(rawpixels);
