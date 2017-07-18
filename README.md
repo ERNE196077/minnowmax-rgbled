@@ -6,13 +6,13 @@ In addition, the libraries provide an Ambilight-like function just as the [Bobli
 
 ## Requirements
 The basic functionality to control RGB LEDs (APA102 & WS2812B) has been tested in the below platforms:
-*Minnowboard Max
-*Xubuntu 16.04.2
-*Arch Linux
+* Minnowboard Max
+* Xubuntu 16.04.2
+* Arch Linux
 
 The Ambilight-like function has been tested using the below desktop environments (Using X11):
-*Gnome
-*Xfce
+* Gnome
+* Xfce
 
 As the hardware used by this driver already has an official Linux module it is needed to blacklist those modules. Add the below lines into your /etc/modprobe.d/blaklist.conf file:
 ```
@@ -26,10 +26,10 @@ Note: Recent kernels contain dw_dmac driver as a built-in module, if it is your 
 
 ### Compilation
 In the working directory there are two important files to get started:
-*compile.sh
-*Makefile
+* compile.sh
+* Makefile
 
 You would need to install some dependencies in order to compile the driver and the libraries
-*Kernel headers
-*Building Libraries (Ubuntu: build-esential; ArchLinux: base-devel)
-*X11 dev libraries (
+* Kernel headers
+* Building Libraries (Ubuntu: build-esential; ArchLinux: base-devel)
+* X11 dev libraries (
