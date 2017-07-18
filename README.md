@@ -5,7 +5,7 @@ This is an experimental scholar project for the Minnowboard Max platform. The ob
 In addition, the libraries provide an Ambilight-like function just as the [Boblight](https://www.tweaking4all.com/home-theatre/xbmc/xbmc-boblight-openelec-ws2811-ws2812/) project.
 
 ## Requirements
-The basic functionality to control RGB LEDs (APA102 & WS2812B) has been tested in the below platforms:
+The basic functionality to control RGB LEDs (APA102 & WS2812B) has been tested in the below platforms, BUT, it is intended to work in any Linux distribution:
 * Minnowboard Max
 * Xubuntu 16.04.2
 * Arch Linux
@@ -32,4 +32,22 @@ In the working directory there are two important files to get started:
 You would need to install some dependencies in order to compile the driver and the libraries
 * Kernel headers
 * Building Libraries (Ubuntu: build-esential; ArchLinux: base-devel)
-* X11 dev libraries (
+* X11 dev libraries (Ubuntu: libx11-dev libxtst-dev; Archlinux: libx11 libxrender)
+
+To compile and install the driver simply use:
+```
+make
+make install
+```
+Reboot for the changes take effect, or run:
+```
+modprobe main_rgbled.ko
+```
+
+For the libraries, the project comes with an example main.c file containing two of the basic functions, the example main.c file is compiled by running the compile.sh script:
+```
+./compile.sh
+```
+
+
+
