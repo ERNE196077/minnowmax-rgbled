@@ -85,7 +85,24 @@ To use the driver is needed to include the "headers/rgbled.h" header file in you
   
   rgbled_sendleds(&test_leds);   // Send the colors to the led strip
   ```
-  
-  
-  
+* rgbled_x11 - This function will start an Ambilight function using the led strip, build a rectangle of leds matching the contour of your screen and place it behind it. Take note of the count of the leds in the top, bottom, right and left of your rectangle, the sum of the leds should be used in the macro RGBLED_CONF_LEDNUM to set the driver configuration. Below is an example:
+```
+int top, right, left, bottom, total;
+top = 20;  // Leds in the top of the screen
+left = 10;  // Leds in the left side of the screen
+right = 10;  // Leds in the right side of the screen
+bottom = 20;  // Leds in the bottom of the screen
+total = top + bottom + left + right; // 60 leds in total
 
+	uint32_t ledsconfig = RGBLED_CONF_TYPEAPA102 | 
+				RGBLED_CONF_DMACH(0) | 
+				RGBLED_CONF_LEDNUM(20);
+
+	rgbled_init(&ledsconfig);
+	
+	rgbled_x11(top,  // Number of leds in the top
+		right,  // Number of leds in the right side
+		bottom,  // Number of leds in the bottom
+		left,  // Numer of leds in the left side
+		30);  // Desired margin to start taking the color lectures (30 should work fine)
+```
