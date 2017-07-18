@@ -54,8 +54,8 @@ To use the driver is needed to include the "headers/rgbled.h" header file in you
 * rgbled_init - Run this function before anything, this will create the connection to the main_rgbled driver. The function receives a unsigned int value containing the configuration of the driver. Use the macros provided to set the configuration in the variable. The example below will set the driver to control 239 APA102 RGB LEDs using the DMA channel 0:
 ```
 	uint32_t ledsconfig = RGBLED_CONF_TYPEAPA102 | 
-							          RGBLED_CONF_DMACH(0) | 
-							          RGBLED_CONF_LEDNUM(239);
+				RGBLED_CONF_DMACH(0) | 
+				RGBLED_CONF_LEDNUM(239);
 
 	rgbled_init(&ledsconfig);
   ```
@@ -78,8 +78,8 @@ To use the driver is needed to include the "headers/rgbled.h" header file in you
   * rgbled_sendleds - Set the led strip with individual colors for each of the leds. To use this option you need to set the function "leds_userdefined" using the rgbled_function function (Only once). The below example set 3 leds with different colors.
   ```
   led_t test_leds[3] = {{255,0,0},  // First led RED
-  		{0,255,0},   // Second led GREEN
-		{0,0,255}};   // Third led BLUE
+  			{0,255,0},   // Second led GREEN
+			{0,0,255}};   // Third led BLUE
   
   rgbled_function(leds_userdefined);  // Set the leds_userdefined function first
   
