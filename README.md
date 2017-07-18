@@ -44,10 +44,32 @@ Reboot for the changes take effect, or run:
 modprobe main_rgbled.ko
 ```
 
-For the libraries, the project comes with an example main.c file containing two of the basic functions, the example main.c file is compiled by running the compile.sh script:
+For the libraries, the project comes with an example main.c file containing two of the basic functions (Explained in usage section), the example main.c file is compiled by running the compile.sh script:
 ```
 ./compile.sh
 ```
+## Usage
+To use the driver is needed to include the "headers/rgbled.h" header file in your sources, this file contain the IOCTL functions to communicate with the main_rgbled Linux driver. The functions are the following:
+* rgbled_init - Run this function before anything, this will create the connection to the main_rgbled driver and receive a unsigned int value containing the configuration of the driver. Use the macros provided to set the configuration in the variable. The example below will set the driver to control 239 APA102 RGB LEDs using the DMA channel 0:
+```
+	uint32_t ledsconfig = RGBLED_CONF_TYPEAPA102 | 
+							          RGBLED_CONF_DMACH(0) | 
+							          RGBLED_CONF_LEDNUM(239);
 
+	rgbled_init(&ledsconfig);
+  ```
+* rgbled_function - Set a function or color preset from the ones available, the function receive one of the following values:
+```
+	leds_off  -  Turn off the leds
+	leds_on  -  Turn on the leds (Completely white)
+	leds_userdefined  -  Wait for a user custom color (See below)
+	leds_warm  -  Warm yellowish color
+	leds_solar  -  Sun like color
+	leds_green  -  Only green leds on
+	leds_red  -  Only red leds ona
+	leds_blue  -  Only blue leds on
+  ```
+  * 
+  
 
 
