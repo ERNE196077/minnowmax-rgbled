@@ -47,6 +47,11 @@ For the libraries, the project comes with an example main.c file containing two 
 ```
 ./compile.sh
 ```
+### Circuit Diagram
+As per my understanding, the WS2812B and APA102 RGB LEDs are intended to be driven with a serial signal oscilating between 0v and 5v. But some users have reported to drive them with signals between 0v and 3.3v (The Minnowboard Max operating voltages for the SPI). However, a level shifter (SN74AHCT125) can be used to amplify the serial signal to the recommended one. Below is a diagram of the circuit used in this project:
+
+![Level Shifter RGB LEDs circuit diagram](https://github.com/ERNE196077/minnowmax-rgbled/blob/master/Circuit.jpg)
+
 
 
 ## Usage
