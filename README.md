@@ -108,11 +108,11 @@ total = top + bottom + left + right; // 60 leds in total
 ```
 ## TODO
 The basic functions of the driver works fine in the MinnowboardMax platform but more work needs to be done to convert this in a robust entertainment center.
-* Develop a Linux service to receive the petitions
-* Add more animations
-* Develop a cloud service to receive cellphone notifications and act accordingly
+* Develop a Linux service to receive the petitions.
+* Add more animations.
+* Develop a cloud service to receive cellphone notifications and act accordingly.
 * Create a UDP infrastructure to receive the led color information from other computers.
-
+* Test in MinnowboardTurbot (Dual and Quad core).
 ## Contact
 Please report any issue, suggestion or claim to my personal mail ramoscaciqueernesto@hotmail.com
 
