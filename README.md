@@ -96,7 +96,7 @@ total = top + bottom + left + right; // 60 leds in total
 
 	uint32_t ledsconfig = RGBLED_CONF_TYPEAPA102 | 
 				RGBLED_CONF_DMACH(0) | 
-				RGBLED_CONF_LEDNUM(20);
+				RGBLED_CONF_LEDNUM(total);
 
 	rgbled_init(&ledsconfig);
 	
