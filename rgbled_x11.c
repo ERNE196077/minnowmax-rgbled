@@ -97,7 +97,7 @@ int createimage( Display * dsp, struct shmimage * image, int width, int height )
     return 1 ;
 }
 
-int x11rgbleds_init(int topleds, int leftleds, int rightleds, int bottomleds, int border, led_t *pleds ){
+int x11rgbleds_init(int topleds, int leftleds, int rightleds, int bottomleds, int wborder, int hborder, led_t *pleds ){
 	
 	int i;
 
@@ -121,10 +121,7 @@ int x11rgbleds_init(int topleds, int leftleds, int rightleds, int bottomleds, in
 	w = XDisplayWidth( display, pscr );
 	h = XDisplayHeight( display, pscr );
 
-	printf("Width : %d\n",w);
-	printf("Height : %d\n",h);
-
-
+	
 	if( !createimage( display, &image, w, h ) )
     {
         XCloseDisplay( display ) ;
@@ -134,10 +131,10 @@ int x11rgbleds_init(int topleds, int leftleds, int rightleds, int bottomleds, in
     /* Get X11 root window */
 	root = XDefaultRootWindow(display);
 
-	topstep = ( w - (border * 2)) / (topleds - 1);
-	bottomstep = ( w - (border * 2)) / (bottomleds - 1);
-	rightstep = ( h - (border * 2)) / (rightleds + 2);
-	leftstep = ( h - (border * 2)) / (leftleds + 2);
+	topstep = ( w - (wborder * 2)) / (topleds - 1);
+	bottomstep = ( w - (wborder * 2)) / (bottomleds - 1);
+	rightstep = ( h - (hborder * 2)) / (rightleds + 2);
+	leftstep = ( h - (hborder * 2)) / (leftleds + 2);
 
 	totalleds = topleds + bottomleds + rightleds + leftleds;
 
@@ -145,8 +142,8 @@ int x11rgbleds_init(int topleds, int leftleds, int rightleds, int bottomleds, in
 	rawpixels = (x11rawpixel_t *)malloc( totalleds * (sizeof(x11rawpixel_t)) );
 	pixels = pleds;
 
-	tmpstepx = border;
-	tmpstepy = border;
+	tmpstepx = wborder;
+	tmpstepy = hborder;
 
 	
 	/* Top LEDs */

@@ -13,7 +13,7 @@ typedef struct{
 } x11rawpixel_t;
 
 int getRootWindowSize(int *w, int *h);
-int x11rgbleds_init(int topleds, int leftleds, int rightleds, int bottomleds, int border, led_t *pleds );
+int x11rgbleds_init(int topleds, int leftleds, int rightleds, int bottomleds, int wborder, int hborder, led_t *pleds );
 
 int x11rgbleds_query( void );
 

@@ -28,7 +28,6 @@
 #define PAGE_SHIFT 12
 #define PAGEMAP_LENGTH 8
 
-//static led_t test_led = {2,0,20};
 static int file;
 static int delay;
 static led_t *x11_leds; 
@@ -37,7 +36,7 @@ static led_t *x11_leds;
 void intHandler (int dummy){
 	printf("rgbled: Exit requested by user!\n");
 	if (!x11_leds){
-		x11rgbleds_close();
+		x11rgbleds_close();7
 		free(x11_leds);
 	}
 	close(file);	
@@ -45,22 +44,22 @@ void intHandler (int dummy){
 }
 
 
-void rgbled_setconfig(int file_desc, rgbled_conf_t *rgbled_conf){
-    ioctl(file_desc, IOCTL_RGBLED_SETCONFIG, rgbled_conf);
+void rgbled_setconfig(rgbled_conf_t *rgbled_conf){
+    ioctl(file, IOCTL_RGBLED_SETCONFIG, rgbled_conf);
 }
 
-void rgbled_sendleds(int file_desc, led_t *user_matrix){
-    ioctl(file_desc, IOCTL_RGBLED_USERLEDS, user_matrix);
+void rgbled_sendleds(led_t *user_matrix){
+    ioctl(file, IOCTL_RGBLED_USERLEDS, user_matrix);
     usleep(delay);
 }
 
-void rgbled_function(int file_desc, led_function_t led_function){
-    ioctl(file_desc, IOCTL_RGBLED_FUNCTION, &led_function);
+void rgbled_function(led_function_t led_function){
+    ioctl(file, IOCTL_RGBLED_FUNCTION, &led_function);
     usleep(delay);
 }
 
-void rgbled_setcolor(int file_desc, led_t *color){
-    ioctl(file_desc, IOCTL_RGBLED_USERCOLOR, color);
+void rgbled_setcolor(led_t *color){
+    ioctl(file, IOCTL_RGBLED_USERCOLOR, color);
     usleep(delay);
 }
 
@@ -94,7 +93,7 @@ void rgbled_test (void){
   rgbled_function(file,leds_off);
 }
 
-int rgbled_x11 (int top, int right, int bottom, int left, int border){
+int rgbled_x11 (int top, int right, int bottom, int left, int wborder, int hborder){
   int total;
   
   /* Register callback in case an user exit */
@@ -110,7 +109,7 @@ int rgbled_x11 (int top, int right, int bottom, int left, int border){
   rgbled_function(file,leds_userdefined);
 
   /* Initialize X11 pixel matrix */
-  x11rgbleds_init(top,right,bottom,left,border, x11_leds);
+  x11rgbleds_init(top, right, bottom, left, wborder, hborder, x11_leds);
 
   /* Start infinite loop */
   while (1){
