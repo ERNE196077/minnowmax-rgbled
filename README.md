@@ -121,5 +121,5 @@ The basic functions of the driver works fine in the MinnowboardMax platform but 
 ## Contact
 Please report any issue, suggestion or claim to my personal mail ramoscaciqueernesto@hotmail.com
 
-## Youtube video link
-[linkname](https://youtu.be/njOMS6QHMWM)
+## Youtube video example link
+[https://youtu.be/njOMS6QHMWM](https://youtu.be/njOMS6QHMWM)
